@@ -12,6 +12,8 @@ import { roleService, type BackendRole } from '@/services/role-service'
 import { permissionService, type BackendPermission } from '@/services/permission-service'
 import { toast } from 'sonner'
 
+import { Skeleton } from '@/components/ui/skeleton'
+
 function getRoleDescription(name: string, activePerms: string[]): string {
   const nameLower = name.toLowerCase()
   if (nameLower === 'admin' || nameLower === 'super admin') {
@@ -32,24 +34,24 @@ function getRoleDescription(name: string, activePerms: string[]): string {
 }
 
 const RoleCardSkeleton = () => (
-  <div className="bg-midnight/20 border border-border/40 rounded-xl p-4 flex flex-col justify-between min-h-[120px] animate-pulse">
-    <div className="space-y-2">
-      <div className="h-4 bg-slate-800 rounded w-1/3"></div>
-      <div className="h-3 bg-slate-800 rounded w-3/4"></div>
-      <div className="h-3 bg-slate-800 rounded w-2/3"></div>
+  <div className="bg-midnight border border-border/60 rounded-xl p-4 flex flex-col justify-between min-h-[120px]">
+    <div className="space-y-3">
+      <Skeleton className="h-4 w-1/3 rounded-md bg-midnight/50" />
+      <Skeleton className="h-3 w-3/4 rounded-md bg-midnight/50" />
+      <Skeleton className="h-3 w-2/3 rounded-md bg-midnight/50" />
     </div>
   </div>
 )
 
 const ExplorerSkeleton = () => (
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 animate-pulse">
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
     {Array.from({ length: 6 }).map((_, i) => (
-      <div key={i} className="flex items-center justify-between p-3 rounded-xl border border-border/40 bg-slate-900/10">
-        <div className="space-y-1.5 flex-1">
-          <div className="h-3 bg-slate-800 rounded w-2/3"></div>
-          <div className="h-2.5 bg-slate-800 rounded w-1/4"></div>
+      <div key={i} className="flex items-center justify-between p-3.5 rounded-xl border border-border/40 bg-midnight">
+        <div className="space-y-2 flex-1">
+          <Skeleton className="h-3 w-1/2 rounded-md bg-midnight/50" />
+          <Skeleton className="h-2.5 w-1/4 rounded-md bg-midnight/50" />
         </div>
-        <div className="h-5 w-5 rounded-full bg-slate-800"></div>
+        <Skeleton className="h-5 w-5 rounded-full bg-midnight/50" />
       </div>
     ))}
   </div>
