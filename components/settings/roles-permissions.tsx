@@ -243,34 +243,36 @@ export function RolesPermissions() {
                   <p className="text-[11px] text-slate-400 leading-normal line-clamp-3">{description}</p>
                 </div>
                 
-                {role.name !== 'Admin' && role.name !== 'Super Admin' && (
-                  <div
-                    className={cn(
-                      'absolute top-2.5 right-2.5 transition-opacity flex gap-1 bg-midnight/95 p-1 rounded-lg border border-border/50 shadow-lg z-10',
-                      isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                    )}
-                    onClick={(e) => e.stopPropagation()}
+                <div
+                  className={cn(
+                    'absolute top-2.5 right-2.5 transition-opacity flex gap-1 bg-midnight/95 p-1 rounded-lg border border-border/50 shadow-lg z-10',
+                    isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  )}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 text-violet-glow hover:bg-violet-core/20 rounded-md cursor-pointer"
+                    onClick={() => handleOpenEditRole(role)}
+                    disabled={isPending}
+                    title="Edit Role"
                   >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 text-violet-glow hover:bg-violet-core/20 rounded-md cursor-pointer"
-                      onClick={() => handleOpenEditRole(role)}
-                      disabled={isPending}
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                    </Button>
+                    <Edit3 className="h-3.5 w-3.5" />
+                  </Button>
+                  {role.name !== 'Admin' && role.name !== 'Super Admin' && (
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-red-400 hover:bg-red-500/20 rounded-md cursor-pointer"
                       onClick={() => handleDeleteRole(role, index)}
                       disabled={isPending}
+                      title="Delete Role"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )
           })}
