@@ -17,7 +17,11 @@ export interface LoginResponse {
 
 export const authService = {
   async login(username: string, password: string): Promise<LoginResponse> {
-    return await api.post<LoginResponse>('/api/auth/login/', { username, password })
+    return await api.post<LoginResponse>(
+      '/api/auth/login/',
+      { username, password },
+      { skipAuthHeader: true, skipSessionRedirect: true }
+    )
   },
 
   async setPassword(password: string, confirmPassword: string, token?: string): Promise<{ message: string }> {
@@ -25,10 +29,14 @@ export const authService = {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
     }
-    return await api.post<{ message: string }>('/api/employee/set-password/', {
-      new_password: password,
-      confirm_new_password: confirmPassword,
-    }, { headers })
+    return await api.post<{ message: string }>(
+      '/api/employee/set-password/',
+      {
+        new_password: password,
+        confirm_new_password: confirmPassword,
+      },
+      { headers, skipAuthHeader: true, skipSessionRedirect: true }
+    )
   },
 
   async persistSession(

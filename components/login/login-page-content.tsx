@@ -6,7 +6,7 @@ import { FormProvider } from 'react-hook-form'
 import { Mail, Lock, Eye, EyeOff, Building2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import { CommonFormFieldError } from '@/components/common'
+import { CommonFormFieldError, CommonErrorBanner } from '@/components/common'
 import { uiInput } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
@@ -29,6 +29,7 @@ export function LoginPageContent() {
     showPassword,
     setShowPassword,
     isLoading,
+    formError,
     showSetPasswordModal,
     pendingAuthToken,
     methods,
@@ -59,6 +60,9 @@ export function LoginPageContent() {
               <CardDescription className="text-xs text-muted-foreground mt-0.5 font-sans">Please sign in to access your dashboard</CardDescription>
             </CardHeader>
             <CardContent>
+              {formError && (
+                <CommonErrorBanner message={formError} className="mb-4" />
+              )}
               <FormProvider {...methods}>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                   <div className="space-y-2">

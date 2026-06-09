@@ -8,6 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { authService, type LoginResponse } from '@/services/auth-service'
 import { loginSchema, type LoginValues } from '@/validations/auth.schema'
+import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
+import { applyAuthFieldErrors } from '@/lib/helpers/parse-auth-form-errors'
 import { ApiError } from '@/lib/api'
 
 interface PendingAuth {
@@ -21,6 +23,7 @@ interface UseLoginFormReturn {
   showPassword: boolean
   setShowPassword: (show: boolean) => void
   isLoading: boolean
+  formError: string | null
   showSetPasswordModal: boolean
   pendingAuthToken: string | null
   methods: UseFormReturn<LoginValues>
@@ -39,6 +42,7 @@ export function useLoginForm(): UseLoginFormReturn {
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const [showSetPasswordModal, setShowSetPasswordModal] = useState(false)
   const [pendingAuth, setPendingAuth] = useState<PendingAuth | null>(null)
 
@@ -47,7 +51,7 @@ export function useLoginForm(): UseLoginFormReturn {
     defaultValues: { username: '', password: '' },
   })
 
-  const { setError } = methods
+  const { setError, clearErrors } = methods
 
   const redirectPath = getSafeRedirectPath(searchParams.get('redirect'))
 
@@ -65,18 +69,36 @@ export function useLoginForm(): UseLoginFormReturn {
     []
   )
 
+  const handleLoginFailure = useCallback(
+    (error: unknown) => {
+      const errorData = error instanceof ApiError ? error.data : undefined
+
+      applyAuthFieldErrors<LoginValues>(errorData, setError, {
+        username: 'username',
+        password: 'password',
+      })
+
+      const errorMessage = getApiErrorMessage(error, 'Invalid username or password.')
+      setFormError(errorMessage)
+      toast.error('Login Failed', { description: errorMessage })
+    },
+    [setError]
+  )
+
   const onSubmit = async (data: LoginValues) => {
     setIsLoading(true)
+    setFormError(null)
+    clearErrors()
+
     try {
       const response: LoginResponse = await authService.login(data.username, data.password)
       const dataObj = response.results?.data
       const token = dataObj?.access
 
       if (!token) {
-        setIsLoading(false)
-        toast.error('Login Failed', {
-          description: 'Invalid server response. Please try again.',
-        })
+        const message = 'Invalid server response. Please try again.'
+        setFormError(message)
+        toast.error('Login Failed', { description: message })
         return
       }
 
@@ -87,52 +109,29 @@ export function useLoginForm(): UseLoginFormReturn {
       if (dataObj && dataObj.has_password_changed === false) {
         setPendingAuth({ token, username, email, userId })
         setShowSetPasswordModal(true)
-        setIsLoading(false)
-      } else {
-        await persistAuthSession(token, username, email, userId)
-        toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
-        setIsLoading(false)
-        navigateAfterLogin()
+        return
       }
+
+      await persistAuthSession(token, username, email, userId)
+      toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
+      navigateAfterLogin()
     } catch (error: unknown) {
+      handleLoginFailure(error)
+    } finally {
       setIsLoading(false)
-      let errorMessage = 'Invalid username or password.'
-
-      if (error instanceof ApiError) {
-        errorMessage = error.message || errorMessage
-        const errorData = error.data
-        if (errorData && typeof errorData === 'object' && 'errors' in errorData) {
-          const backendErrors = (errorData as { errors: Record<string, unknown> }).errors
-          if (backendErrors && typeof backendErrors === 'object') {
-            const errorMessages: string[] = []
-            Object.entries(backendErrors).forEach(([field, messages]) => {
-              const messagesArr = Array.isArray(messages) ? messages : [String(messages)]
-              if (messagesArr.length > 0) {
-                const cleanMsg = String(messagesArr[0])
-                errorMessages.push(cleanMsg)
-                if (field === 'username' || field === 'password') {
-                  setError(field, {
-                    type: 'server',
-                    message: cleanMsg,
-                  })
-                }
-              }
-            })
-            if (errorMessages.length > 0) {
-              errorMessage = errorMessages.join(' ')
-            }
-          }
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message
-      }
-
-      toast.error('Login Failed', { description: errorMessage })
     }
   }
 
   const onSetPasswordSuccess = async () => {
-    if (pendingAuth) {
+    if (!pendingAuth) {
+      navigateAfterLogin()
+      return
+    }
+
+    setIsLoading(true)
+    setFormError(null)
+
+    try {
       await persistAuthSession(
         pendingAuth.token,
         pendingAuth.username,
@@ -140,16 +139,23 @@ export function useLoginForm(): UseLoginFormReturn {
         pendingAuth.userId
       )
       setPendingAuth(null)
+      setShowSetPasswordModal(false)
+      toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
+      navigateAfterLogin()
+    } catch (error: unknown) {
+      const errorMessage = getApiErrorMessage(error, 'Failed to save your session. Please sign in again.')
+      setFormError(errorMessage)
+      toast.error('Login Failed', { description: errorMessage })
+    } finally {
+      setIsLoading(false)
     }
-    setShowSetPasswordModal(false)
-    toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
-    navigateAfterLogin()
   }
 
   return {
     showPassword,
     setShowPassword,
     isLoading,
+    formError,
     showSetPasswordModal,
     pendingAuthToken: pendingAuth?.token ?? null,
     methods,

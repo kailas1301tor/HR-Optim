@@ -1,5 +1,6 @@
 import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
 import { API_BASE_URL } from '@/lib/env'
+import { parseAuthErrorPayload } from '@/lib/helpers/parse-auth-form-errors'
 
 let isRedirectingToLogin = false
 
@@ -28,6 +29,22 @@ export class ApiError extends Error {
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean>
+  /** Do not attach stored session token (e.g. login). */
+  skipAuthHeader?: boolean
+  /** Do not hard-redirect to /login on 401 (e.g. failed login attempt). */
+  skipSessionRedirect?: boolean
+}
+
+function resolveErrorMessage(responseData: unknown, status: number, fallback: string): string {
+  const parsed = parseAuthErrorPayload(responseData)
+  if (parsed.length > 0) return parsed.join('. ')
+
+  const errBody = responseData as Record<string, unknown> | undefined
+  return (
+    (typeof errBody?.message === 'string' ? errBody.message : undefined) ??
+    (typeof errBody?.error === 'string' ? errBody.error : undefined) ??
+    (fallback || `Request failed with status ${status}`)
+  )
 }
 
 async function request<T>(
@@ -53,7 +70,7 @@ async function request<T>(
     headers.set('Content-Type', 'application/json')
   }
 
-  const sessionToken = getClientCookie(AUTH_COOKIE_NAMES.session)
+  const sessionToken = options.skipAuthHeader ? null : getClientCookie(AUTH_COOKIE_NAMES.session)
   if (sessionToken && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${sessionToken}`)
   }
@@ -84,17 +101,30 @@ async function request<T>(
     }
 
     if (response.status === 401) {
-      await handleUnauthorized()
-      throw new ApiError('Session expired. Please sign in again.', 401, responseData)
+      const hadActiveSession = Boolean(sessionToken)
+      const shouldRedirect = hadActiveSession && !options.skipSessionRedirect
+
+      if (shouldRedirect) {
+        await handleUnauthorized()
+      }
+
+      throw new ApiError(
+        resolveErrorMessage(
+          responseData,
+          401,
+          hadActiveSession ? 'Session expired. Please sign in again.' : 'Invalid username or password.'
+        ),
+        401,
+        responseData
+      )
     }
 
     if (!response.ok) {
-      const errBody = responseData as Record<string, unknown> | undefined
-      const errorMessage =
-        (typeof errBody?.message === 'string' ? errBody.message : undefined) ??
-        (typeof errBody?.error === 'string' ? errBody.error : undefined) ??
-        `Request failed with status ${response.status}`
-      throw new ApiError(errorMessage, response.status, responseData)
+      throw new ApiError(
+        resolveErrorMessage(responseData, response.status, `Request failed with status ${response.status}`),
+        response.status,
+        responseData
+      )
     }
 
     return responseData as T
