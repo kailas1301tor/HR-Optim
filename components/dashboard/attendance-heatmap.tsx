@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 
 // Generate attendance data for heatmap (12 weeks)
 function generateAttendanceData() {
@@ -53,7 +54,7 @@ export function AttendanceHeatmap() {
       <div className="bg-card border border-border rounded-2xl p-6 min-h-[220px]">
         <h3 className="text-lg font-semibold text-cloud mb-1">Attendance Overview</h3>
         <p className="text-sm text-muted-foreground mb-6">Last 12 weeks attendance distribution</p>
-        <Skeleton className="h-[120px] w-full rounded-lg" />
+        <Skeleton className={cn('h-[120px] w-full rounded-xl', uiSkeletonBlock)} />
       </div>
     )
   }

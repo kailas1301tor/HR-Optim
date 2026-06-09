@@ -4,7 +4,8 @@
 import { motion } from 'framer-motion'
 import { Calendar, Eye, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { CommonStatusBadge } from '@/components/common'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,7 +15,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { Employee } from './employee-table'
+import { getEmployeeStatusBadgeVariant } from '@/lib/ui/design-system'
+import { departmentConfig } from './employee-constants'
+import type { Employee } from './employee-table-types'
 
 interface EmployeeTableRowProps {
   employee: Employee
@@ -23,8 +26,6 @@ interface EmployeeTableRowProps {
   onToggleStatus: (employee: Employee, active: boolean) => void
   onEdit: (employee: Employee) => void
   onDelete: (id: number) => void
-  departmentConfig: Record<string, { label: string; className: string }>
-  statusConfig: Record<string, { label: string; className: string; dotClassName: string }>
 }
 
 export function EmployeeTableRow({
@@ -34,10 +35,7 @@ export function EmployeeTableRow({
   onToggleStatus,
   onEdit,
   onDelete,
-  departmentConfig,
-  statusConfig,
 }: EmployeeTableRowProps) {
-  // Safe fallback for initials
   const initials = employee.full_name
     ? employee.full_name
         .split(' ')
@@ -46,6 +44,8 @@ export function EmployeeTableRow({
         .toUpperCase()
         .slice(0, 2)
     : 'EM'
+
+  const statusVariant = getEmployeeStatusBadgeVariant(employee.status)
 
   return (
     <motion.tr
@@ -83,10 +83,7 @@ export function EmployeeTableRow({
         <span className="text-sm text-slate-300 font-medium">{employee.designation}</span>
       </td>
       <td className="px-4 py-3">
-        <span className={statusConfig[employee.status]?.className || statusConfig['Active'].className}>
-          <span className={statusConfig[employee.status]?.dotClassName || statusConfig['Active'].dotClassName} />
-          {employee.status}
-        </span>
+        <CommonStatusBadge variant={statusVariant} label={employee.status} />
       </td>
       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <Switch
@@ -97,31 +94,45 @@ export function EmployeeTableRow({
       <td className="px-4 py-3">
         <span className="flex items-center gap-1.5 text-sm text-slate-300 font-mono">
           <Calendar className="w-3.5 h-3.5 text-slate-400/80" />
-          {employee.joined_date ? new Date(employee.joined_date).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-          }) : 'N/A'}
+          {employee.joined_date
+            ? new Date(employee.joined_date).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })
+            : 'N/A'}
         </span>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-10 w-10 p-0 hover:bg-midnight">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onSelect}>
+          <DropdownMenuContent align="end" className="bg-popover border border-border text-xs rounded-xl">
+            <DropdownMenuItem onClick={onSelect} className="cursor-pointer">
               <Eye className="w-4 h-4 mr-2" />
               View Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(employee); }}>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(employee)
+              }}
+              className="cursor-pointer"
+            >
               <Pencil className="w-4 h-4 mr-2" />
               Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(employee.id); }}>
+            <DropdownMenuItem
+              className="text-destructive cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(employee.id)
+              }}
+            >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </DropdownMenuItem>

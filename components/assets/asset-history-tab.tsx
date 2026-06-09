@@ -4,6 +4,7 @@
 import { History } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { useAssetHistoryTab } from './useAssetHistoryTab'
 
 interface AssetHistoryTabProps {
@@ -17,24 +18,24 @@ export function AssetHistoryTab({ assetId }: AssetHistoryTabProps) {
     return (
       <div className="bg-card border border-border/80 rounded-2xl p-6 space-y-6">
         <div className="flex items-center gap-2 mb-2">
-          <Skeleton className="h-5 w-48 rounded" />
+          <Skeleton className={cn('h-5 w-48 rounded-xl', uiSkeletonBlock)} />
         </div>
         <div className="relative pl-6 border-l-2 border-border/40 ml-3 space-y-6">
           {Array.from({ length: 3 }).map((_, idx) => (
             <div key={idx} className="relative space-y-2">
               {/* Timeline marker */}
-              <Skeleton className="absolute -left-[37px] top-1.5 w-6 h-6 rounded-full" />
+              <Skeleton className={cn('absolute -left-[37px] top-1.5 w-6 h-6 rounded-full', uiSkeletonBlock)} />
               {/* Card shimmer */}
               <div className="bg-midnight/35 border border-border/40 p-4 rounded-xl space-y-3">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <Skeleton className="h-4 w-32 rounded" />
-                  <Skeleton className="h-3 w-24 rounded" />
+                  <Skeleton className={cn('h-4 w-32 rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-3 w-24 rounded-xl', uiSkeletonBlock)} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Skeleton className="h-3.5 w-20 rounded" />
-                  <Skeleton className="h-3.5 w-24 rounded" />
+                  <Skeleton className={cn('h-3.5 w-20 rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
                 </div>
-                <Skeleton className="h-8 w-full rounded" />
+                <Skeleton className={cn('h-8 w-full rounded-xl', uiSkeletonBlock)} />
               </div>
             </div>
           ))}

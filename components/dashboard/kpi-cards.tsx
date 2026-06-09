@@ -10,6 +10,7 @@ import {
   TrendingDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { uiCardInteractive } from '@/lib/ui/design-system'
 
 interface KPICardProps {
   title: string
@@ -93,9 +94,10 @@ export function KPICard({
     <motion.div
       whileHover={{ scale: 1.02 }}
       className={cn(
-        'relative rounded-2xl p-5 transition-all duration-200',
+        uiCardInteractive,
+        'relative p-5',
         styles.bg,
-        'hover:ring-1 hover:ring-violet-core hover:shadow-lg hover:shadow-violet-core/10'
+        'hover:ring-1 hover:ring-violet-core/40'
       )}
     >
       <div className="flex items-start justify-between mb-4">

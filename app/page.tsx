@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import { AUTH_COOKIE_NAMES, formatDisplayNameFromUsername } from '@/lib/cookies'
 import { AppShell } from '@/components/layout/app-shell'
 import { KPIGrid } from '@/components/dashboard/kpi-cards'
 import { AttendanceHeatmap } from '@/components/dashboard/attendance-heatmap'
@@ -8,11 +9,8 @@ import { PendingApprovals } from '@/components/dashboard/pending-approvals'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
-  const username = cookieStore.get('auth_username')?.value || 'john'
-  const nameParts = username.split(/[._@]/).filter(Boolean)
-  const displayName = nameParts[0]
-    ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1)
-    : 'John'
+  const username = cookieStore.get(AUTH_COOKIE_NAMES.username)?.value || 'john'
+  const displayName = formatDisplayNameFromUsername(username)
 
   return (
     <AppShell>

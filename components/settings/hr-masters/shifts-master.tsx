@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { useShiftsMaster } from './useShiftsMaster'
 import type { FrontendShift } from '@/services/shift-service'
 
@@ -66,8 +68,8 @@ export function ShiftsMaster({ shifts, isLoading, onRefresh }: ShiftsMasterProps
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
             </div>
           ) : shifts.length === 0 ? (
             <div className="text-center py-6 text-sm text-slate-400">No shifts found.</div>

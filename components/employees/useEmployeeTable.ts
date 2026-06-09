@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react'
 import { employeeService, type DropdownData } from '@/services/employee-service'
 import { onboardingOffboardingService } from '@/services/onboarding-offboarding-service'
-import type { Employee } from './employee-table'
+import type { Employee } from './employee-table-types'
 import { toast } from 'sonner'
 import { useEmployeePagination } from './useEmployeePagination'
 
@@ -29,6 +29,8 @@ export interface UseEmployeeTableReturn {
   sortOrder: SortOrder
   activeTab: string
   sortedEmployees: Employee[]
+  hasError: boolean
+  workforceStats: { total: number; active: number; onLeave: number; onboarding: number }
   setSelectedEmployee: (emp: Employee | null) => void
   setDrawerOpen: (open: boolean) => void
   setIsAddModalOpen: (open: boolean) => void
@@ -66,9 +68,17 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
   const [dropdowns, setDropdowns] = useState<DropdownData | null>(null)
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [workforceStats, setWorkforceStats] = useState({
+    total: 0,
+    active: 0,
+    onLeave: 0,
+    onboarding: 0,
+  })
 
   const fetchEmployees = async (signal?: AbortSignal) => {
     setIsTableLoading(true)
+    setHasError(false)
     try {
       const params = {
         page: pageParam,
@@ -97,6 +107,7 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
       })
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'AbortError') return
+      setHasError(true)
       toast.error('Failed to load employees')
     } finally {
       if (!signal?.aborted) {
@@ -112,6 +123,44 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
       controller.abort()
     }
   }, [searchQuery, departmentFilter, statusFilter, pageParam, activeTab])
+
+  useEffect(() => {
+    const isFiltered = Boolean(searchQuery || departmentFilter || statusFilter || activeTab !== 'all')
+    if (isFiltered) {
+      setWorkforceStats({
+        total: pagination.totalCount,
+        active: employeeList.filter((e) => e.status?.toLowerCase() === 'active').length,
+        onLeave: employeeList.filter((e) => e.status?.toLowerCase().includes('leave')).length,
+        onboarding: employeeList.filter((e) => e.status?.toLowerCase().includes('onboarding')).length,
+      })
+      return
+    }
+
+    const controller = new AbortController()
+    async function loadStats() {
+      try {
+        const response = await employeeService.getEmployees({ page: 1, page_size: 500 }, controller.signal)
+        if (controller.signal.aborted) return
+        const data = response.data
+        setWorkforceStats({
+          total: response.total_count,
+          active: data.filter((e) => e.status?.toLowerCase() === 'active').length,
+          onLeave: data.filter((e) => e.status?.toLowerCase().includes('leave')).length,
+          onboarding: data.filter((e) => e.status?.toLowerCase().includes('onboarding')).length,
+        })
+      } catch {
+        if (controller.signal.aborted) return
+        setWorkforceStats({
+          total: pagination.totalCount,
+          active: 0,
+          onLeave: 0,
+          onboarding: 0,
+        })
+      }
+    }
+    loadStats()
+    return () => controller.abort()
+  }, [searchQuery, departmentFilter, statusFilter, activeTab, pagination.totalCount, employeeList])
 
   useEffect(() => {
     async function loadFilters() {
@@ -196,6 +245,8 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
     sortOrder,
     activeTab,
     sortedEmployees,
+    hasError,
+    workforceStats,
     setSelectedEmployee,
     setDrawerOpen,
     setIsAddModalOpen: setIsAddOpen,

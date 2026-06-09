@@ -2,7 +2,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, FileText, History, ShieldAlert, MoreHorizontal, User, RefreshCw, Trash2, Shield, Wrench, Pencil } from 'lucide-react'
+import { ArrowLeft, FileText, History, MoreHorizontal, User, RefreshCw, Trash2, Shield, Wrench, Pencil } from 'lucide-react'
+import { CommonErrorState } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { type BackendAsset, type AssetDropdowns } from '@/services/asset-service'
@@ -72,18 +73,12 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
 
   if (error || !asset || !typeConfig || !statusConfig) {
     return (
-      <div className="flex h-[400px] flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card p-6 text-center">
-        <ShieldAlert className="h-12 w-12 text-destructive" />
-        <div>
-          <h3 className="text-lg font-semibold text-cloud">Asset Not Found</h3>
-          <p className="text-sm text-slate-400 mt-1 max-w-sm">
-            {error || 'The requested asset records could not be retrieved from the server.'}
-          </p>
-        </div>
-        <Button onClick={() => router.push('/assets')} variant="outline" className="gap-2">
-          <ArrowLeft className="h-4 w-4" /> Back to Assets List
-        </Button>
-      </div>
+      <CommonErrorState
+        title="Asset Not Found"
+        message={error || 'The requested asset records could not be retrieved from the server.'}
+        onRetry={() => router.push('/assets')}
+        retryLabel="Back to Assets"
+      />
     )
   }
 
@@ -104,11 +99,11 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
         </Button>
 
         {!isDisposed && (
-          <div className="flex items-center gap-2 self-end sm:self-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto sm:self-auto">
             {!isAssigned && !inRepair && (
               <Button
                 onClick={() => setIsAssignOpen(true)}
-                className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl flex items-center gap-1.5"
+                className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 w-full sm:w-auto"
               >
                 <User className="h-4 w-4" /> Assign
               </Button>
@@ -118,7 +113,7 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
               <Button
                 onClick={() => setIsTransferOpen(true)}
                 variant="outline"
-                className="border-border text-cloud flex items-center gap-1.5"
+                className="border-border text-cloud flex items-center justify-center gap-1.5 w-full sm:w-auto"
               >
                 <RefreshCw className="h-4 w-4" /> Transfer
               </Button>
@@ -127,7 +122,7 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
             <Button
               onClick={() => setIsEditOpen(true)}
               variant="outline"
-              className="border-border text-cloud flex items-center gap-1.5"
+              className="border-border text-cloud flex items-center justify-center gap-1.5 w-full sm:w-auto"
             >
               <Pencil className="h-4 w-4" /> Edit
             </Button>

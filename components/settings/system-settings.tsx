@@ -4,6 +4,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -126,7 +128,7 @@ export function SystemSettings({ notifications, setNotifications }: SystemSettin
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Preferred Theme</Label>
                 {!mounted ? (
-                  <Skeleton className="h-10 w-full rounded-xl" />
+                  <Skeleton className={cn('h-10 w-full rounded-xl', uiSkeletonBlock)} />
                 ) : (
                   <Select value={theme} onValueChange={setTheme}>
                     <SelectTrigger className="bg-midnight border-border rounded-xl text-xs text-slate-300 cursor-pointer">

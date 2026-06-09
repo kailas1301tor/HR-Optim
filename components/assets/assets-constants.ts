@@ -1,5 +1,6 @@
 // components/assets/assets-constants.ts
 import { Laptop, Smartphone, Monitor, Car, Printer, Headphones, Package } from 'lucide-react'
+import type { StatusBadgeVariant } from '@/lib/ui/design-system'
 import type { BackendAsset } from '@/services/asset-service'
 
 export const categoryConfig = {
@@ -21,6 +22,25 @@ export function getAssetTypeConfig(typeName: string = '') {
   if (name.includes('printer')) return { label: typeName, icon: Printer, color: 'text-pink-400 bg-pink-400/20' };
   if (name.includes('headset') || name.includes('headphone')) return { label: typeName, icon: Headphones, color: 'text-lime-400 bg-lime-400/20' };
   return { label: typeName || 'Other', icon: Package, color: 'text-slate-400 bg-slate-400/20' };
+}
+
+export function getAssetStatusBadgeVariant(statusName: string = ''): StatusBadgeVariant {
+  const name = statusName.toLowerCase()
+  if (
+    name.includes('assigned') ||
+    name.includes('in-service') ||
+    name.includes('in service') ||
+    name.includes('in use') ||
+    name.includes('in-use')
+  ) {
+    return 'in_use'
+  }
+  if (name.includes('repair') || name.includes('maintenance')) return 'maintenance'
+  if (name.includes('store') || name.includes('in-store') || name.includes('ready') || name.includes('available')) {
+    return 'available'
+  }
+  if (name.includes('disposed') || name.includes('deleted')) return 'disposed'
+  return 'inactive'
 }
 
 export function getStatusConfig(statusName: string = '') {

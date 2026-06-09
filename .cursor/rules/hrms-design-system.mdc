@@ -1,0 +1,102 @@
+---
+description: HRMS design system — mandatory shared components and class tokens
+alwaysApply: true
+---
+
+# HRMS Design System
+
+All UI work MUST use the shared design system. Do not invent one-off card, toolbar, empty, or error patterns.
+
+## Class tokens
+
+Import from `@/lib/ui/design-system`:
+
+| Token | Use for |
+|-------|---------|
+| `uiCard` | Static cards |
+| `uiCardInteractive` | Clickable/hoverable cards |
+| `uiDialog` | Modal panels |
+| `uiInput` / `uiSelect` | Form fields |
+| `uiPrimaryBtn` | Primary CTAs (prefer `PrimaryButton`) |
+| `uiOutlineBtn` | Secondary/outline actions |
+| `uiSkeletonBlock` | Skeleton backgrounds |
+| `uiEmptyStateShell` / `uiEmptyStateIconRing` | Empty states (prefer `CommonEmptyState`) |
+| `uiErrorBanner` | Inline errors (prefer `CommonErrorBanner`) |
+| `statusBadgeClasses` | Status pills (prefer `CommonStatusBadge`) |
+
+## Mandatory shared components
+
+Import from `@/components/common`:
+
+| Component | Use instead of |
+|-----------|----------------|
+| `CommonPageHeader` | Raw `<h1>` + subtitle blocks |
+| `CommonStatCards` | Inline stat count grids |
+| `CommonListToolbar` | Custom search + filter rows |
+| `CommonFilterChips` | Inline tab/chip filter buttons |
+| `CommonEmptyState` | Custom empty-state divs |
+| `CommonErrorBanner` | Red inline alert divs |
+| `CommonErrorState` | Full-page error panels |
+| `CommonPageSkeleton` | Ad-hoc Suspense skeletons |
+| `CommonStatusBadge` | Inline status span styling |
+| `CommonFormFieldError` | Raw field error `<p>` tags |
+| `CommonCard` | Repeated card wrappers |
+
+## Buttons
+
+- Primary actions: `PrimaryButton` from `@/components/ui/primary-button`
+- Other variants: shadcn `Button` with `uiOutlineBtn` or design tokens
+
+| `uiTableShell` | Desktop table wrapper |
+| `uiSectionHeader` | Section h2 + subtitle + border |
+| `uiTabChipBase` / `uiTabChipActive` / `uiTabChipInactive` | Settings/top tab chips |
+| `getEmployeeStatusBadgeVariant()` | Map employee status strings to badge variants |
+
+## Additional shared components
+
+| Component | Use instead of |
+|-----------|----------------|
+| `CommonStatCardDisplay` | Non-clickable KPI cards (%, currency) |
+| `CommonPagination` | Custom prev/next page controls |
+| `CommonMobileCardGrid` | `lg:hidden` card grid shell |
+
+## Settings shared primitives
+
+Import from `@/components/settings/shared`:
+
+| Component | Use for |
+|-----------|---------|
+| `SettingsMasterCard` | Master list shells (title, Add, rows, empty) |
+| `SettingsFormDialog` | Add/edit dialogs with `uiDialog` footer |
+| `SettingsDeleteDialog` | Standardized delete confirmations |
+| `SettingsListRow` | Rows with mobile-visible action buttons |
+
+## Standard page file layout
+
+```
+feature/
+├── feature-list.tsx          # composition root
+├── feature-page-header.tsx
+├── feature-stats-cards.tsx   # optional
+├── feature-toolbar.tsx
+├── feature-card.tsx          # mobile
+├── feature-card-skeleton.tsx
+└── feature-table.tsx         # desktop optional
+```
+
+## Reference implementations
+
+- Requests list: `components/requests/requests-list.tsx`
+- Documents grid: `components/documents/documents-grid.tsx`
+- Assets list: `components/assets/assets-list.tsx`
+- Employees list: `components/employees/employees-list.tsx`
+- Settings panel: `components/settings/settings-panel.tsx`
+- New request page: `components/requests/create-request-page.tsx`
+
+## Rules
+
+1. Never hardcode `rounded-md` on new UI — use `rounded-xl` (controls) or `rounded-2xl` (cards/dialogs).
+2. Never duplicate empty/error/toolbar markup — extend `components/common/` if a pattern is missing.
+3. Skeletons use `uiSkeletonBlock` (`bg-midnight/60`), not arbitrary gray classes.
+4. Page Suspense fallbacks use `CommonPageSkeleton`.
+5. See also: `front-end-cursor-rules.mdc`, `ultimate-frontend-development-guide.mdc`.

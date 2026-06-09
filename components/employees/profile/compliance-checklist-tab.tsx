@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2, Upload, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 
 type ChecklistVariant = 'onboarding' | 'offboarding'
 
@@ -91,18 +92,18 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <Skeleton className="h-4 w-40 rounded bg-slate-800 animate-pulse" />
+      <div className="space-y-4" aria-label="Loading checklist" role="status">
+        <Skeleton className={cn('h-4 w-40 rounded-xl', uiSkeletonBlock)} />
         {Array.from({ length: 3 }).map((_, idx) => (
           <div key={idx} className="bg-midnight/40 border border-border/40 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Skeleton className="w-8 h-8 rounded-lg bg-slate-800 animate-pulse" />
+              <Skeleton className={cn('w-8 h-8 rounded-xl', uiSkeletonBlock)} />
               <div className="space-y-1.5">
-                <Skeleton className="h-3.5 w-32 rounded bg-slate-800 animate-pulse" />
-                <Skeleton className="h-2 w-20 rounded bg-slate-800 animate-pulse" />
+                <Skeleton className={cn('h-3.5 w-32 rounded-xl', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-2 w-20 rounded-xl', uiSkeletonBlock)} />
               </div>
             </div>
-            <Skeleton className="w-24 h-9 rounded-lg bg-slate-800 animate-pulse" />
+            <Skeleton className={cn('w-24 h-9 rounded-xl', uiSkeletonBlock)} />
           </div>
         ))}
       </div>

@@ -1,9 +1,10 @@
 // components/documents/documents-toolbar.tsx
 'use client'
 
-import { Search, Download, Upload } from 'lucide-react'
+import { Download, Upload } from 'lucide-react'
+import { CommonListToolbar } from '@/components/common'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { PrimaryButton } from '@/components/ui/primary-button'
 import {
   Select,
   SelectContent,
@@ -11,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
+import { cn } from '@/lib/utils'
 
 interface DocumentsToolbarProps {
   tab: 'employee' | 'company'
   localSearch: string
   setLocalSearch: (val: string) => void
-  statusFilter: string
-  onStatusChange: (val: string) => void
   categoryFilter: string
   onCategoryChange: (val: string) => void
   categories: Array<{ id: number; name: string }>
@@ -29,8 +30,6 @@ export function DocumentsToolbar({
   tab,
   localSearch,
   setLocalSearch,
-  statusFilter,
-  onStatusChange,
   categoryFilter,
   onCategoryChange,
   categories,
@@ -38,35 +37,14 @@ export function DocumentsToolbar({
   onUploadClick,
 }: DocumentsToolbarProps) {
   return (
-    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
-        {/* Search Box */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder={`Search ${tab === 'employee' ? 'employee' : 'company'} documents...`}
-            value={localSearch}
-            onChange={(e) => setLocalSearch(e.target.value)}
-            className="pl-9 w-full bg-midnight border-border rounded-xl h-10 text-xs text-slate-300"
-          />
-        </div>
-
-        {/* Status filter dropdown */}
-        <Select value={statusFilter} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-full sm:w-40 bg-midnight border-border rounded-xl h-10 text-xs text-slate-300">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent className="bg-popover border border-border text-xs">
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="valid">Valid</SelectItem>
-            <SelectItem value="expiring">Expiring Soon</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Category/Type Filter dropdown */}
+    <CommonListToolbar
+      searchQuery={localSearch}
+      onSearchChange={setLocalSearch}
+      searchPlaceholder={`Search ${tab === 'employee' ? 'employee' : 'company'} documents...`}
+      searchAriaLabel="Search documents"
+      filters={
         <Select value={categoryFilter} onValueChange={onCategoryChange}>
-          <SelectTrigger className="w-full sm:w-44 bg-midnight border-border rounded-xl h-10 text-xs text-slate-300">
+          <SelectTrigger className={cn('w-full sm:w-44 text-xs', uiSelect)} aria-label="Filter by category">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent className="bg-popover border border-border text-xs">
@@ -78,25 +56,25 @@ export function DocumentsToolbar({
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="flex items-center gap-2 justify-end sm:justify-start">
-        <Button
-          variant="outline"
-          onClick={onExport}
-          className="gap-2 rounded-xl h-10 text-xs flex-1 sm:flex-none justify-center"
-        >
-          <Download className="w-4 h-4" />
-          Export
-        </Button>
-        <Button
-          onClick={onUploadClick}
-          className="gap-2 bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl h-10 text-xs flex-1 sm:flex-none justify-center"
-        >
-          <Upload className="w-4 h-4" />
-          Upload Document
-        </Button>
-      </div>
-    </div>
+      }
+      actions={
+        <>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onExport}
+            className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
+          >
+            <Download className="w-4 h-4" />
+            <span className="hidden sm:inline">Export</span>
+          </Button>
+          <PrimaryButton type="button" onClick={onUploadClick} className="gap-2 text-xs flex-1 sm:flex-none">
+            <Upload className="w-4 h-4" />
+            <span className="sm:hidden">Upload</span>
+            <span className="hidden sm:inline">Upload Document</span>
+          </PrimaryButton>
+        </>
+      }
+    />
   )
 }

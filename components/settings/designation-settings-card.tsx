@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2, Briefcase } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { useDesignationSettings } from './useDesignationSettings'
 
 export function DesignationSettingsCard() {
@@ -75,7 +77,7 @@ export function DesignationSettingsCard() {
         <CardContent className="space-y-4">
           {/* Department Selector */}
           {isDeptLoading ? (
-            <Skeleton className="h-10 w-full rounded-xl bg-midnight/50" />
+            <Skeleton className={cn('h-10 w-full rounded-xl', uiSkeletonBlock)} />
           ) : (
             <Select value={selectedDeptId} onValueChange={handleDeptChange}>
               <SelectTrigger className="bg-midnight border-border rounded-xl text-sm h-10 cursor-pointer">
@@ -99,8 +101,8 @@ export function DesignationSettingsCard() {
             </div>
           ) : isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
             </div>
           ) : designations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-6 gap-2">

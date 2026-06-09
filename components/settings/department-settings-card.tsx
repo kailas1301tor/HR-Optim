@@ -17,8 +17,11 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
-import { Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Edit3, Loader2, Building2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { CommonEmptyState } from '@/components/common'
 import { type Department } from '@/services/department-service'
 import { useDepartmentSettings } from './useDepartmentSettings'
 
@@ -60,12 +63,17 @@ export function DepartmentSettingsCard() {
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
             </div>
           ) : departments.length === 0 ? (
-            <div className="text-center py-6 text-sm text-slate-400">No departments found.</div>
+            <CommonEmptyState
+              icon={Building2}
+              title="No departments yet"
+              description="Add a department to organize your company structure."
+              className="py-8 shadow-none border-0 bg-transparent"
+            />
           ) : (
             departments.map((dept) => {
               const isSelected = selectedDeptId === String(dept.id)
@@ -89,7 +97,7 @@ export function DepartmentSettingsCard() {
                       <p className="text-xs text-slate-400 font-normal leading-relaxed">{dept.description}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="icon"

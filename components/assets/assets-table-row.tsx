@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Eye, Pencil, Trash2, MoreHorizontal, Building2, MapPin, UserCheck, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CommonStatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
+import { getAssetStatusBadgeVariant } from './assets-constants'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,10 +94,7 @@ export function AssetsTableRow({
         </div>
       </td>
       <td className="px-4 py-3">
-        <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide uppercase', status.className)}>
-          <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', status.dotClassName)} />
-          {status.label}
-        </span>
+        <CommonStatusBadge variant={getAssetStatusBadgeVariant(asset.status)} label={status.label} />
       </td>
       <td className="px-4 py-3 text-right">
         <span className="text-sm font-mono text-cloud tabular-nums font-medium">

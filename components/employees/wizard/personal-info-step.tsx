@@ -8,6 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CommonFormFieldError } from '@/components/common'
+import { cn } from '@/lib/utils'
+import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
 import type { DropdownData } from '@/services/employee-service'
 
@@ -32,7 +35,7 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
         <h3 className="text-sm font-semibold text-cloud">Personal Information</h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="emp-dob" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Date of Birth
@@ -41,10 +44,10 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
             {...register('date_of_birth')}
             id="emp-dob"
             type="date"
-            className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300"
+            className={cn(uiInput, 'text-slate-300')}
             required
           />
-          {errors.date_of_birth && <p className="text-xs text-destructive">{errors.date_of_birth.message}</p>}
+          {errors.date_of_birth?.message && <CommonFormFieldError message={errors.date_of_birth.message} />}
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -54,7 +57,7 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
             value={currentNationality}
             onValueChange={(val) => setValue('nationality', val)}
           >
-            <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+            <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Nationality" />
             </SelectTrigger>
             <SelectContent>
@@ -65,7 +68,7 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
               ))}
             </SelectContent>
           </Select>
-          {errors.nationality && <p className="text-xs text-destructive">{errors.nationality.message}</p>}
+          {errors.nationality?.message && <CommonFormFieldError message={errors.nationality.message} />}
         </div>
       </div>
 
@@ -77,10 +80,10 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
           {...register('address')}
           id="emp-address"
           placeholder="e.g. 123 Main St, Uptown"
-          className="bg-midnight/55 border-border rounded-xl text-sm"
+          className={uiInput}
           required
         />
-        {errors.address && <p className="text-xs text-destructive">{errors.address.message}</p>}
+        {errors.address?.message && <CommonFormFieldError message={errors.address.message} />}
       </div>
     </div>
   )

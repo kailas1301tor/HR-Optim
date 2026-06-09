@@ -76,6 +76,11 @@
   /* Shimmer base variables for dark theme */
   --skeleton-base: rgba(255, 255, 255, 0.05);
   --skeleton-highlight: rgba(255, 255, 255, 0.12);
+
+  /* App shell layout */
+  --shell-header-height: 4rem;
+  --shell-sidebar-width: 240px;
+  --shell-sidebar-width-collapsed: 72px;
 }
 
 .light {

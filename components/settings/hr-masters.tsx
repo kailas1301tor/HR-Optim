@@ -3,6 +3,7 @@
 
 import { ShiftsMaster } from './hr-masters/shifts-master'
 import { GenericMasterCard } from './hr-masters/generic-master-card'
+import { uiSectionHeader } from '@/lib/ui/design-system'
 import { useHrShiftsAndTypes } from './useHrShiftsAndTypes'
 import { useHrLeaveAndDocTypes } from './useHrLeaveAndDocTypes'
 import { useHrNationalities } from './useHrNationalities'
@@ -54,9 +55,9 @@ export function HRMasters() {
 
   return (
     <div className="space-y-6 outline-none">
-      <div className="pb-1 border-b border-border/40">
+      <div className={uiSectionHeader}>
         <h2 className="text-lg font-semibold text-cloud">HR Management Masters</h2>
-        <p className="text-xs text-slate-400 mt-1">Configure employee classification, policies, and compliance settings</p>
+        <p className="text-xs text-muted-foreground mt-1">Configure employee classification, policies, and compliance settings</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -1,5 +1,4 @@
 // components/settings/settings-constants.ts
-import type { Rule } from './leave-payroll-rules'
 import type { WorkflowTemplate } from './workflow-templates'
 
 export interface Role {
@@ -101,20 +100,6 @@ export const INITIAL_ROLES: Role[] = [
 
 export const INITIAL_LEAVE_TYPES = ['ANNUAL LEAVE', 'EMERGENCY LEAVE', 'MATERNITY LEAVE', 'SICK LEAVE', 'UNPAID LEAVE']
 
-
-export const INITIAL_RULES: Rule[] = [
-  {
-    id: 'rule-1',
-    type: 'leave',
-    leaveType: 'ANNUAL LEAVE',
-    maxDays: '30',
-    carryForwardLimit: '15',
-    accrualRate: '2.5',
-    accrualFrequency: 'Monthly',
-    isPaid: true,
-    description: 'Standard annual leave policy accrues monthly.',
-  },
-]
 
 export const INITIAL_WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
   {

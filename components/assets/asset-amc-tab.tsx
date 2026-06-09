@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { useAssetAmcTab } from './useAssetAmcTab'
 
 interface AssetAMCTabProps {
@@ -72,29 +73,29 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
             <div key={i} className="bg-card border border-border/80 rounded-2xl p-5 space-y-4">
               <div className="flex justify-between items-start gap-3">
                 <div className="space-y-2">
-                  <Skeleton className="h-4.5 w-32 rounded" />
-                  <Skeleton className="h-3.5 w-24 rounded" />
+                  <Skeleton className={cn('h-4.5 w-32 rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
                 </div>
-                <Skeleton className="h-5 w-16 rounded" />
+                <Skeleton className={cn('h-5 w-16 rounded-full', uiSkeletonBlock)} />
               </div>
 
               <div className="grid grid-cols-2 gap-4 bg-midnight/35 border border-border/40 p-3 rounded-xl">
                 <div className="flex items-center gap-2">
-                  <Skeleton className="w-4 h-4 rounded-full shrink-0" />
+                  <Skeleton className={cn('w-4 h-4 rounded-full shrink-0', uiSkeletonBlock)} />
                   <div className="space-y-1 w-full">
-                    <Skeleton className="h-2 w-10 rounded" />
-                    <Skeleton className="h-3.5 w-24 rounded" />
+                    <Skeleton className={cn('h-2 w-10 rounded-xl', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Skeleton className="w-4 h-4 rounded-full shrink-0" />
+                  <Skeleton className={cn('w-4 h-4 rounded-full shrink-0', uiSkeletonBlock)} />
                   <div className="space-y-1 w-full">
-                    <Skeleton className="h-2 w-12 rounded" />
-                    <Skeleton className="h-3.5 w-20 rounded" />
+                    <Skeleton className={cn('h-2 w-12 rounded-xl', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-20 rounded-xl', uiSkeletonBlock)} />
                   </div>
                 </div>
               </div>
-              <Skeleton className="h-10 w-full rounded" />
+              <Skeleton className={cn('h-10 w-full rounded-xl', uiSkeletonBlock)} />
             </div>
           ))}
         </div>

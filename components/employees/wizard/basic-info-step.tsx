@@ -8,6 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CommonFormFieldError } from '@/components/common'
+import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
 import type { DropdownData } from '@/services/employee-service'
 
@@ -36,7 +38,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
         <h3 className="text-sm font-semibold text-cloud">Basic Information</h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="emp-full-name" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Full Name
@@ -45,10 +47,10 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             {...register('full_name')}
             id="emp-full-name"
             placeholder="Enter Full Name"
-            className="bg-midnight/55 border-border rounded-xl text-sm"
+            className={uiInput}
             required
           />
-          {errors.full_name && <p className="text-xs text-destructive">{errors.full_name.message}</p>}
+          {errors.full_name?.message && <CommonFormFieldError message={errors.full_name.message} />}
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-username" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -58,12 +60,12 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             {...register('username')}
             id="emp-username"
             placeholder="e.g. johndoe"
-            className="bg-midnight/55 border-border rounded-xl text-sm"
+            className={uiInput}
             required
             disabled={isEditMode}
             autoComplete="off"
           />
-          {errors.username && <p className="text-xs text-destructive">{errors.username.message}</p>}
+          {errors.username?.message && <CommonFormFieldError message={errors.username.message} />}
         </div>
       </div>
 
@@ -76,14 +78,14 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
           id="emp-email"
           type="email"
           placeholder="name@company.com"
-          className="bg-midnight/55 border-border rounded-xl text-sm"
+          className={uiInput}
           required
           autoComplete="off"
         />
-        {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+        {errors.email?.message && <CommonFormFieldError message={errors.email.message} />}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="emp-phone" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Phone Number
@@ -92,10 +94,10 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             {...register('phone_number')}
             id="emp-phone"
             placeholder="e.g. 1234567890"
-            className="bg-midnight/55 border-border rounded-xl text-sm"
+            className={uiInput}
             required
           />
-          {errors.phone_number && <p className="text-xs text-destructive">{errors.phone_number.message}</p>}
+          {errors.phone_number?.message && <CommonFormFieldError message={errors.phone_number.message} />}
         </div>
         <div className="space-y-2">
           <Label htmlFor="emp-id" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -105,15 +107,15 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             {...register('employee_id')}
             id="emp-id"
             placeholder="e.g. EMP001"
-            className="bg-midnight/55 border-border rounded-xl text-sm"
+            className={uiInput}
             required
             disabled={isEditMode}
           />
-          {errors.employee_id && <p className="text-xs text-destructive">{errors.employee_id.message}</p>}
+          {errors.employee_id?.message && <CommonFormFieldError message={errors.employee_id.message} />}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Role
@@ -122,7 +124,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             value={currentRole}
             onValueChange={(val) => setValue('role', val)}
           >
-            <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+            <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Role" />
             </SelectTrigger>
             <SelectContent>
@@ -133,7 +135,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
               ))}
             </SelectContent>
           </Select>
-          {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
+          {errors.role?.message && <CommonFormFieldError message={errors.role.message} />}
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -143,7 +145,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             value={currentDepartment}
             onValueChange={(val) => setValue('department', val)}
           >
-            <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+            <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Department" />
             </SelectTrigger>
             <SelectContent>
@@ -154,11 +156,11 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
               ))}
             </SelectContent>
           </Select>
-          {errors.department && <p className="text-xs text-destructive">{errors.department.message}</p>}
+          {errors.department?.message && <CommonFormFieldError message={errors.department.message} />}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Designation
@@ -167,7 +169,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             value={currentDesignation}
             onValueChange={(val) => setValue('designation', val)}
           >
-            <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+            <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Designation" />
             </SelectTrigger>
             <SelectContent>
@@ -180,7 +182,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
                 ))}
             </SelectContent>
           </Select>
-          {errors.designation && <p className="text-xs text-destructive">{errors.designation.message}</p>}
+          {errors.designation?.message && <CommonFormFieldError message={errors.designation.message} />}
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -190,7 +192,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             value={currentStatus}
             onValueChange={(val) => setValue('status', val)}
           >
-            <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+            <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Status" />
             </SelectTrigger>
             <SelectContent>
@@ -201,7 +203,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
               ))}
             </SelectContent>
           </Select>
-          {errors.status && <p className="text-xs text-destructive">{errors.status.message}</p>}
+          {errors.status?.message && <CommonFormFieldError message={errors.status.message} />}
         </div>
       </div>
 
@@ -213,7 +215,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
           value={currentShift}
           onValueChange={(val) => setValue('shift', val)}
         >
-          <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+          <SelectTrigger className={uiSelect}>
             <SelectValue placeholder="Select Shift" />
           </SelectTrigger>
           <SelectContent>
@@ -224,7 +226,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             ))}
           </SelectContent>
         </Select>
-        {errors.shift && <p className="text-xs text-destructive">{errors.shift.message}</p>}
+        {errors.shift?.message && <CommonFormFieldError message={errors.shift.message} />}
       </div>
     </div>
   )

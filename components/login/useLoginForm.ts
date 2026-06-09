@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -14,6 +14,7 @@ interface PendingAuth {
   token: string
   username: string
   email: string
+  userId: number
 }
 
 interface UseLoginFormReturn {
@@ -24,12 +25,18 @@ interface UseLoginFormReturn {
   pendingAuthToken: string | null
   methods: UseFormReturn<LoginValues>
   onSubmit: (data: LoginValues) => Promise<void>
-  handleAutofill: () => void
   onSetPasswordSuccess: () => void
+}
+
+function getSafeRedirectPath(redirect: string | null): string {
+  if (!redirect) return '/'
+  if (!redirect.startsWith('/') || redirect.startsWith('//')) return '/'
+  return redirect
 }
 
 export function useLoginForm(): UseLoginFormReturn {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [showSetPasswordModal, setShowSetPasswordModal] = useState(false)
@@ -40,33 +47,52 @@ export function useLoginForm(): UseLoginFormReturn {
     defaultValues: { username: '', password: '' },
   })
 
-  const { setValue, setError } = methods
+  const { setError } = methods
 
-  const persistAuthCookies = useCallback((token: string, username: string, email: string): void => {
-    document.cookie = `auth_session=${token}; path=/; max-age=86400; SameSite=Lax`
-    document.cookie = `auth_username=${username}; path=/; max-age=86400; SameSite=Lax`
-    document.cookie = `auth_email=${email}; path=/; max-age=86400; SameSite=Lax`
-  }, [])
+  const redirectPath = getSafeRedirectPath(searchParams.get('redirect'))
+
+  const navigateAfterLogin = useCallback(() => {
+    router.refresh()
+    setTimeout(() => {
+      router.push(redirectPath)
+    }, 800)
+  }, [router, redirectPath])
+
+  const persistAuthSession = useCallback(
+    async (token: string, username: string, email: string, userId: number): Promise<void> => {
+      await authService.persistSession(token, username, email, userId)
+    },
+    []
+  )
 
   const onSubmit = async (data: LoginValues) => {
     setIsLoading(true)
     try {
       const response: LoginResponse = await authService.login(data.username, data.password)
       const dataObj = response.results?.data
-      const token = dataObj?.access || 'true'
+      const token = dataObj?.access
+
+      if (!token) {
+        setIsLoading(false)
+        toast.error('Login Failed', {
+          description: 'Invalid server response. Please try again.',
+        })
+        return
+      }
+
       const username = dataObj?.username ?? ''
       const email = dataObj?.email ?? ''
+      const userId = dataObj?.user_id ?? 0
 
       if (dataObj && dataObj.has_password_changed === false) {
-        setPendingAuth({ token, username, email })
+        setPendingAuth({ token, username, email, userId })
         setShowSetPasswordModal(true)
         setIsLoading(false)
       } else {
-        persistAuthCookies(token, username, email)
+        await persistAuthSession(token, username, email, userId)
         toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
         setIsLoading(false)
-        router.refresh()
-        setTimeout(() => { router.push('/') }, 800)
+        navigateAfterLogin()
       }
     } catch (error: unknown) {
       setIsLoading(false)
@@ -105,21 +131,19 @@ export function useLoginForm(): UseLoginFormReturn {
     }
   }
 
-  const handleAutofill = () => {
-    setValue('username', 'john@example.com')
-    setValue('password', 'securepassword123')
-    toast.info('Credentials filled!', { description: 'Click Sign In to proceed.' })
-  }
-
-  const onSetPasswordSuccess = () => {
+  const onSetPasswordSuccess = async () => {
     if (pendingAuth) {
-      persistAuthCookies(pendingAuth.token, pendingAuth.username, pendingAuth.email)
+      await persistAuthSession(
+        pendingAuth.token,
+        pendingAuth.username,
+        pendingAuth.email,
+        pendingAuth.userId
+      )
       setPendingAuth(null)
     }
     setShowSetPasswordModal(false)
     toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
-    router.refresh()
-    setTimeout(() => { router.push('/') }, 800)
+    navigateAfterLogin()
   }
 
   return {
@@ -130,7 +154,6 @@ export function useLoginForm(): UseLoginFormReturn {
     pendingAuthToken: pendingAuth?.token ?? null,
     methods,
     onSubmit,
-    handleAutofill,
     onSetPasswordSuccess,
   }
 }

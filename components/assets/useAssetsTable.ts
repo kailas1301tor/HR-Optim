@@ -8,6 +8,13 @@ import { assetService, type BackendAsset, type AssetDropdowns } from '@/services
 import { departmentService, type Department } from '@/services/department-service'
 import { INITIAL_ASSETS } from './assets-constants'
 
+function countInService(assets: BackendAsset[]): number {
+  return assets.filter((a) => {
+    const s = a.status?.toLowerCase() || ''
+    return s.includes('assigned') || s.includes('service') || s.includes('in use') || s.includes('in-use')
+  }).length
+}
+
 export interface UseAssetsTableReturn {
   assetsList: BackendAsset[]
   pagination: { totalCount: number; totalPages: number; currentPage: number }
@@ -24,6 +31,7 @@ export interface UseAssetsTableReturn {
   pageParam: number
   totalValue: number
   inServiceCount: number
+  utilizationRate: number
   setSelectedAsset: (asset: BackendAsset | null) => void
   setIsAddOpen: (open: boolean) => void
   setDeleteTargetId: (id: number | null) => void
@@ -42,18 +50,19 @@ export function useAssetsTable(): UseAssetsTableReturn {
   const [dropdowns, setDropdowns] = useState<AssetDropdowns | null>(null)
   const [departments, setDepartments] = useState<Department[]>([])
   const [isTableLoading, setIsTableLoading] = useState(false)
+  const [globalInService, setGlobalInService] = useState(0)
 
-  // Modals state
   const [selectedAsset, setSelectedAsset] = useState<BackendAsset | null>(null)
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  // URL State filters
   const searchQuery = searchParams.get('search') || ''
   const statusFilter = searchParams.get('status') || 'all'
   const typeFilter = searchParams.get('asset_type') || 'all'
   const pageParam = Number(searchParams.get('page')) || 1
+
+  const isFiltered = statusFilter !== 'all' || typeFilter !== 'all' || Boolean(searchQuery)
 
   const fetchAssets = async (signal?: AbortSignal) => {
     setIsTableLoading(true)
@@ -93,6 +102,31 @@ export function useAssetsTable(): UseAssetsTableReturn {
       controller.abort()
     }
   }, [searchQuery, statusFilter, typeFilter, pageParam])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    async function loadGlobalStats() {
+      if (isFiltered || pagination.totalCount === 0) return
+      try {
+        const response = await assetService.getAssets(
+          {
+            page: 1,
+            page_size: Math.min(pagination.totalCount, 500),
+          },
+          INITIAL_ASSETS,
+          controller.signal
+        )
+        if (controller.signal.aborted) return
+        setGlobalInService(countInService(response.data))
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') return
+      }
+    }
+    loadGlobalStats()
+    return () => {
+      controller.abort()
+    }
+  }, [pagination.totalCount, isFiltered])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -143,12 +177,10 @@ export function useAssetsTable(): UseAssetsTableReturn {
     }
   }
 
-  // Statistics
   const totalValue = assetsList.reduce((sum, a) => sum + (a.purchase_cost ? parseFloat(a.purchase_cost) : 0), 0)
-  const inServiceCount = assetsList.filter((a) => {
-    const s = a.status?.toLowerCase() || ''
-    return s.includes('assigned') || s.includes('service')
-  }).length
+  const inServiceCount = isFiltered ? countInService(assetsList) : globalInService
+  const utilizationDenominator = isFiltered ? Math.max(assetsList.length, 1) : Math.max(pagination.totalCount, 1)
+  const utilizationRate = Math.round((inServiceCount / utilizationDenominator) * 100)
 
   return {
     assetsList,
@@ -166,6 +198,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
     pageParam,
     totalValue,
     inServiceCount,
+    utilizationRate,
     setSelectedAsset,
     setIsAddOpen,
     setDeleteTargetId,

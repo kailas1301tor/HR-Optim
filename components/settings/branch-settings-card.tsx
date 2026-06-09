@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2, MapPin } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { useBranchSettings } from './useBranchSettings'
 
 export function BranchSettingsCard() {
@@ -66,9 +68,9 @@ export function BranchSettingsCard() {
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
-              <Skeleton className="h-14 w-full rounded-xl bg-midnight/50" />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
             </div>
           ) : branches.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 gap-2">

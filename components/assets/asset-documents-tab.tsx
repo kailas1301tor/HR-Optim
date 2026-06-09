@@ -13,6 +13,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { useAssetDocumentsTab } from './useAssetDocumentsTab'
 
 interface AssetDocumentsTabProps {
@@ -132,11 +134,11 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="bg-midnight/35 border border-border/50 p-4 rounded-xl flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0 w-full">
-                  <Skeleton className="w-10 h-10 rounded-lg shrink-0" />
+                  <Skeleton className={cn('w-10 h-10 rounded-xl shrink-0', uiSkeletonBlock)} />
                   <div className="space-y-2 w-full">
-                    <Skeleton className="h-4 w-28 rounded" />
-                    <Skeleton className="h-3.5 w-20 rounded" />
-                    <Skeleton className="h-3.5 w-24 rounded" />
+                    <Skeleton className={cn('h-4 w-28 rounded-xl', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-20 rounded-xl', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
                   </div>
                 </div>
               </div>

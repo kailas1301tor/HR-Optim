@@ -8,6 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CommonFormFieldError } from '@/components/common'
+import { cn } from '@/lib/utils'
+import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
 import type { DropdownData } from '@/services/employee-service'
 
@@ -33,7 +36,7 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
         <h3 className="text-sm font-semibold text-cloud">Employment Details</h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="emp-joined-date" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Joined Date
@@ -42,10 +45,10 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
             {...register('joined_date')}
             id="emp-joined-date"
             type="date"
-            className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300"
+            className={cn(uiInput, 'text-slate-300')}
             required
           />
-          {errors.joined_date && <p className="text-xs text-destructive">{errors.joined_date.message}</p>}
+          {errors.joined_date?.message && <CommonFormFieldError message={errors.joined_date.message} />}
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -55,7 +58,7 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
             value={currentEmployeeType}
             onValueChange={(val) => setValue('employee_type', val)}
           >
-            <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+            <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Type" />
             </SelectTrigger>
             <SelectContent>
@@ -66,11 +69,11 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
               ))}
             </SelectContent>
           </Select>
-          {errors.employee_type && <p className="text-xs text-destructive">{errors.employee_type.message}</p>}
+          {errors.employee_type?.message && <CommonFormFieldError message={errors.employee_type.message} />}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="emp-basic-salary" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Basic Salary (USD)
@@ -81,10 +84,10 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
             type="number"
             step="0.01"
             placeholder="e.g. 5000.00"
-            className="bg-midnight/55 border-border rounded-xl text-sm"
+            className={uiInput}
             required
           />
-          {errors.basic_salary && <p className="text-xs text-destructive">{errors.basic_salary.message}</p>}
+          {errors.basic_salary?.message && <CommonFormFieldError message={errors.basic_salary.message} />}
         </div>
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -94,7 +97,7 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
             value={currentAccommodation}
             onValueChange={(val) => setValue('accommodation', val)}
           >
-            <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm text-slate-300">
+            <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Option" />
             </SelectTrigger>
             <SelectContent>
@@ -105,7 +108,7 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
               ))}
             </SelectContent>
           </Select>
-          {errors.accommodation && <p className="text-xs text-destructive">{errors.accommodation.message}</p>}
+          {errors.accommodation?.message && <CommonFormFieldError message={errors.accommodation.message} />}
         </div>
       </div>
     </div>

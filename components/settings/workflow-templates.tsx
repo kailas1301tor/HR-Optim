@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { Plus, Trash2, Edit3, X } from 'lucide-react'
+import { CommonStatusBadge } from '@/components/common'
+import { uiSectionHeader } from '@/lib/ui/design-system'
 
 export interface WorkflowTemplate {
   name: string
@@ -80,9 +82,12 @@ export function WorkflowTemplates({
 
   return (
     <div className="space-y-6 outline-none">
-      <div className="pb-1 border-b border-border/40">
-        <h2 className="text-lg font-semibold text-cloud">Workflow Checklists Templates</h2>
-        <p className="text-xs text-slate-400 mt-1">Configure step checklists templates for onboarding and offboarding</p>
+      <div className={uiSectionHeader}>
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="text-lg font-semibold text-cloud">Workflow Checklists Templates</h2>
+          <CommonStatusBadge variant="draft" label="Preview — not persisted" />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">Configure step checklists templates for onboarding and offboarding</p>
       </div>
 
       <Card className="bg-card/40 backdrop-blur border border-border/80 shadow-lg">
@@ -109,7 +114,7 @@ export function WorkflowTemplates({
                   {template.steps.length > 0 ? template.steps.join(' ➔ ') : 'No steps configured'}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <Button
                   variant="ghost"
                   size="icon"

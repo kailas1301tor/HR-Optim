@@ -1,33 +1,25 @@
 // services/auth-service.ts
-import { api } from '@/lib/api';
+import { api } from '@/lib/api'
 
 export interface LoginResponse {
-  message: string;
+  message: string
   results: {
     data: {
-      refresh: string;
-      access: string;
-      user_id: number;
-      username: string;
-      email: string;
-      has_password_changed: boolean;
-    };
-  };
+      refresh: string
+      access: string
+      user_id: number
+      username: string
+      email: string
+      has_password_changed: boolean
+    }
+  }
 }
 
 export const authService = {
-  /**
-   * Log in user using credentials.
-   * Directly queries the backend API.
-   */
   async login(username: string, password: string): Promise<LoginResponse> {
-    return await api.post<LoginResponse>('/api/auth/login/', { username, password });
+    return await api.post<LoginResponse>('/api/auth/login/', { username, password })
   },
 
-  /**
-   * Set password for a new employee.
-   * Accepts an explicit token since the auth cookie may not be set yet.
-   */
   async setPassword(password: string, confirmPassword: string, token?: string): Promise<{ message: string }> {
     const headers: Record<string, string> = {}
     if (token) {
@@ -36,17 +28,32 @@ export const authService = {
     return await api.post<{ message: string }>('/api/employee/set-password/', {
       new_password: password,
       confirm_new_password: confirmPassword,
-    }, { headers });
+    }, { headers })
   },
 
-  /**
-   * Clears session cookies and redirects to login page.
-   */
-  logout() {
-    document.cookie = 'auth_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    document.cookie = 'auth_username=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    document.cookie = 'auth_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
-    window.location.href = '/login';
-  }
-};
+  async persistSession(
+    token: string,
+    username: string,
+    email: string,
+    userId?: number
+  ): Promise<void> {
+    const response = await fetch('/api/auth/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, username, email, userId }),
+    })
 
+    if (!response.ok) {
+      throw new Error('Failed to persist session')
+    }
+  },
+
+  async logout(): Promise<void> {
+    try {
+      await fetch('/api/auth/session', { method: 'DELETE' })
+    } catch {
+      // Proceed with redirect even if session clear fails
+    }
+    window.location.href = '/login'
+  },
+}

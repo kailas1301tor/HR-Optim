@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton'
 import { Upload } from 'lucide-react'
 import { toast } from 'sonner'
+import { uiDialog, uiSkeletonBlock } from '@/lib/ui/design-system'
+import { cn } from '@/lib/utils'
 import { employeeDocumentService, companyDocumentService } from '@/services/document-service'
 import { employeeService } from '@/services/employee-service'
 import { branchService } from '@/services/branch-service'
@@ -29,7 +31,6 @@ export function UploadDocumentModal({ open, onOpenChange, tab, onSuccess }: Uplo
   const [companyDocTypes, setCompanyDocTypes] = useState<{ id: number; name: string }[]>([])
   const [loadingMetadata, setLoadingMetadata] = useState(false)
 
-  // Load metadata on mount or when dialog opens
   useEffect(() => {
     if (!open) return
 
@@ -62,7 +63,6 @@ export function UploadDocumentModal({ open, onOpenChange, tab, onSuccess }: Uplo
     loadMetadata()
   }, [open, tab])
 
-  // Submissions
   const onEmployeeSubmit = async (data: EmployeeDocumentUploadInput) => {
     setIsSubmitting(true)
     try {
@@ -119,7 +119,7 @@ export function UploadDocumentModal({ open, onOpenChange, tab, onSuccess }: Uplo
 
   return (
     <Dialog open={open} onOpenChange={(val) => { if (!val) handleClose() }}>
-      <DialogContent className="bg-card text-foreground border border-border/80 rounded-2xl max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className={cn(uiDialog, 'max-w-md overflow-y-auto max-h-[90vh]')}>
         <DialogHeader>
           <DialogTitle className="text-cloud font-semibold text-lg flex items-center gap-2">
             <Upload className="w-5 h-5 text-violet-glow" />
@@ -129,28 +129,13 @@ export function UploadDocumentModal({ open, onOpenChange, tab, onSuccess }: Uplo
 
         {loadingMetadata ? (
           <div className="space-y-4 py-6">
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-1/4 rounded bg-slate-800 animate-pulse" />
-              <Skeleton className="h-10 w-full rounded-xl bg-slate-800 animate-pulse" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-1/3 rounded bg-slate-800 animate-pulse" />
-              <Skeleton className="h-10 w-full rounded-xl bg-slate-800 animate-pulse" />
-            </div>
-            <div className="space-y-2">
-              <Skeleton className="h-3 w-1/3 rounded bg-slate-800 animate-pulse" />
-              <Skeleton className="h-10 w-full rounded-xl bg-slate-800 animate-pulse" />
-            </div>
-            {tab === 'company' && (
-              <div className="space-y-2">
-                <Skeleton className="h-3 w-1/4 rounded bg-slate-800 animate-pulse" />
-                <Skeleton className="h-10 w-full rounded-xl bg-slate-800 animate-pulse" />
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className={cn('h-3 w-1/4 rounded', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-10 w-full rounded-xl', uiSkeletonBlock)} />
               </div>
-            )}
-            <div className="space-y-2 pt-2">
-              <Skeleton className="h-3 w-1/3 rounded bg-slate-800 animate-pulse" />
-              <Skeleton className="h-28 w-full rounded-xl bg-slate-800 animate-pulse" />
-            </div>
+            ))}
+            <Skeleton className={cn('h-28 w-full rounded-xl', uiSkeletonBlock)} />
           </div>
         ) : tab === 'employee' ? (
           <EmployeeDocumentForm

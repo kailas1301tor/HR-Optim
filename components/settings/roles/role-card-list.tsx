@@ -78,7 +78,7 @@ export function RoleCardList({
             <div
               className={cn(
                 'absolute top-2.5 right-2.5 transition-opacity flex gap-1 bg-midnight/95 p-1 rounded-lg border border-border/50 shadow-lg z-10',
-                isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                isSelected ? 'opacity-100' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
               )}
               onClick={(e) => e.stopPropagation()}
             >
