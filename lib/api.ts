@@ -47,23 +47,28 @@ function resolveErrorMessage(responseData: unknown, status: number, fallback: st
   )
 }
 
-async function request<T>(
-  method: string,
+function buildRequestUrl(
   endpoint: string,
-  body?: Record<string, unknown> | object | FormData | string | null,
-  options: RequestOptions = {}
-): Promise<T> {
+  params?: Record<string, string | number | boolean>,
+): string {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   let url = `${API_BASE_URL}${cleanEndpoint}`
 
-  if (options.params) {
+  if (params) {
     const searchParams = new URLSearchParams()
-    Object.entries(options.params).forEach(([key, val]) => {
+    Object.entries(params).forEach(([key, val]) => {
       searchParams.append(key, String(val))
     })
     url += `?${searchParams.toString()}`
   }
 
+  return url
+}
+
+function buildAuthHeaders(
+  options: RequestOptions,
+  body?: Record<string, unknown> | object | FormData | string | null,
+): { headers: Headers; sessionToken: string | null } {
   const headers = new Headers(options.headers || {})
 
   if (!headers.has('Content-Type') && !(body instanceof FormData)) {
@@ -74,6 +79,85 @@ async function request<T>(
   if (sessionToken && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${sessionToken}`)
   }
+
+  return { headers, sessionToken }
+}
+
+export interface BlobResponse {
+  blob: Blob
+  contentDisposition: string | null
+}
+
+async function requestBlob(
+  endpoint: string,
+  options: RequestOptions = {},
+): Promise<BlobResponse> {
+  const url = buildRequestUrl(endpoint, options.params)
+  const { headers, sessionToken } = buildAuthHeaders(options)
+
+  const response = await fetch(url, {
+    ...options,
+    method: 'GET',
+    headers,
+  })
+
+  if (response.status === 401) {
+    const hadActiveSession = Boolean(sessionToken)
+    const shouldRedirect = hadActiveSession && !options.skipSessionRedirect
+
+    if (shouldRedirect) {
+      await handleUnauthorized()
+    }
+
+    let responseData: unknown
+    try {
+      responseData = await response.json()
+    } catch {
+      responseData = undefined
+    }
+
+    throw new ApiError(
+      resolveErrorMessage(
+        responseData,
+        401,
+        hadActiveSession ? 'Session expired. Please sign in again.' : 'Unauthorized.',
+      ),
+      401,
+      responseData,
+    )
+  }
+
+  if (!response.ok) {
+    let responseData: unknown
+    const contentType = response.headers.get('Content-Type')
+    if (contentType?.includes('application/json')) {
+      responseData = await response.json()
+    } else {
+      responseData = await response.text()
+    }
+
+    throw new ApiError(
+      resolveErrorMessage(responseData, response.status, `Request failed with status ${response.status}`),
+      response.status,
+      responseData,
+    )
+  }
+
+  const blob = await response.blob()
+  return {
+    blob,
+    contentDisposition: response.headers.get('Content-Disposition'),
+  }
+}
+
+async function request<T>(
+  method: string,
+  endpoint: string,
+  body?: Record<string, unknown> | object | FormData | string | null,
+  options: RequestOptions = {}
+): Promise<T> {
+  const url = buildRequestUrl(endpoint, options.params)
+  const { headers, sessionToken } = buildAuthHeaders(options, body)
 
   const config: RequestInit = {
     ...options,
@@ -140,6 +224,9 @@ async function request<T>(
 export const api = {
   get: <T>(endpoint: string, options?: RequestOptions) =>
     request<T>('GET', endpoint, undefined, options),
+
+  getBlob: (endpoint: string, options?: RequestOptions) =>
+    requestBlob(endpoint, options),
 
   post: <T>(endpoint: string, body?: Record<string, unknown> | object | FormData | string | null, options?: RequestOptions) =>
     request<T>('POST', endpoint, body, options),
