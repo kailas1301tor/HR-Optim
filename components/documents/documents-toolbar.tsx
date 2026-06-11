@@ -1,7 +1,7 @@
 // components/documents/documents-toolbar.tsx
 'use client'
 
-import { Upload } from 'lucide-react'
+import { Download, Upload } from 'lucide-react'
 import { CommonListToolbar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { PrimaryButton } from '@/components/ui/primary-button'
@@ -23,6 +23,8 @@ interface DocumentsToolbarProps {
   onCategoryChange: (val: string) => void
   categories: Array<{ id: number; name: string }>
   onUploadClick: () => void
+  onExportExpiry?: () => void
+  isExporting?: boolean
 }
 
 export function DocumentsToolbar({
@@ -33,6 +35,8 @@ export function DocumentsToolbar({
   onCategoryChange,
   categories,
   onUploadClick,
+  onExportExpiry,
+  isExporting = false,
 }: DocumentsToolbarProps) {
   return (
     <CommonListToolbar
@@ -57,6 +61,18 @@ export function DocumentsToolbar({
       }
       actions={
         <>
+          {onExportExpiry ? (
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(uiOutlineBtn, 'gap-2 text-xs min-h-11 flex-1 sm:flex-none')}
+              onClick={onExportExpiry}
+              disabled={isExporting}
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? 'Exporting…' : 'Export Expiry'}
+            </Button>
+          ) : null}
           <PrimaryButton type="button" onClick={onUploadClick} className="gap-2 text-xs min-h-11 flex-1 sm:flex-none">
             <Upload className="w-4 h-4" />
             <span className="sm:hidden">Upload</span>

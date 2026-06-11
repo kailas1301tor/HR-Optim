@@ -24,7 +24,9 @@ interface AttendanceToolbarProps {
   shiftsError: boolean
   isExporting: boolean
   isLoading: boolean
+  canExport: boolean
   onExport: () => void
+  onDeptExport?: () => void
 }
 
 export function AttendanceToolbar({
@@ -36,7 +38,9 @@ export function AttendanceToolbar({
   shiftsError,
   isExporting,
   isLoading,
+  canExport,
   onExport,
+  onDeptExport,
 }: AttendanceToolbarProps) {
   return (
     <CommonListToolbar
@@ -60,15 +64,30 @@ export function AttendanceToolbar({
         </Select>
       }
       actions={
-        <Button
-          variant="outline"
-          className={cn(uiOutlineBtn, 'gap-2 justify-center min-h-11')}
-          onClick={onExport}
-          disabled={isExporting || isLoading}
-        >
-          <Download className="w-4 h-4" aria-hidden />
-          {isExporting ? 'Exporting…' : 'Export'}
-        </Button>
+        <>
+          {onDeptExport ? (
+            <Button
+              variant="outline"
+              className={cn(uiOutlineBtn, 'gap-2 justify-center min-h-11')}
+              onClick={onDeptExport}
+              disabled={isExporting || isLoading || !canExport}
+              aria-label="Export department attendance"
+            >
+              <Download className="w-4 h-4" aria-hidden />
+              {isExporting ? 'Exporting…' : 'Dept Export'}
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            className={cn(uiOutlineBtn, 'gap-2 justify-center min-h-11')}
+            onClick={onExport}
+            disabled={isExporting || isLoading || !canExport}
+            aria-label="Export attendance to Excel"
+          >
+            <Download className="w-4 h-4" aria-hidden />
+            {isExporting ? 'Exporting…' : 'Export'}
+          </Button>
+        </>
       }
     />
   )

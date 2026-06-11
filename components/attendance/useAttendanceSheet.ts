@@ -4,7 +4,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
 import { downloadBlob } from '@/lib/helpers/download-blob'
-import { attendanceService } from '@/services/attendance-service'
+import {
+  attendanceService,
+  buildDepartmentAttendanceExportParams,
+} from '@/services/attendance-service'
+import { ApiError } from '@/lib/api'
 import type { AttendanceRecord, AttendanceStatusCounts } from '@/types/attendance'
 import { EMPTY_ATTENDANCE_STATUS_COUNTS } from '@/types/attendance'
 import { useAttendanceFilters } from './useAttendanceFilters'
@@ -28,6 +32,7 @@ export interface UseAttendanceSheetReturn {
   navigateDate: (days: number) => void
   setSelectedDate: (date: Date) => void
   handleExport: () => Promise<void>
+  handleDeptExport: () => Promise<void>
   handleRetry: () => void
   handleClearFilters: () => void
 }
@@ -105,6 +110,29 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
     }
   }
 
+  const handleDeptExport = async (): Promise<void> => {
+    if (records.length === 0) return
+
+    setIsExporting(true)
+    try {
+      const { blob, filename } = await attendanceService.exportDepartmentAttendance(
+        buildDepartmentAttendanceExportParams(listParams.date),
+      )
+      downloadBlob(blob, filename)
+      toast.success('Department attendance exported')
+    } catch (err: unknown) {
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Failed to export department attendance'
+      toast.error(message)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const handleRetry = (): void => {
     void reloadShifts()
     setReloadToken((prev) => prev + 1)
@@ -128,6 +156,7 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
     navigateDate,
     setSelectedDate,
     handleExport,
+    handleDeptExport,
     handleRetry,
     handleClearFilters,
   }

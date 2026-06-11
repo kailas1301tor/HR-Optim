@@ -1,11 +1,9 @@
 import { cookies } from 'next/headers'
 import { AUTH_COOKIE_NAMES, formatDisplayNameFromUsername } from '@/lib/cookies'
 import { AppShell } from '@/components/layout/app-shell'
-import { KPIGrid } from '@/components/dashboard/kpi-cards'
-import { AttendanceHeatmap } from '@/components/dashboard/attendance-heatmap'
-import { DocumentExpiryTimeline } from '@/components/dashboard/document-expiry'
-import { DepartmentDistribution } from '@/components/dashboard/department-distribution'
-import { PendingApprovals } from '@/components/dashboard/pending-approvals'
+import { Suspense } from 'react'
+import { CommonPageSkeleton } from '@/components/common'
+import { DashboardContent } from '@/components/dashboard/dashboard-content'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -23,19 +21,9 @@ export default async function DashboardPage() {
           </p>
         </div>
 
-        {/* KPI Cards */}
-        <KPIGrid />
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <AttendanceHeatmap />
-          <DepartmentDistribution />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <DocumentExpiryTimeline />
-          <PendingApprovals />
-        </div>
+        <Suspense fallback={<CommonPageSkeleton />}>
+          <DashboardContent />
+        </Suspense>
       </div>
     </AppShell>
   )

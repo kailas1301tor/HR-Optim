@@ -153,12 +153,22 @@ export interface FrontendVendor {
   description: string
 }
 
+export interface LateDeductionPolicy {
+  id?: number
+  name: string
+  time: string
+  deduction_type: string
+  value: string
+}
+
 export interface BackendShift {
   id: number
   name: string
   start_time: string
   end_time: string
   standard_work_hours: string
+  is_late_deduction_required?: boolean
+  late_deduction_policies?: LateDeductionPolicy[]
   is_active?: boolean
   deleted?: boolean
   created_at?: string
@@ -171,4 +181,15 @@ export interface FrontendShift {
   startTime: string
   endTime: string
   standardWorkHours: number
+  isLateDeductionRequired: boolean
+  lateDeductionPolicies: LateDeductionPolicy[]
+}
+
+export interface ShiftPayload {
+  name: string
+  start_time: string
+  end_time: string
+  standard_work_hours: string
+  is_late_deduction_required: boolean
+  late_deduction_policies: LateDeductionPolicy[]
 }

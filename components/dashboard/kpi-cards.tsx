@@ -10,7 +10,9 @@ import {
   TrendingDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { uiCardInteractive } from '@/lib/ui/design-system'
+import { Skeleton } from '@/components/ui/skeleton'
+import { uiCardInteractive, uiSkeletonBlock } from '@/lib/ui/design-system'
+import type { DashboardKpiItem } from '@/types/dashboard'
 
 interface KPICardProps {
   title: string
@@ -19,7 +21,6 @@ interface KPICardProps {
   changeLabel?: string
   icon: React.ElementType
   color: 'violet' | 'lime' | 'teal' | 'amber'
-  sparkline?: number[]
 }
 
 const colorStyles = {
@@ -49,139 +50,71 @@ const colorStyles = {
   },
 }
 
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  const max = Math.max(...data)
-  const min = Math.min(...data)
-  const range = max - min || 1
-  const width = 80
-  const height = 24
-  
-  const points = data
-    .map((value, index) => {
-      const x = (index / (data.length - 1)) * width
-      const y = height - ((value - min) / range) * height
-      return `${x},${y}`
-    })
-    .join(' ')
-
-  return (
-    <svg width={width} height={height} className="overflow-visible">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+const KPI_ICONS: Record<string, React.ElementType> = {
+  'Total Employees': Users,
+  'Present Today': Clock,
+  'Documents Expiring': FileWarning,
+  'Assets Tracked': Package,
 }
 
-export function KPICard({
-  title,
-  value,
-  change,
-  changeLabel,
-  icon: Icon,
-  color,
-  sparkline,
-}: KPICardProps) {
+function KPICard({ title, value, change, changeLabel, icon: Icon, color }: KPICardProps) {
   const styles = colorStyles[color]
-  const isPositive = change && change > 0
+  const isPositive = change !== undefined && change >= 0
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
+      whileHover={{ y: -2 }}
       className={cn(
         uiCardInteractive,
-        'relative p-5',
+        'p-6 relative overflow-hidden',
         styles.bg,
-        'hover:ring-1 hover:ring-violet-core/40'
       )}
     >
       <div className="flex items-start justify-between mb-4">
-        <div className={cn('w-10 h-10 rounded-[20px] [corner-shape:squircle] flex items-center justify-center', styles.iconBg)}>
+        <div className={cn('p-3 rounded-[20px] [corner-shape:squircle]', styles.iconBg)}>
           <Icon className={cn('w-5 h-5', styles.iconColor)} />
         </div>
-        {sparkline && (
-          <Sparkline
-            data={sparkline}
-            color={color === 'violet' ? '#a855f7' : color === 'lime' ? '#a3e635' : color === 'teal' ? '#2dd4bf' : '#fbbf24'}
-          />
-        )}
       </div>
 
-      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500 mb-1">
-        {title}
-      </p>
-      <p className="text-3xl font-semibold text-cloud font-mono tracking-tight">
-        {value}
-      </p>
+      <p className="text-sm text-slate-400 mb-1">{title}</p>
+      <p className="text-3xl font-bold text-cloud font-mono tracking-tight">{value}</p>
 
       {change !== undefined && (
-        <div className="flex items-center gap-1.5 mt-3">
+        <div className="flex items-center gap-2 mt-3">
           <div
             className={cn(
-              'flex items-center gap-0.5 px-1.5 py-0.5 rounded text-xs font-medium',
-              isPositive ? 'bg-lime-400/10 text-lime-400' : 'bg-red-400/10 text-red-400'
+              'flex items-center gap-1 text-xs font-medium',
+              isPositive ? 'text-lime-400' : 'text-red-400',
             )}
           >
-            {isPositive ? (
-              <TrendingUp className="w-3 h-3" />
-            ) : (
-              <TrendingDown className="w-3 h-3" />
-            )}
+            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {Math.abs(change)}%
           </div>
-          {changeLabel && (
-            <span className="text-xs text-slate-500">{changeLabel}</span>
-          )}
+          {changeLabel && <span className="text-xs text-slate-500">{changeLabel}</span>}
         </div>
       )}
     </motion.div>
   )
 }
 
-export function KPIGrid() {
-  const kpis = [
-    {
-      title: 'Total Employees',
-      value: '2,847',
-      change: 12,
-      changeLabel: 'vs last month',
-      icon: Users,
-      color: 'violet' as const,
-      sparkline: [45, 52, 49, 60, 55, 68, 72],
-    },
-    {
-      title: 'Present Today',
-      value: '2,651',
-      change: 4.2,
-      changeLabel: 'attendance rate',
-      icon: Clock,
-      color: 'lime' as const,
-      sparkline: [88, 91, 89, 93, 90, 94, 93],
-    },
-    {
-      title: 'Documents Expiring',
-      value: '23',
-      change: -8,
-      changeLabel: 'vs last week',
-      icon: FileWarning,
-      color: 'amber' as const,
-      sparkline: [32, 28, 31, 25, 27, 24, 23],
-    },
-    {
-      title: 'Assets Tracked',
-      value: '1,284',
-      change: 5.3,
-      changeLabel: 'utilization',
-      icon: Package,
-      color: 'teal' as const,
-      sparkline: [1100, 1150, 1180, 1210, 1245, 1260, 1284],
-    },
-  ]
+interface KPIGridProps {
+  kpis: DashboardKpiItem[]
+  isLoading?: boolean
+}
+
+export function KPIGrid({ kpis, isLoading = false }: KPIGridProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton
+            key={index}
+            className={cn('h-36 rounded-[32px] [corner-shape:squircle]', uiSkeletonBlock)}
+          />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -192,7 +125,7 @@ export function KPIGrid() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: index * 0.1 }}
         >
-          <KPICard {...kpi} />
+          <KPICard {...kpi} icon={KPI_ICONS[kpi.title] ?? Users} />
         </motion.div>
       ))}
     </div>

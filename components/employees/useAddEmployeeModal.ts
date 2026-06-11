@@ -4,6 +4,7 @@
 import { useEffect, useState } from 'react'
 import { useForm, type UseFormReturn, type Path } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { bankDetailsService } from '@/services/bank-details-service'
 import { employeeService } from '@/services/employee-service'
 import { employeeSchema, type EmployeeInput } from '@/validations/employee.schema'
 import type { Employee } from '@/types/employee'
@@ -84,15 +85,30 @@ export function useAddEmployeeModal(
     try {
       const payload = formValuesToPayload(data)
 
+      let savedEmployee: Employee
       if (isEditMode && editEmployee) {
-        const updated = await employeeService.updateEmployee({ ...payload, id: Number(editEmployee.id) })
+        savedEmployee = await employeeService.updateEmployee({ ...payload, id: Number(editEmployee.id) })
         toast.success('Employee updated successfully')
-        onSuccess(updated)
       } else {
-        const created = await employeeService.createEmployee(payload)
+        savedEmployee = await employeeService.createEmployee(payload)
         toast.success('Employee created successfully')
-        onSuccess(created)
       }
+
+      const employeeId = Number(savedEmployee.id)
+      const bankRecords = await bankDetailsService.list()
+      const existingBankId = bankRecords.find((record) => record.employee === employeeId)?.id
+      await bankDetailsService.upsertForEmployee(
+        employeeId,
+        {
+          bank_name: data.bank_name,
+          account_number: data.account_number,
+          ifsc: data.ifsc,
+          branch: data.branch,
+        },
+        existingBankId,
+      )
+
+      onSuccess(savedEmployee)
       onOpenChange(false)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Validation error'

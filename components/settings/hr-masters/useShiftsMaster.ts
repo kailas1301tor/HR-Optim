@@ -3,7 +3,8 @@ import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import { invalidateAttendanceShifts } from '@/components/attendance/useAttendanceShifts'
 import { shiftService } from '@/services/shift-service'
-import type { FrontendShift } from '@/types/settings'
+import type { FrontendShift, LateDeductionPolicy } from '@/types/settings'
+import { FIXED_CALCULATE_TYPE } from '@/types/settings'
 
 export interface UseShiftsMasterProps {
   onRefresh: () => Promise<void>
@@ -22,6 +23,12 @@ export interface UseShiftsMasterReturn {
   setShiftEndTime: (time: string) => void
   shiftStandardHours: string
   setShiftStandardHours: (hours: string) => void
+  isLateDeductionRequired: boolean
+  setIsLateDeductionRequired: (enabled: boolean) => void
+  lateDeductionPolicies: LateDeductionPolicy[]
+  handlePolicyChange: (index: number, field: keyof LateDeductionPolicy, value: string) => void
+  handleAddPolicy: () => void
+  handleRemovePolicy: (index: number) => void
   deleteTarget: FrontendShift | null
   setDeleteTarget: (shift: FrontendShift | null) => void
   isDeleting: boolean
@@ -31,18 +38,29 @@ export interface UseShiftsMasterReturn {
   handleDeleteShift: () => Promise<void>
 }
 
+function createEmptyPolicy(startTime: string): LateDeductionPolicy {
+  return {
+    name: 'Tier 1 Time',
+    time: startTime,
+    deduction_type: FIXED_CALCULATE_TYPE,
+    value: '',
+  }
+}
+
 export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsMasterReturn {
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
   const [editingShift, setEditingShift] = useState<FrontendShift | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Form fields
   const [shiftName, setShiftName] = useState('')
   const [shiftStartTime, setShiftStartTime] = useState('09:00')
   const [shiftEndTime, setShiftEndTime] = useState('18:00')
   const [shiftStandardHours, setShiftStandardHours] = useState('9')
+  const [isLateDeductionRequired, setIsLateDeductionRequired] = useState(false)
+  const [lateDeductionPolicies, setLateDeductionPolicies] = useState<LateDeductionPolicy[]>([
+    createEmptyPolicy('09:15'),
+  ])
 
-  // Delete state
   const [deleteTarget, setDeleteTarget] = useState<FrontendShift | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -51,6 +69,8 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     setShiftStartTime('09:00')
     setShiftEndTime('18:00')
     setShiftStandardHours('9')
+    setIsLateDeductionRequired(false)
+    setLateDeductionPolicies([createEmptyPolicy('09:15')])
     setEditingShift(null)
   }
 
@@ -64,13 +84,52 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     setShiftStartTime(shift.startTime)
     setShiftEndTime(shift.endTime)
     setShiftStandardHours(String(shift.standardWorkHours))
+    setIsLateDeductionRequired(shift.isLateDeductionRequired)
+    setLateDeductionPolicies(
+      shift.lateDeductionPolicies.length > 0
+        ? shift.lateDeductionPolicies
+        : [createEmptyPolicy(shift.startTime)],
+    )
     setEditingShift(shift)
     setIsShiftModalOpen(true)
+  }
+
+  const handlePolicyChange = (index: number, field: keyof LateDeductionPolicy, value: string): void => {
+    setLateDeductionPolicies((prev) =>
+      prev.map((policy, policyIndex) =>
+        policyIndex === index ? { ...policy, [field]: value } : policy,
+      ),
+    )
+  }
+
+  const handleAddPolicy = (): void => {
+    setLateDeductionPolicies((prev) => [
+      ...prev,
+      createEmptyPolicy(shiftStartTime),
+    ])
+  }
+
+  const handleRemovePolicy = (index: number): void => {
+    setLateDeductionPolicies((prev) => prev.filter((_, policyIndex) => policyIndex !== index))
   }
 
   const handleSaveShift = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
     if (!shiftName.trim()) return
+
+    if (isLateDeductionRequired) {
+      const invalidPolicy = lateDeductionPolicies.some(
+        (policy) =>
+          !policy.name.trim() ||
+          !policy.time ||
+          !policy.deduction_type ||
+          !policy.value.trim(),
+      )
+      if (invalidPolicy || lateDeductionPolicies.length === 0) {
+        toast.error('Complete all late deduction policy fields')
+        return
+      }
+    }
 
     setIsSubmitting(true)
     try {
@@ -79,6 +138,8 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
         start_time: `${shiftStartTime}:00`,
         end_time: `${shiftEndTime}:00`,
         standard_work_hours: shiftStandardHours,
+        is_late_deduction_required: isLateDeductionRequired,
+        late_deduction_policies: isLateDeductionRequired ? lateDeductionPolicies : [],
       }
 
       if (editingShift) {
@@ -138,6 +199,12 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     setShiftEndTime,
     shiftStandardHours,
     setShiftStandardHours,
+    isLateDeductionRequired,
+    setIsLateDeductionRequired,
+    lateDeductionPolicies,
+    handlePolicyChange,
+    handleAddPolicy,
+    handleRemovePolicy,
     deleteTarget,
     setDeleteTarget,
     isDeleting,

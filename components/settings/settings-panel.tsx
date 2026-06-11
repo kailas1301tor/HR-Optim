@@ -3,7 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Building2, Users, Package, Settings, ShieldCheck, Calculator } from 'lucide-react'
+import { Building2, Users, Package, Settings, ShieldCheck, Calculator, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CommonPageHeader } from '@/components/common'
 import { uiTabChipActiveTrigger, uiTabChipBase, uiTabChipInactive } from '@/lib/ui/design-system'
@@ -13,6 +13,7 @@ import { PayRulesMaster } from './payroll/pay-rules-master'
 import { RolesPermissions } from './roles-permissions'
 import { AssetMasters } from './asset-masters'
 import { SystemSettings } from './system-settings'
+import { SecuritySettings } from './security-settings'
 import {
   INITIAL_WORKFLOW_TEMPLATES,
   INITIAL_NOTIFICATIONS,
@@ -71,6 +72,10 @@ export function SettingsPanel() {
             <Package className="h-4 w-4" />
             Asset Management
           </TabsTrigger>
+          <TabsTrigger value="security" className={tabTriggerClass}>
+            <Lock className="h-4 w-4" />
+            Security
+          </TabsTrigger>
           <TabsTrigger value="system" className={tabTriggerClass}>
             <Settings className="h-4 w-4" />
             System Settings
@@ -98,6 +103,10 @@ export function SettingsPanel() {
 
         <TabsContent value="assets" className="space-y-6 outline-none">
           <AssetMasters />
+        </TabsContent>
+
+        <TabsContent value="security" className="space-y-6 outline-none">
+          <SecuritySettings />
         </TabsContent>
 
         <TabsContent value="system" className="space-y-6 outline-none">

@@ -29,7 +29,7 @@ export interface RefreshTokenResult {
  * @see auth-refresh-api-wire todo in module plan
  */
 export interface RefreshTokenApiContract {
-  endpoint: '/api/auth/refresh/'
+  endpoint: '/api/auth/token/refresh/'
   method: 'POST'
   body: { refresh: string }
 }

@@ -15,6 +15,7 @@ import { uiInput } from '@/lib/ui/design-system'
 import { CommonErrorState } from '@/components/common'
 import { useShiftsMaster } from './useShiftsMaster'
 import { useShiftsList } from './useShiftsList'
+import { ShiftLateDeductionSection } from './shift-late-deduction-section'
 export function ShiftsMaster() {
   const { shifts, isLoading, hasError, reload } = useShiftsList()
   const {
@@ -30,6 +31,12 @@ export function ShiftsMaster() {
     setShiftEndTime,
     shiftStandardHours,
     setShiftStandardHours,
+    isLateDeductionRequired,
+    setIsLateDeductionRequired,
+    lateDeductionPolicies,
+    handlePolicyChange,
+    handleAddPolicy,
+    handleRemovePolicy,
     deleteTarget,
     setDeleteTarget,
     isDeleting,
@@ -44,7 +51,11 @@ export function ShiftsMaster() {
       shifts.map((shift) => ({
         id: shift.id,
         name: shift.name,
-        subtitle: `${shift.startTime} – ${shift.endTime} | ${shift.standardWorkHours} hrs`,
+        subtitle: `${shift.startTime} – ${shift.endTime} | ${shift.standardWorkHours} hrs${
+          shift.isLateDeductionRequired
+            ? ` | Late deduction: ${shift.lateDeductionPolicies.length} tier(s)`
+            : ''
+        }`,
       })),
     [shifts]
   )
@@ -184,6 +195,15 @@ export function ShiftsMaster() {
             />
           </div>
         </div>
+        <ShiftLateDeductionSection
+          isEnabled={isLateDeductionRequired}
+          onEnabledChange={setIsLateDeductionRequired}
+          policies={lateDeductionPolicies}
+          onPolicyChange={handlePolicyChange}
+          onAddPolicy={handleAddPolicy}
+          onRemovePolicy={handleRemovePolicy}
+          disabled={isSubmitting}
+        />
       </SettingsFormDialog>
 
       <SettingsDeleteDialog

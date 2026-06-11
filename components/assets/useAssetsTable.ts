@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { toast } from 'sonner'
+import { downloadBlob } from '@/lib/helpers/download-blob'
 import { assetService } from '@/services/asset-service'
 import { computePageAssetStats } from '@/lib/mappers/asset-mapper'
 import type { Asset, PageAssetStats } from '@/types/asset'
@@ -34,6 +35,8 @@ export interface UseAssetsTableReturn {
   handleRetry: () => void
   updateQueryParams: (updates: Record<string, string | null>) => void
   handleClearFilters: () => void
+  isExporting: boolean
+  handleExport: () => Promise<void>
 }
 
 export function useAssetsTable(): UseAssetsTableReturn {
@@ -61,6 +64,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
   const [isTableLoading, setIsTableLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
+  const [isExporting, setIsExporting] = useState(false)
   const fetchIdRef = useRef(0)
 
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
@@ -119,6 +123,24 @@ export function useAssetsTable(): UseAssetsTableReturn {
     [assetsList, pagination.totalCount, pagination.totalPages, isFiltered]
   )
 
+  const handleExport = async (): Promise<void> => {
+    setIsExporting(true)
+    try {
+      const params: Record<string, string | number> = {}
+      if (searchQuery) params.search = searchQuery
+      if (statusFilter !== 'all') params.status = statusFilter
+      if (typeFilter !== 'all') params.asset_type = typeFilter
+      const { blob, filename } = await assetService.exportExcel(params)
+      downloadBlob(blob, filename)
+      toast.success('Assets exported successfully')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to export assets'
+      toast.error(message)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return {
     assetsList,
     pagination,
@@ -144,5 +166,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
     handleRetry,
     updateQueryParams,
     handleClearFilters,
+    isExporting,
+    handleExport,
   }
 }

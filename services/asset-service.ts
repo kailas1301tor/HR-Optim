@@ -1,5 +1,6 @@
 // services/asset-service.ts
 import { api } from '@/lib/api';
+import { parseContentDispositionFilename } from '@/lib/helpers/download-blob';
 import { cleanParams } from '@/lib/types';
 import type {
   AssetDropdowns,
@@ -206,5 +207,19 @@ export const assetService = {
   async disposeAsset(payload: DisposeAssetPayload): Promise<AssetDisposal> {
     const response = await api.post<SingleDisposalResponse>('/api/asset/assets/dispose/', payload as unknown as Record<string, unknown>);
     return response.results.data;
+  },
+
+  async exportExcel(
+    params?: { search?: string; asset_type?: string | number; status?: string | number },
+    signal?: AbortSignal,
+  ): Promise<{ blob: Blob; filename: string }> {
+    const { blob, contentDisposition } = await api.getBlob('/api/asset/assets/export/', {
+      params: params ? cleanParams(params) : undefined,
+      signal,
+    })
+    return {
+      blob,
+      filename: parseContentDispositionFilename(contentDisposition, 'assets_export.xlsx'),
+    }
   },
 };

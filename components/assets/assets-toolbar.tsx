@@ -1,7 +1,7 @@
 // components/assets/assets-toolbar.tsx
 'use client'
 
-import { Plus } from 'lucide-react'
+import { Download, Plus } from 'lucide-react'
 import { CommonListToolbar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { PrimaryButton } from '@/components/ui/primary-button'
@@ -25,6 +25,8 @@ interface AssetsToolbarProps {
   onStatusChange: (val: string) => void
   onTypeChange: (val: string) => void
   onAddAsset: () => void
+  onExport?: () => void
+  isExporting?: boolean
 }
 
 export function AssetsToolbar({
@@ -36,6 +38,8 @@ export function AssetsToolbar({
   onStatusChange,
   onTypeChange,
   onAddAsset,
+  onExport,
+  isExporting = false,
 }: AssetsToolbarProps) {
   return (
     <CommonListToolbar
@@ -75,6 +79,18 @@ export function AssetsToolbar({
       }
       actions={
         <>
+          {onExport ? (
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
+              onClick={onExport}
+              disabled={isExporting}
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? 'Exporting…' : 'Export'}
+            </Button>
+          ) : null}
           <PrimaryButton type="button" onClick={onAddAsset} className="gap-2 text-xs flex-1 sm:flex-none">
             <Plus className="w-4 h-4" />
             <span className="sm:hidden">Add</span>

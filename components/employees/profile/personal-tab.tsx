@@ -6,6 +6,7 @@ import { ContactSection } from './personal/contact-section'
 import { EmploymentSection } from './personal/employment-section'
 import { RegulatorySection } from './personal/regulatory-section'
 import { BankSection } from './personal/bank-section'
+import { AssignedAssetsSection } from './personal/assigned-assets-section'
 
 interface PersonalTabProps {
   employee: Employee
@@ -18,6 +19,7 @@ export function PersonalTab({ employee }: PersonalTabProps) {
       <EmploymentSection employee={employee} />
       <RegulatorySection employee={employee} />
       <BankSection employee={employee} />
+      <AssignedAssetsSection employeeId={Number(employee.id)} />
     </div>
   )
 }

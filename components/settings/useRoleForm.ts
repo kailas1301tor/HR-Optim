@@ -128,9 +128,11 @@ export function useRoleForm({
     try {
       if (roleEditId !== null) {
         const updatedRole = await roleService.updateRole(roleEditId, roleFormName.trim(), selectedPermissionIds)
+        await roleService.assignPermissionsToGroup(roleEditId, selectedPermissionIds)
         toast.success(`Role "${updatedRole.name}" updated successfully`)
       } else {
         const newRole = await roleService.createRole(roleFormName.trim(), selectedPermissionIds)
+        await roleService.assignPermissionsToGroup(newRole.id, selectedPermissionIds)
         toast.success(`Role "${newRole.name}" created successfully`)
       }
       handleCancelForm()

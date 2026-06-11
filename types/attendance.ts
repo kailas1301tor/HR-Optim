@@ -31,3 +31,11 @@ export const EMPTY_ATTENDANCE_STATUS_COUNTS: AttendanceStatusCounts = {
   leave: 0,
   weekend: 0,
 }
+
+/** V14: send `date` OR `month`+`year` — not both (backend returns 500 when combined). */
+export interface DepartmentAttendanceExportParams {
+  export_format?: string
+  date?: string
+  month?: number
+  year?: number
+}

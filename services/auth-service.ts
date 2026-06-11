@@ -12,7 +12,7 @@ import type {
 } from '@/types/auth'
 export type { LoginResponse } from '@/types/auth'
 
-const REFRESH_ENDPOINT: RefreshTokenApiContract['endpoint'] = '/api/auth/refresh/'
+const REFRESH_ENDPOINT: RefreshTokenApiContract['endpoint'] = '/api/auth/token/refresh/'
 
 export const authService = {
   async login(username: string, password: string): Promise<LoginResponse> {
@@ -79,6 +79,18 @@ export const authService = {
    * Renews access token via backend refresh endpoint.
    * Returns null when no refresh token is stored or the API rejects the request.
    */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<{ message: string }> {
+    return await api.post<{ message: string }>('/api/auth/change-password/', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    })
+  },
+
   async refreshAccessToken(): Promise<RefreshTokenResult | null> {
     const refresh = getRefreshToken()
     if (!refresh) return null

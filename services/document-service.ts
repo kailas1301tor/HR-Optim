@@ -1,5 +1,6 @@
 // services/document-service.ts
 import { api } from '@/lib/api'
+import { parseContentDispositionFilename } from '@/lib/helpers/download-blob'
 import { cleanParams } from '@/lib/types'
 import type { DropdownItem } from '@/lib/types'
 import {
@@ -34,6 +35,11 @@ interface DocumentCountsResponse {
   results: {
     data: DocumentStatusCounts
   }
+}
+
+export interface DocumentExportResult {
+  blob: Blob
+  filename: string
 }
 
 export const employeeDocumentService = {
@@ -81,6 +87,20 @@ export const employeeDocumentService = {
     )
     return response.results?.data ?? { employee_document_types: [] }
   },
+
+  async exportExpiry(days = 30, signal?: AbortSignal): Promise<DocumentExportResult> {
+    const { blob, contentDisposition } = await api.getBlob(
+      '/api/employee/employee-documents/export/',
+      {
+        params: cleanParams({ export_format: 'excel', days }),
+        signal,
+      },
+    )
+    return {
+      blob,
+      filename: parseContentDispositionFilename(contentDisposition, `employee_documents_expiry_${days}d.xlsx`),
+    }
+  },
 }
 
 export const companyDocumentService = {
@@ -127,5 +147,19 @@ export const companyDocumentService = {
       { signal }
     )
     return response.results?.data ?? { company_document_types: [], branches: [] }
+  },
+
+  async exportExpiry(days = 30, signal?: AbortSignal): Promise<DocumentExportResult> {
+    const { blob, contentDisposition } = await api.getBlob(
+      '/api/company/company-documents/export/',
+      {
+        params: cleanParams({ export_format: 'excel', days }),
+        signal,
+      },
+    )
+    return {
+      blob,
+      filename: parseContentDispositionFilename(contentDisposition, `company_documents_expiry_${days}d.xlsx`),
+    }
   },
 }

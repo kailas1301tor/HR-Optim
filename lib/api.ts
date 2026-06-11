@@ -1,6 +1,6 @@
 import { toast } from 'sonner'
 import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
-import { API_BASE_URL } from '@/lib/env'
+import { resolveRequestUrl } from '@/lib/env'
 import { parseAuthErrorPayload } from '@/lib/helpers/parse-auth-form-errors'
 import { attemptSilentReauth } from '@/lib/auth/silent-reauth'
 import { clearRefreshToken } from '@/lib/auth/refresh-token-storage'
@@ -62,18 +62,20 @@ function buildRequestUrl(
   endpoint: string,
   params?: Record<string, string | number | boolean>,
 ): string {
-  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
-  let url = `${API_BASE_URL}${cleanEndpoint}`
+  return resolveRequestUrl(endpoint, params)
+}
 
-  if (params) {
-    const searchParams = new URLSearchParams()
-    Object.entries(params).forEach(([key, val]) => {
-      searchParams.append(key, String(val))
-    })
-    url += `?${searchParams.toString()}`
+function wrapNetworkError(error: unknown): Error {
+  if (error instanceof ApiError) return error
+  if (error instanceof Error && error.name === 'AbortError') return error
+  if (error instanceof TypeError) {
+    return new ApiError(
+      'Unable to reach the server. Please check your connection and try again.',
+      0,
+      error,
+    )
   }
-
-  return url
+  return error instanceof Error ? error : new ApiError('Request failed')
 }
 
 function buildAuthHeaders(
@@ -235,8 +237,9 @@ async function request<T>(
     if (error instanceof Error && error.name === 'AbortError') {
       throw error
     }
-    console.error(`🔴 API Request Error [${method} ${url}]:`, error)
-    throw error
+    const wrapped = wrapNetworkError(error)
+    console.error(`🔴 API Request Error [${method} ${url}]:`, wrapped)
+    throw wrapped
   }
 }
 

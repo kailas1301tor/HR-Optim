@@ -9,9 +9,25 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { monthlyData } from './payroll-constants'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import type { PayrollTrendPoint } from '@/types/payroll'
 
-export function PayrollTrendsChart() {
+interface PayrollTrendsChartProps {
+  data: PayrollTrendPoint[]
+  isLoading?: boolean
+}
+
+export function PayrollTrendsChart({ data, isLoading = false }: PayrollTrendsChartProps) {
+  if (isLoading) {
+    return (
+      <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6">
+        <Skeleton className={cn('h-64 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+      </div>
+    )
+  }
+
   return (
     <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6">
       <div className="flex items-center justify-between mb-6">
@@ -36,7 +52,7 @@ export function PayrollTrendsChart() {
       </div>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyData}>
+          <BarChart data={data}>
             <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
             <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} tickFormatter={(v) => `${v / 1000}k`} />
             <Tooltip

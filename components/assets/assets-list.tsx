@@ -47,6 +47,8 @@ export function AssetsList() {
     handleRetry,
     updateQueryParams,
     handleClearFilters,
+    isExporting,
+    handleExport,
   } = useAssetsTable()
 
   const handleAddAsset = () => {
@@ -58,7 +60,7 @@ export function AssetsList() {
 
   return (
     <div className="space-y-6">
-      <AssetsPageHeader onAddAsset={handleAddAsset} />
+      <AssetsPageHeader />
 
       <AssetsStatsCards
         totalCount={pageStats.totalCount}
@@ -85,6 +87,8 @@ export function AssetsList() {
         onStatusChange={(val) => updateQueryParams({ status: val, page: '1' })}
         onTypeChange={(val) => updateQueryParams({ asset_type: val, page: '1' })}
         onAddAsset={handleAddAsset}
+        onExport={handleExport}
+        isExporting={isExporting}
       />
 
       {hasError ? (

@@ -2,19 +2,47 @@
 
 import { motion } from 'framer-motion'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
+import { Skeleton } from '@/components/ui/skeleton'
+import { CommonEmptyState } from '@/components/common'
+import { Users } from 'lucide-react'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { cn } from '@/lib/utils'
+import type { DashboardDepartmentItem } from '@/types/dashboard'
 
-const departmentData = [
-  { name: 'Engineering', value: 847, color: '#7c3aed' },
-  { name: 'Operations', value: 623, color: '#a855f7' },
-  { name: 'Finance', value: 412, color: '#14b8a6' },
-  { name: 'HR', value: 298, color: '#a3e635' },
-  { name: 'Marketing', value: 234, color: '#f59e0b' },
-  { name: 'Others', value: 433, color: '#64748b' },
-]
+const CHART_COLORS = ['#7c3aed', '#a855f7', '#14b8a6', '#a3e635', '#f59e0b', '#64748b']
 
-const total = departmentData.reduce((sum, d) => sum + d.value, 0)
+interface DepartmentDistributionProps {
+  items: DashboardDepartmentItem[]
+  isLoading?: boolean
+}
 
-export function DepartmentDistribution() {
+export function DepartmentDistribution({ items, isLoading = false }: DepartmentDistributionProps) {
+  const chartData = items.map((item, index) => ({
+    name: item.name,
+    value: item.count,
+    color: CHART_COLORS[index % CHART_COLORS.length],
+    percentage: item.percentage,
+  }))
+
+  const total = chartData.reduce((sum, d) => sum + d.value, 0)
+
+  if (isLoading) {
+    return (
+      <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6">
+        <Skeleton className={cn('h-48 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6">
+        <h3 className="text-lg font-semibold text-cloud mb-1">Department Distribution</h3>
+        <CommonEmptyState icon={Users} title="No department data" description="Department breakdown is not available." />
+      </div>
+    )
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -25,12 +53,11 @@ export function DepartmentDistribution() {
       <p className="text-sm text-muted-foreground mb-6">Employee count by department</p>
 
       <div className="flex items-center gap-6">
-        {/* Chart */}
         <div className="w-40 h-40 flex-shrink-0">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={departmentData}
+                data={chartData}
                 cx="50%"
                 cy="50%"
                 innerRadius={45}
@@ -39,19 +66,19 @@ export function DepartmentDistribution() {
                 dataKey="value"
                 strokeWidth={0}
               >
-                {departmentData.map((entry, index) => (
+                {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
               <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
-                    const data = payload[0].payload
+                    const data = payload[0].payload as (typeof chartData)[0]
                     return (
                       <div className="bg-carbon border border-border rounded-[16px] [corner-shape:squircle] px-3 py-2 shadow-lg">
                         <p className="text-sm font-medium text-cloud">{data.name}</p>
                         <p className="text-xs text-muted-foreground">
-                          {data.value} employees ({((data.value / total) * 100).toFixed(1)}%)
+                          {data.value} employees ({data.percentage.toFixed(1)}%)
                         </p>
                       </div>
                     )
@@ -63,9 +90,8 @@ export function DepartmentDistribution() {
           </ResponsiveContainer>
         </div>
 
-        {/* Legend */}
         <div className="flex-1 space-y-2">
-          {departmentData.map((dept, index) => (
+          {chartData.map((dept, index) => (
             <motion.div
               key={dept.name}
               initial={{ opacity: 0, x: 20 }}
@@ -74,16 +100,13 @@ export function DepartmentDistribution() {
               className="flex items-center justify-between"
             >
               <div className="flex items-center gap-2">
-                <div
-                  className="w-3 h-3 rounded-sm"
-                  style={{ backgroundColor: dept.color }}
-                />
+                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: dept.color }} />
                 <span className="text-sm text-slate-300">{dept.name}</span>
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-mono text-cloud">{dept.value}</span>
                 <span className="text-xs text-muted-foreground w-12 text-right">
-                  {((dept.value / total) * 100).toFixed(1)}%
+                  {total > 0 ? dept.percentage.toFixed(1) : '0.0'}%
                 </span>
               </div>
             </motion.div>

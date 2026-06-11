@@ -6,6 +6,7 @@ import { VendorsMaster } from './vendors-master'
 import { useAssetTypesAndVendors } from './useAssetTypesAndVendors'
 import { useAssetCategoriesAndShops } from './useAssetCategoriesAndShops'
 import { useServiceTypesAndStatuses } from './useServiceTypesAndStatuses'
+import { useAssetDocumentTypes } from './useAssetDocumentTypes'
 import { uiSectionHeader } from '@/lib/ui/design-system'
 
 export function AssetMasters() {
@@ -51,6 +52,15 @@ export function AssetMasters() {
     handleAssetStatusSave,
     handleAssetStatusDelete,
   } = useServiceTypesAndStatuses()
+
+  const {
+    items: assetDocumentTypes,
+    isLoading: assetDocumentTypesLoading,
+    hasError: assetDocumentTypesHasError,
+    reload: loadAssetDocumentTypes,
+    handleSave: handleAssetDocumentTypeSave,
+    handleDelete: handleAssetDocumentTypeDelete,
+  } = useAssetDocumentTypes()
 
   return (
     <div className="space-y-6 outline-none">
@@ -126,6 +136,18 @@ export function AssetMasters() {
           onDelete={handleAssetStatusDelete}
           placeholder="e.g. AVAILABLE"
           label="Status Label"
+        />
+
+        <GenericMasterCard
+          title="Asset Document Types"
+          items={assetDocumentTypes}
+          isLoading={assetDocumentTypesLoading}
+          hasError={assetDocumentTypesHasError}
+          onRetry={loadAssetDocumentTypes}
+          onSave={handleAssetDocumentTypeSave}
+          onDelete={handleAssetDocumentTypeDelete}
+          placeholder="e.g. Warranty Certificate"
+          label="Document Type"
         />
       </div>
     </div>

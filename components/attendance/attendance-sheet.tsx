@@ -39,6 +39,7 @@ export function AttendanceSheet() {
     formatDate,
     navigateDate,
     handleExport,
+    handleDeptExport,
     handleRetry,
     handleClearFilters,
   } = useAttendanceSheet()
@@ -68,7 +69,9 @@ export function AttendanceSheet() {
         shiftsError={shiftsError}
         isExporting={isExporting}
         isLoading={isLoading}
+        canExport={!isLoading && records.length > 0}
         onExport={handleExport}
+        onDeptExport={handleDeptExport}
       />
 
       <AttendanceStatsCards statusCounts={statusCounts} isLoading={isLoading} />

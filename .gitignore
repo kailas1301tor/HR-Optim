@@ -30,6 +30,9 @@ pnpm-debug.log*
 .env
 .env*.local
 
+# cursor mcp config (contains secrets)
+.cursor/mcp.json
+
 # vercel
 .vercel
 

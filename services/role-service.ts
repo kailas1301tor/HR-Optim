@@ -74,4 +74,11 @@ export const roleService = {
     });
   },
 
+  async assignPermissionsToGroup(groupId: number, permissionIds: number[]): Promise<void> {
+    await api.post('/api/auth/groups/permissions/', {
+      group_id: groupId,
+      permission_ids: permissionIds,
+    })
+  },
+
 }

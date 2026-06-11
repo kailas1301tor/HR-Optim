@@ -3,85 +3,62 @@
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { FileText, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { CommonEmptyState } from '@/components/common'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import type { DashboardDocumentExpiryItem } from '@/types/dashboard'
 
-interface Document {
-  id: string
-  name: string
-  type: string
-  employeeName: string
-  expiryDate: string
-  daysUntilExpiry: number
-  status: 'expired' | 'expiring' | 'valid'
+type DocStatus = 'expired' | 'expiring' | 'valid'
+
+function mapDocStatus(status: string, daysLeft: number): DocStatus {
+  if (status.toLowerCase().includes('expired') || daysLeft < 0) return 'expired'
+  if (status.toLowerCase().includes('expiring') || daysLeft <= 30) return 'expiring'
+  return 'valid'
 }
-
-const documents: Document[] = [
-  {
-    id: 'DOC-001',
-    name: 'Emirates ID',
-    type: 'ID',
-    employeeName: 'Ahmed Al Maktoum',
-    expiryDate: '2024-01-15',
-    daysUntilExpiry: -10,
-    status: 'expired',
-  },
-  {
-    id: 'DOC-002',
-    name: 'Work Visa',
-    type: 'Visa',
-    employeeName: 'Sarah Johnson',
-    expiryDate: '2024-02-05',
-    daysUntilExpiry: 12,
-    status: 'expiring',
-  },
-  {
-    id: 'DOC-003',
-    name: 'Passport',
-    type: 'ID',
-    employeeName: 'Mohammed Hassan',
-    expiryDate: '2024-02-20',
-    daysUntilExpiry: 27,
-    status: 'expiring',
-  },
-  {
-    id: 'DOC-004',
-    name: 'Medical Insurance',
-    type: 'Insurance',
-    employeeName: 'Fatima Al Rashid',
-    expiryDate: '2024-06-15',
-    daysUntilExpiry: 142,
-    status: 'valid',
-  },
-  {
-    id: 'DOC-005',
-    name: 'Driving License',
-    type: 'License',
-    employeeName: 'James Wilson',
-    expiryDate: '2024-08-30',
-    daysUntilExpiry: 218,
-    status: 'valid',
-  },
-]
 
 const statusConfig = {
   expired: {
     color: 'bg-danger-bg text-danger-text',
     barColor: 'bg-red-500',
-    icon: AlertTriangle,
   },
   expiring: {
     color: 'bg-warning-bg text-warning-text',
     barColor: 'bg-amber-500',
-    icon: Clock,
   },
   valid: {
     color: 'bg-success-bg text-success-text',
     barColor: 'bg-lime-400',
-    icon: CheckCircle,
   },
 }
 
-export function DocumentExpiryTimeline() {
-  const maxDays = Math.max(...documents.filter(d => d.daysUntilExpiry > 0).map((d) => d.daysUntilExpiry), 1)
+interface DocumentExpiryTimelineProps {
+  items: DashboardDocumentExpiryItem[]
+  isLoading?: boolean
+}
+
+export function DocumentExpiryTimeline({ items, isLoading = false }: DocumentExpiryTimelineProps) {
+  const displayItems = items.slice(0, 8)
+  const maxDays = Math.max(
+    ...displayItems.filter((d) => d.daysLeft > 0).map((d) => d.daysLeft),
+    1,
+  )
+
+  if (isLoading) {
+    return (
+      <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6">
+        <Skeleton className={cn('h-64 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+      </div>
+    )
+  }
+
+  if (displayItems.length === 0) {
+    return (
+      <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6">
+        <h3 className="text-lg font-semibold text-cloud">Document Expiry Timeline</h3>
+        <CommonEmptyState icon={FileText} title="No documents" description="No document expiry data available." />
+      </div>
+    )
+  }
 
   return (
     <motion.div
@@ -91,22 +68,22 @@ export function DocumentExpiryTimeline() {
     >
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-lg font-semibold text-cloud">Document Expiry Timeline</h3>
-        <span className="text-xs text-muted-foreground">Next 12 months</span>
+        <span className="text-xs text-muted-foreground">Upcoming renewals</span>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
         Track document renewals and avoid compliance issues
       </p>
 
       <div className="space-y-4">
-        {documents.map((doc, index) => {
-          const config = statusConfig[doc.status]
-          const barWidth = doc.status === 'expired' 
-            ? 0 
-            : Math.min((doc.daysUntilExpiry / maxDays) * 100, 100)
+        {displayItems.map((doc, index) => {
+          const status = mapDocStatus(doc.status, doc.daysLeft)
+          const config = statusConfig[status]
+          const barWidth =
+            status === 'expired' ? 0 : Math.min((doc.daysLeft / maxDays) * 100, 100)
 
           return (
             <motion.div
-              key={doc.id}
+              key={`${doc.id}-${index}`}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
@@ -119,28 +96,28 @@ export function DocumentExpiryTimeline() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-medium text-cloud truncate">{doc.name}</p>
-                    <span className={cn(
-                      'px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0',
-                      config.color
-                    )}>
-                      {doc.status === 'expired' ? 'Expired' : doc.status === 'expiring' ? 'Expiring Soon' : 'Valid'}
+                    <span
+                      className={cn(
+                        'px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0',
+                        config.color,
+                      )}
+                    >
+                      {doc.status}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    {doc.employeeName} · <span className="font-mono text-violet-glow">{doc.id}</span>
+                    {doc.owner} · <span className="font-mono text-violet-glow">{doc.idNumber}</span>
+                    {doc.type ? ` · ${doc.type}` : ''}
                   </p>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <p className="text-sm font-mono text-cloud">
-                    {doc.status === 'expired' 
-                      ? `${Math.abs(doc.daysUntilExpiry)}d ago` 
-                      : `${doc.daysUntilExpiry}d`}
+                    {doc.daysLeft < 0 ? `${Math.abs(doc.daysLeft)}d ago` : `${doc.daysLeft}d`}
                   </p>
                   <p className="text-xs text-muted-foreground">{doc.expiryDate}</p>
                 </div>
               </div>
-              
-              {/* Progress Bar */}
+
               <div className="ml-12 h-1.5 bg-midnight rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}

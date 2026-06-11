@@ -1,7 +1,11 @@
 // components/documents/documents-grid.tsx
 'use client'
 
+import { useState } from 'react'
+import { toast } from 'sonner'
 import { FileQuestion } from 'lucide-react'
+import { downloadBlob } from '@/lib/helpers/download-blob'
+import { companyDocumentService, employeeDocumentService } from '@/services/document-service'
 import { Button } from '@/components/ui/button'
 import {
   CommonEmptyState,
@@ -23,6 +27,8 @@ const TAB_OPTIONS = [
 ]
 
 export function DocumentsGrid() {
+  const [isExporting, setIsExporting] = useState(false)
+
   const {
     tab,
     statusFilter,
@@ -44,6 +50,23 @@ export function DocumentsGrid() {
     handleStatusCardSelect,
   } = useDocumentsList()
 
+  const handleExportExpiry = async () => {
+    setIsExporting(true)
+    try {
+      const result =
+        tab === 'employee'
+          ? await employeeDocumentService.exportExpiry(30)
+          : await companyDocumentService.exportExpiry(30)
+      downloadBlob(result.blob, result.filename)
+      toast.success('Expiry report downloaded')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to export documents'
+      toast.error(message)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <CommonFilterChips options={TAB_OPTIONS} value={tab} onChange={handleTabChange} />
@@ -56,6 +79,8 @@ export function DocumentsGrid() {
         onCategoryChange={(val) => updateQueryParams({ category: val })}
         categories={categories}
         onUploadClick={() => setIsUploadOpen(true)}
+        onExportExpiry={handleExportExpiry}
+        isExporting={isExporting}
       />
 
       <DocumentsStatsCards
