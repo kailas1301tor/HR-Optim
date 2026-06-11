@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import { COMPANY_NAME, PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 
 // Mock font variables to avoid Google Fonts network request failure during build in sandbox
@@ -8,8 +9,11 @@ const inter = { variable: 'font-sans' }
 const jetbrainsMono = { variable: 'font-mono' }
 
 export const metadata: Metadata = {
-  title: 'HRMS - Human Resource Management System',
-  description: 'Enterprise-grade Human Resource Management and Asset Management System for UAE companies',
+  title: {
+    default: `${PRODUCT_NAME} · ${COMPANY_NAME}`,
+    template: `%s | ${PRODUCT_NAME}`,
+  },
+  description: PRODUCT_DESCRIPTION,
   generator: 'v0.app',
   icons: {
     icon: [

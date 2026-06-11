@@ -1,5 +1,6 @@
 // validations/asset-actions.schema.ts
-import { z } from 'zod';
+import { z } from 'zod'
+import { FILE_UPLOAD_ERROR_MESSAGE, isAllowedUploadFile } from '@/lib/helpers/file-upload-validation'
 
 export const assignAssetSchema = z.object({
   assign_to_employee: z.coerce.number().positive({ message: 'Please select an employee' }),
@@ -50,8 +51,11 @@ export const addAMCSchema = z.object({
 
 export const uploadDocumentSchema = z.object({
   document_type: z.coerce.number().positive({ message: 'Please select a document type' }),
-  file: z.any().refine((file) => file instanceof File, { message: 'Please upload a file' }),
-});
+  file: z
+    .any()
+    .refine((file) => file instanceof File, { message: 'Please upload a file' })
+    .refine((file) => isAllowedUploadFile(file), { message: FILE_UPLOAD_ERROR_MESSAGE }),
+})
 
 export type AssignAssetInput = z.infer<typeof assignAssetSchema>;
 export type TransferAssetInput = z.infer<typeof transferAssetSchema>;

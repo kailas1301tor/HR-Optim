@@ -12,7 +12,7 @@ import { CommonFormFieldError } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
-import type { DropdownData } from '@/services/employee-service'
+import type { DropdownData } from '@/types/employee'
 
 interface EmploymentDetailsStepProps {
   isEditMode?: boolean
@@ -55,7 +55,7 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
             Employee Type
           </Label>
           <Select
-            value={currentEmployeeType}
+            value={currentEmployeeType || undefined}
             onValueChange={(val) => setValue('employee_type', val)}
           >
             <SelectTrigger className={uiSelect}>
@@ -94,7 +94,7 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
             Accommodation
           </Label>
           <Select
-            value={currentAccommodation}
+            value={currentAccommodation || undefined}
             onValueChange={(val) => setValue('accommodation', val)}
           >
             <SelectTrigger className={uiSelect}>
@@ -102,7 +102,7 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
             </SelectTrigger>
             <SelectContent>
               {dropdowns?.accommodation_choices.map((item) => (
-                <SelectItem key={item.id} value={String(item.id)}>
+                <SelectItem key={item.id} value={item.name}>
                   {item.name}
                 </SelectItem>
               ))}

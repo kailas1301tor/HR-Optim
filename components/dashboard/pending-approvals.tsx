@@ -99,7 +99,7 @@ export function PendingApprovals() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-2xl p-6"
+      className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6"
     >
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-lg font-semibold text-cloud">Pending Approvals</h3>
@@ -123,7 +123,7 @@ export function PendingApprovals() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.05 }}
               className={cn(
-                'bg-midnight rounded-xl p-4 border-l-2',
+                'bg-midnight rounded-[20px] [corner-shape:squircle] p-4 border-l-2',
                 config.borderColor
               )}
             >

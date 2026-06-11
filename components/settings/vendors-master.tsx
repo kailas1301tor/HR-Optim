@@ -17,22 +17,30 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
+import { CommonEmptyState, CommonErrorState } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useVendorsMaster } from './useVendorsMaster'
-import type { FrontendVendor } from '@/services/vendor-service'
+import type { FrontendVendor } from '@/types/settings'
 import type { AssetType } from '@/services/asset-type-service'
 
 interface VendorsMasterProps {
   vendors: FrontendVendor[]
   assetTypes: AssetType[]
   isLoading: boolean
+  hasError?: boolean
   onRefresh: () => Promise<void>
 }
 
-export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: VendorsMasterProps) {
+export function VendorsMaster({
+  vendors,
+  assetTypes,
+  isLoading,
+  hasError = false,
+  onRefresh,
+}: VendorsMasterProps) {
   const {
     isVendorModalOpen,
     setIsVendorModalOpen,
@@ -54,6 +62,17 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
     getAssetTypeName,
   } = useVendorsMaster({ assetTypes, onRefresh })
 
+  if (hasError) {
+    return (
+      <CommonErrorState
+        title="Failed to load vendors"
+        message="Please check your connection and try again."
+        onRetry={onRefresh}
+        className="min-h-[200px]"
+      />
+    )
+  }
+
   return (
     <>
       <Card className="bg-card/40 backdrop-blur border-border/80 shadow-lg">
@@ -70,16 +89,21 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
             </div>
           ) : vendors.length === 0 ? (
-            <div className="text-center py-6 text-sm text-slate-400">No vendors found.</div>
+            <CommonEmptyState
+              icon={Plus}
+              title="No vendors found"
+              description="Add vendors linked to asset types for maintenance tracking."
+              className="py-6 shadow-none border-0 bg-transparent"
+            />
           ) : (
             vendors.map((vendor) => (
               <div
                 key={vendor.id}
-                className="flex items-center justify-between bg-midnight border border-border/60 rounded-xl p-3 hover:border-violet-core/40 transition-all group"
+                className="flex items-center justify-between bg-midnight border border-border/60 rounded-[20px] [corner-shape:squircle] p-3 hover:border-violet-core/40 transition-all group"
               >
                 <div className="flex flex-col gap-0.5">
                   <span className="text-sm font-medium text-slate-200">{vendor.name}</span>
@@ -92,7 +116,7 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-lg cursor-pointer"
+                    className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                     onClick={() => handleOpenEdit(vendor)}
                     aria-label={`Edit ${vendor.name}`}
                   >
@@ -101,7 +125,7 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-lg cursor-pointer"
+                    className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                     onClick={() => setDeleteTarget(vendor)}
                     aria-label={`Delete ${vendor.name}`}
                   >
@@ -115,8 +139,14 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
       </Card>
 
       {/* Add / Edit Vendor Dialog */}
-      <Dialog open={isVendorModalOpen} onOpenChange={setIsVendorModalOpen}>
-        <DialogContent className="max-w-xl bg-card border border-border/80 rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <Dialog
+        open={isVendorModalOpen}
+        onOpenChange={(open) => {
+          if (!open && isSubmitting) return
+          setIsVendorModalOpen(open)
+        }}
+      >
+        <DialogContent className="max-w-xl bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="text-cloud font-semibold text-lg font-sans">
               {editingVendor ? 'Edit Vendor' : 'Add Vendor'}
@@ -126,7 +156,7 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSaveVendor} className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="vendor-name" className="text-xs font-semibold uppercase tracking-wider text-slate-400">Vendor Name</Label>
                 <Input
@@ -134,7 +164,7 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
                   value={vendorName}
                   onChange={(e) => setVendorName(e.target.value)}
                   placeholder="e.g. DELL"
-                  className="bg-midnight border-border rounded-xl text-sm"
+                  className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
                   required
                   disabled={isSubmitting}
                 />
@@ -146,7 +176,7 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
                   onValueChange={setSelectedAssetTypeId}
                   disabled={isSubmitting}
                 >
-                  <SelectTrigger id="asset-type" className="bg-midnight border-border rounded-xl text-sm text-slate-300">
+                  <SelectTrigger id="asset-type" className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm text-slate-300">
                     <SelectValue placeholder="Select Asset Type" />
                   </SelectTrigger>
                   <SelectContent className="bg-midnight border-border text-slate-300">
@@ -172,18 +202,18 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
                 value={vendorDescription}
                 onChange={(e) => setVendorDescription(e.target.value)}
                 placeholder="e.g. Hardware vendor"
-                className="bg-midnight border-border rounded-xl text-sm"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
                 disabled={isSubmitting}
               />
             </div>
 
             <DialogFooter className="pt-4 border-t border-border/40">
               <DialogClose asChild>
-                <Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer" disabled={isSubmitting}>Cancel</Button>
+                <Button type="button" variant="outline" className="h-10 rounded-[20px] [corner-shape:squircle] cursor-pointer" disabled={isSubmitting}>Cancel</Button>
               </DialogClose>
               <Button
                 type="submit"
-                className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-5 cursor-pointer flex items-center gap-2"
+                className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer flex items-center gap-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -196,7 +226,7 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
 
       {/* Delete Confirmation AlertDialog */}
       <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent className="max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl">
+        <AlertDialogContent className="max-w-md bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-cloud font-semibold text-lg font-sans">
               Are you absolutely sure?
@@ -206,11 +236,11 @@ export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: Ven
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 border-t border-border/40 gap-2">
-            <AlertDialogCancel className="h-10 rounded-xl cursor-pointer" disabled={isDeleting}>
+            <AlertDialogCancel className="h-10 rounded-[20px] [corner-shape:squircle] cursor-pointer" disabled={isDeleting}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="h-10 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-5 cursor-pointer flex items-center gap-2"
+              className="h-10 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer flex items-center gap-2"
               onClick={(e) => {
                 e.preventDefault()
                 handleDeleteVendor()

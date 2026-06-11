@@ -13,7 +13,7 @@ import { monthlyData } from './payroll-constants'
 
 export function PayrollTrendsChart() {
   return (
-    <div className="bg-card border border-border rounded-2xl p-6">
+    <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-lg font-semibold text-cloud mb-1">Payroll Trends</h3>

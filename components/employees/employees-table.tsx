@@ -1,24 +1,17 @@
 // components/employees/employees-table.tsx
 'use client'
 
-import { AnimatePresence } from 'framer-motion'
-import { ChevronUp, ChevronDown, ArrowUpDown } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CommonPagination } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock, uiTableShell } from '@/lib/ui/design-system'
 import { EmployeeTableRow } from './employee-table-row'
-import type { Employee } from './employee-table-types'
-
-type SortField = 'full_name' | 'department' | 'designation' | 'joined_date' | 'status'
+import type { Employee } from '@/types/employee'
 
 interface EmployeesTableProps {
   employees: Employee[]
   isLoading: boolean
-  sortField: SortField
-  sortOrder: 'asc' | 'desc'
   pagination: { totalCount: number; totalPages: number; currentPage: number }
-  onSort: (field: SortField) => void
   onSelect: (employee: Employee) => void
   onToggleStatus: (employee: Employee, active: boolean) => void
   onEdit: (employee: Employee) => void
@@ -26,60 +19,38 @@ interface EmployeesTableProps {
   onPageChange: (page: number) => void
 }
 
+const TABLE_COLUMNS = [
+  { id: 'employee', label: 'Employee' },
+  { id: 'department', label: 'Department' },
+  { id: 'position', label: 'Position' },
+  { id: 'status', label: 'Status' },
+  { id: 'active', label: 'Active' },
+  { id: 'joined', label: 'Join Date' },
+] as const
+
 export function EmployeesTable({
   employees,
   isLoading,
-  sortField,
-  sortOrder,
   pagination,
-  onSort,
   onSelect,
   onToggleStatus,
   onEdit,
   onDelete,
   onPageChange,
 }: EmployeesTableProps) {
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 opacity-50" />
-    return sortOrder === 'asc' ? <ChevronUp className="w-3 h-3 ml-1" /> : <ChevronDown className="w-3 h-3 ml-1" />
-  }
-
   return (
     <div className={cn(uiTableShell, 'hidden lg:block')}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
-              {[
-                { id: 'full_name', label: 'Employee' },
-                { id: 'department', label: 'Department' },
-                { id: 'designation', label: 'Position' },
-                { id: 'status', label: 'Status' },
-              ].map((col) => (
+              {TABLE_COLUMNS.map((col) => (
                 <th key={col.id} className="text-left px-4 py-3">
-                  <button
-                    type="button"
-                    onClick={() => onSort(col.id as SortField)}
-                    className="flex items-center text-[11px] font-medium uppercase tracking-wider text-slate-500 hover:text-cloud transition-colors"
-                  >
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
                     {col.label}
-                    <SortIcon field={col.id as SortField} />
-                  </button>
+                  </span>
                 </th>
               ))}
-              <th className="text-left px-4 py-3">
-                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">Active</span>
-              </th>
-              <th className="text-left px-4 py-3">
-                <button
-                  type="button"
-                  onClick={() => onSort('joined_date')}
-                  className="flex items-center text-[11px] font-medium uppercase tracking-wider text-slate-500 hover:text-cloud transition-colors"
-                >
-                  Join Date
-                  <SortIcon field="joined_date" />
-                </button>
-              </th>
               <th className="w-12" />
             </tr>
           </thead>
@@ -105,19 +76,17 @@ export function EmployeesTable({
                 </tr>
               ))
             ) : (
-              <AnimatePresence>
-                {employees.map((employee, index) => (
-                  <EmployeeTableRow
-                    key={employee.id}
-                    employee={employee}
-                    index={index}
-                    onSelect={() => onSelect(employee)}
-                    onToggleStatus={onToggleStatus}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                  />
-                ))}
-              </AnimatePresence>
+              employees.map((employee, index) => (
+                <EmployeeTableRow
+                  key={employee.id}
+                  employee={employee}
+                  index={index}
+                  onSelect={() => onSelect(employee)}
+                  onToggleStatus={onToggleStatus}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                />
+              ))
             )}
           </tbody>
         </table>

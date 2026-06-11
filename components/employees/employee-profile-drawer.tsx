@@ -1,32 +1,22 @@
 // components/employees/employee-profile-drawer.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { uiSkeletonBlock, uiTabChipActive, uiTabChipBase, uiTabChipInactive } from '@/lib/ui/design-system'
 import { CommonErrorState, CommonStatusBadge } from '@/components/common'
 import { getEmployeeStatusBadgeVariant } from '@/lib/ui/design-system'
 import {
   X,
   Building2,
-  FileText,
-  Package,
-  Clock,
-  CalendarDays,
-  Activity,
   Pencil,
 } from 'lucide-react'
 import type { Employee } from './employee-table-types'
 import { PersonalTab } from './profile/personal-tab'
-import { DocumentsTab } from './profile/documents-tab'
-import { AssetsTab } from './profile/assets-tab'
-import { AttendanceTab } from './profile/attendance-tab'
-import { LeaveTab } from './profile/leave-tab'
-import { ActivityTab } from './profile/activity-tab'
 import { OnboardingChecklistTab } from './profile/onboarding-checklist-tab'
 import { OffboardingChecklistTab } from './profile/offboarding-checklist-tab'
 import { ClipboardCheck, FileX } from 'lucide-react'
@@ -35,6 +25,7 @@ import { employeeService } from '@/services/employee-service'
 interface EmployeeProfileDrawerProps {
   employee: Employee | null
   open: boolean
+  detailVersion?: number
   onClose: () => void
   onEdit: (employee: Employee) => void
 }
@@ -43,37 +34,38 @@ const tabs = [
   { id: 'personal', label: 'Personal', icon: Building2 },
   { id: 'onboarding', label: 'Onboarding', icon: ClipboardCheck },
   { id: 'offboarding', label: 'Offboarding', icon: FileX },
-  { id: 'documents', label: 'Documents', icon: FileText },
-  { id: 'assets', label: 'Assets', icon: Package },
-  { id: 'attendance', label: 'Attendance', icon: Clock },
-  { id: 'leave', label: 'Leave', icon: CalendarDays },
-  { id: 'activity', label: 'Activity', icon: Activity },
-]
+] as const
 
-export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: EmployeeProfileDrawerProps) {
+export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClose, onEdit }: EmployeeProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState('personal')
   const [detailedEmployee, setDetailedEmployee] = useState<Employee | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fetchIdRef = useRef(0)
 
   const fetchDetail = async (id: number, signal?: AbortSignal) => {
+    const fetchId = ++fetchIdRef.current
     setIsLoadingDetail(true)
     setError(null)
     try {
       const data = await employeeService.getEmployee(id, signal)
+      if (signal?.aborted || fetchId !== fetchIdRef.current) return
       setDetailedEmployee(data)
     } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return
-      }
+      if (err instanceof Error && err.name === 'AbortError') return
+      if (fetchId !== fetchIdRef.current) return
       console.error('Failed to load employee details:', err)
       setError(err instanceof Error ? err.message : 'Failed to load employee details')
     } finally {
-      if (!signal?.aborted) {
+      if (fetchId === fetchIdRef.current) {
         setIsLoadingDetail(false)
       }
     }
   }
+
+  useEffect(() => {
+    setActiveTab('personal')
+  }, [employee?.id])
 
   useEffect(() => {
     if (!open || !employee?.id) {
@@ -86,7 +78,7 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
     return () => {
       controller.abort()
     }
-  }, [open, employee?.id])
+  }, [open, employee?.id, detailVersion])
 
   if (!employee) return null
 
@@ -164,10 +156,9 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap',
-                      activeTab === tab.id
-                        ? 'bg-violet-core/20 text-violet-glow'
-                        : 'text-slate-400 hover:text-cloud hover:bg-midnight'
+                      uiTabChipBase,
+                      'flex items-center gap-2 whitespace-nowrap',
+                      activeTab === tab.id ? uiTabChipActive : uiTabChipInactive
                     )}
                   >
                     <tab.icon className="w-4 h-4" />
@@ -198,11 +189,6 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
               {activeTab === 'offboarding' && (
                 <OffboardingChecklistTab employeeId={displayEmployee.id} />
               )}
-              {activeTab === 'documents' && <DocumentsTab />}
-              {activeTab === 'assets' && <AssetsTab />}
-              {activeTab === 'attendance' && <AttendanceTab />}
-              {activeTab === 'leave' && <LeaveTab />}
-              {activeTab === 'activity' && <ActivityTab />}
             </div>
           </motion.div>
         </>
@@ -215,30 +201,30 @@ function PersonalTabSkeleton() {
   return (
     <div className="space-y-6" aria-label="Loading employee details" role="status">
       <div>
-        <Skeleton className={cn('h-3 w-32 rounded-xl mb-3', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-3 w-32 rounded-[20px] [corner-shape:squircle] mb-3', uiSkeletonBlock)} />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-midnight/60 border border-border/40 rounded-xl p-3 flex flex-col gap-2">
-              <Skeleton className={cn('w-8 h-8 rounded-xl', uiSkeletonBlock)} />
+            <div key={i} className="bg-midnight/60 border border-border/40 rounded-[20px] [corner-shape:squircle] p-3 flex flex-col gap-2">
+              <Skeleton className={cn('w-8 h-8 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               <div className="space-y-1.5">
-                <Skeleton className={cn('h-2 w-12 rounded-xl', uiSkeletonBlock)} />
-                <Skeleton className={cn('h-3 w-20 rounded-xl', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-2 w-12 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-3 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               </div>
             </div>
           ))}
         </div>
-        <Skeleton className={cn('h-10 w-full rounded-xl mt-3', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-10 w-full rounded-[20px] [corner-shape:squircle] mt-3', uiSkeletonBlock)} />
       </div>
 
       <div>
-        <Skeleton className={cn('h-3 w-28 rounded-xl mb-3', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-3 w-28 rounded-[20px] [corner-shape:squircle] mb-3', uiSkeletonBlock)} />
         <div className="grid grid-cols-2 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-midnight/40 border border-border/40 rounded-xl p-4 flex items-start gap-3">
-              <Skeleton className={cn('w-9 h-9 rounded-xl shrink-0', uiSkeletonBlock)} />
+            <div key={i} className="bg-midnight/40 border border-border/40 rounded-[20px] [corner-shape:squircle] p-4 flex items-start gap-3">
+              <Skeleton className={cn('w-9 h-9 rounded-[20px] [corner-shape:squircle] shrink-0', uiSkeletonBlock)} />
               <div className="space-y-1.5 flex-1">
-                <Skeleton className={cn('h-2 w-12 rounded-xl', uiSkeletonBlock)} />
-                <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-2 w-12 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-3.5 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               </div>
             </div>
           ))}
@@ -246,8 +232,8 @@ function PersonalTabSkeleton() {
       </div>
 
       <div className="space-y-4">
-        <Skeleton className={cn('h-3 w-20 rounded-xl', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-20 w-full rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-3 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-20 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
       </div>
     </div>
   )

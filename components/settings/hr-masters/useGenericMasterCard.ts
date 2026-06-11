@@ -84,9 +84,17 @@ export function useGenericMasterCard({
     }
   }
 
+  const handleDialogOpenChange = (open: boolean): void => {
+    if (!open && !isSubmitting) {
+      setFormValue('')
+      setEditItem(null)
+    }
+    if (!isSubmitting) setIsOpen(open)
+  }
+
   return {
     isOpen,
-    setIsOpen,
+    setIsOpen: handleDialogOpenChange,
     editItem,
     formValue,
     setFormValue,

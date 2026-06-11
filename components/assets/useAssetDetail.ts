@@ -1,15 +1,18 @@
 // components/assets/useAssetDetail.ts
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useState, useTransition, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { toast } from 'sonner'
-import { assetService, type BackendAsset, type AssetDropdowns } from '@/services/asset-service'
-import { departmentService, type Department } from '@/services/department-service'
+import { assetService } from '@/services/asset-service'
+import { isAssetDisposed } from '@/lib/helpers/asset-status'
+import type { Asset, AssetDropdowns } from '@/types/asset'
+import type { Department } from '@/types/settings'
 import { getAssetTypeConfig, getStatusConfig } from './assets-constants'
+import { useAssetDropdowns } from './useAssetDropdowns'
 
 export interface UseAssetDetailReturn {
-  asset: BackendAsset | null
+  asset: Asset | null
   dropdowns: AssetDropdowns | null
   isLoading: boolean
   error: string | null
@@ -32,7 +35,7 @@ export interface UseAssetDetailReturn {
   setIsDisposeOpen: (open: boolean) => void
   setIsEditOpen: (open: boolean) => void
   setTab: (tabName: string) => void
-  fetchAssetDetails: () => Promise<void>
+  fetchAssetDetails: () => void
   departments: Department[]
   isEditOpen: boolean
 }
@@ -43,13 +46,14 @@ export function useAssetDetail(assetId: number): UseAssetDetailReturn {
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
-  const [asset, setAsset] = useState<BackendAsset | null>(null)
-  const [dropdowns, setDropdowns] = useState<AssetDropdowns | null>(null)
-  const [departments, setDepartments] = useState<Department[]>([])
+  const { dropdowns, departments } = useAssetDropdowns()
+
+  const [asset, setAsset] = useState<Asset | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
+  const fetchIdRef = useRef(0)
 
-  // Dialog states
   const [isAssignOpen, setIsAssignOpen] = useState(false)
   const [isTransferOpen, setIsTransferOpen] = useState(false)
   const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false)
@@ -59,38 +63,48 @@ export function useAssetDetail(assetId: number): UseAssetDetailReturn {
 
   const activeTab = searchParams.get('tab') || 'overview'
 
-  const fetchAssetDetails = async (signal?: AbortSignal) => {
-    setIsLoading(true)
+  const fetchAssetDetails = useCallback(() => {
+    setReloadToken((prev) => prev + 1)
+  }, [])
+
+  useEffect(() => {
+    setAsset(null)
     setError(null)
-    try {
-      const [assetData, dropdownData, deptData] = await Promise.all([
-        assetService.getAssetById(assetId, signal),
-        assetService.getAssetDropdowns(signal),
-        departmentService.getDepartments()
-      ])
-      if (signal?.aborted) return
-      setAsset(assetData)
-      setDropdowns(dropdownData)
-      setDepartments(deptData)
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') return
-      console.error('Failed to load asset details:', err)
-      setError(err instanceof Error ? err.message : 'Failed to load asset details')
-      toast.error('Failed to fetch asset details')
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoading(false)
-      }
-    }
-  }
+    setIsAssignOpen(false)
+    setIsTransferOpen(false)
+    setIsMaintenanceOpen(false)
+    setIsReturnOpen(false)
+    setIsDisposeOpen(false)
+    setIsEditOpen(false)
+  }, [assetId])
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchAssetDetails(controller.signal)
-    return () => {
-      controller.abort()
+    const fetchId = ++fetchIdRef.current
+
+    async function loadAsset(): Promise<void> {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const assetData = await assetService.getAssetById(assetId, controller.signal)
+        if (controller.signal.aborted || fetchId !== fetchIdRef.current) return
+        setAsset(assetData)
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        if (fetchId !== fetchIdRef.current) return
+        setAsset(null)
+        setError(err instanceof Error ? err.message : 'Failed to load asset details')
+        toast.error('Failed to fetch asset details')
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setIsLoading(false)
+        }
+      }
     }
-  }, [assetId])
+
+    void loadAsset()
+    return () => controller.abort()
+  }, [assetId, reloadToken])
 
   const setTab = (tabName: string) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -103,10 +117,10 @@ export function useAssetDetail(assetId: number): UseAssetDetailReturn {
   const typeConfig = asset ? getAssetTypeConfig(asset.asset_type) : null
   const statusConfig = asset ? getStatusConfig(asset.status) : null
 
-  // Helper flags
   const statusLower = asset?.status?.toLowerCase() || ''
-  const isDisposed = statusLower.includes('dispose') || statusLower.includes('delete')
-  const isAssigned = statusLower.includes('assign') || statusLower.includes('in use') || statusLower.includes('in-use')
+  const isDisposed = isAssetDisposed(asset?.status)
+  const isAssigned =
+    statusLower.includes('assign') || statusLower.includes('in use') || statusLower.includes('in-use')
   const inRepair = statusLower.includes('repair') || statusLower.includes('maintenance')
 
   return {

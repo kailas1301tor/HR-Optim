@@ -87,7 +87,7 @@ export function DocumentExpiryTimeline() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-2xl p-6"
+      className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6"
     >
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-lg font-semibold text-cloud">Document Expiry Timeline</h3>
@@ -113,7 +113,7 @@ export function DocumentExpiryTimeline() {
               className="group"
             >
               <div className="flex items-center gap-4 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-midnight flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-[16px] [corner-shape:squircle] bg-midnight flex items-center justify-center flex-shrink-0">
                   <FileText className="w-4 h-4 text-slate-400" />
                 </div>
                 <div className="flex-1 min-w-0">

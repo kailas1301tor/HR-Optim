@@ -12,7 +12,7 @@ import { CommonFormFieldError } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
-import type { DropdownData } from '@/services/employee-service'
+import type { DropdownData } from '@/types/employee'
 
 interface PersonalInfoStepProps {
   isEditMode?: boolean
@@ -54,7 +54,7 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
             Nationality
           </Label>
           <Select
-            value={currentNationality}
+            value={currentNationality || undefined}
             onValueChange={(val) => setValue('nationality', val)}
           >
             <SelectTrigger className={uiSelect}>

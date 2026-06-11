@@ -1,13 +1,18 @@
 // components/assets/assets-list.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CommonEmptyState } from '@/components/common'
+import {
+  CommonEmptyState,
+  CommonErrorBanner,
+  CommonErrorState,
+  CommonMobileCardGrid,
+  CommonPagination,
+} from '@/components/common'
+import { PrimaryButton } from '@/components/ui/primary-button'
 import { uiOutlineBtn } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
 import { AssetsPageHeader } from './assets-page-header'
 import { AssetsStatsCards } from './assets-stats-cards'
 import { AssetsToolbar } from './assets-toolbar'
@@ -15,6 +20,7 @@ import { AssetsTable } from './assets-table'
 import { AssetCard } from './asset-card'
 import { AssetCardSkeleton } from './asset-card-skeleton'
 import { AddAssetModal } from './add-asset-modal'
+import { DisposeAssetDialog } from './dispose-asset-dialog'
 import { useAssetsTable } from './useAssetsTable'
 
 export function AssetsList() {
@@ -23,69 +29,52 @@ export function AssetsList() {
     pagination,
     dropdowns,
     departments,
+    dropdownsError,
+    reloadDropdowns,
     isTableLoading,
+    hasError,
     selectedAsset,
     isAddOpen,
-    deleteTargetId,
-    isDeleting,
-    searchQuery,
+    disposeTargetId,
+    localSearch,
+    setLocalSearch,
     statusFilter,
     typeFilter,
-    totalValue,
-    inServiceCount,
-    utilizationRate,
+    pageStats,
     setSelectedAsset,
     setIsAddOpen,
-    setDeleteTargetId,
-    fetchAssets,
+    setDisposeTargetId,
+    handleRetry,
     updateQueryParams,
-    executeDelete,
+    handleClearFilters,
   } = useAssetsTable()
-
-  const [localSearch, setLocalSearch] = useState(searchQuery)
-
-  useEffect(() => {
-    setLocalSearch(searchQuery)
-  }, [searchQuery])
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (localSearch !== searchQuery) {
-        updateQueryParams({ search: localSearch, page: '1' })
-      }
-    }, 300)
-    return () => clearTimeout(handler)
-  }, [localSearch, searchQuery])
 
   const handleAddAsset = () => {
     setSelectedAsset(null)
     setIsAddOpen(true)
   }
 
-  const handleExport = () => {
-    toast.success('Exporting assets...')
-  }
-
-  const handleClearFilters = () => {
-    setLocalSearch('')
-    updateQueryParams({ search: '', status: 'all', asset_type: 'all', page: '1' })
-  }
-
-  const totalValueLabel = `AED ${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-
-  const showEmpty = !isTableLoading && assetsList.length === 0
+  const showEmpty = !isTableLoading && !hasError && assetsList.length === 0
 
   return (
     <div className="space-y-6">
       <AssetsPageHeader onAddAsset={handleAddAsset} />
 
       <AssetsStatsCards
-        totalCount={pagination.totalCount}
-        inServiceCount={inServiceCount}
-        utilizationRate={utilizationRate}
-        totalValue={totalValueLabel}
+        totalCount={pageStats.totalCount}
+        inServiceCount={pageStats.inServiceCount}
+        utilizationRate={pageStats.utilizationRate}
+        totalValue={pageStats.totalValueLabel}
+        isPageScoped={pageStats.isPageScoped}
         isLoading={isTableLoading}
       />
+
+      {dropdownsError && (
+        <CommonErrorBanner
+          message="Filter options could not be loaded. Status and category filters may be unavailable."
+          onRetry={() => void reloadDropdowns()}
+        />
+      )}
 
       <AssetsToolbar
         localSearch={localSearch}
@@ -95,28 +84,29 @@ export function AssetsList() {
         dropdowns={dropdowns}
         onStatusChange={(val) => updateQueryParams({ status: val, page: '1' })}
         onTypeChange={(val) => updateQueryParams({ asset_type: val, page: '1' })}
-        onExport={handleExport}
         onAddAsset={handleAddAsset}
       />
 
-      {isTableLoading ? (
+      {hasError ? (
+        <CommonErrorState
+          title="Failed to load assets"
+          message="Please check your connection and try again."
+          onRetry={handleRetry}
+        />
+      ) : isTableLoading ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+          <CommonMobileCardGrid>
             {Array.from({ length: 4 }).map((_, idx) => (
               <AssetCardSkeleton key={idx} />
             ))}
-          </div>
+          </CommonMobileCardGrid>
           <AssetsTable
             assetsList={[]}
             isTableLoading
             pagination={pagination}
-            deleteTargetId={null}
-            isDeleting={false}
             onEdit={() => {}}
-            onDelete={() => {}}
+            onDispose={() => {}}
             onPageChange={() => {}}
-            onDeleteDialogChange={() => {}}
-            onExecuteDelete={() => {}}
           />
         </>
       ) : showEmpty ? (
@@ -126,18 +116,14 @@ export function AssetsList() {
           description="Try updating your search query or filters, or add a new asset to get started."
           actions={
             <>
-              <Button
-                type="button"
-                onClick={handleAddAsset}
-                className="h-9 text-xs bg-violet-core hover:bg-violet-core/90 text-white rounded-xl"
-              >
+              <PrimaryButton onClick={handleAddAsset} className="text-xs min-h-11">
                 Add Asset
-              </Button>
+              </PrimaryButton>
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClearFilters}
-                className={cn(uiOutlineBtn, 'h-9 text-xs')}
+                className={cn(uiOutlineBtn, 'text-xs min-h-11')}
               >
                 Clear Filters
               </Button>
@@ -146,7 +132,7 @@ export function AssetsList() {
         />
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+          <CommonMobileCardGrid>
             {assetsList.map((asset, index) => (
               <AssetCard
                 key={asset.id}
@@ -156,67 +142,61 @@ export function AssetsList() {
                   setSelectedAsset(a)
                   setIsAddOpen(true)
                 }}
-                onDelete={(id) => setDeleteTargetId(id)}
+                onDelete={(id) => setDisposeTargetId(id)}
               />
             ))}
-          </div>
+          </CommonMobileCardGrid>
 
           {pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between gap-3 lg:hidden px-1">
-              <p className="text-xs text-muted-foreground">
-                Page {pagination.currentPage} of {pagination.totalPages}
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.currentPage <= 1 || isTableLoading}
-                  onClick={() => updateQueryParams({ page: String(pagination.currentPage - 1) })}
-                  className={cn(uiOutlineBtn, 'text-xs h-8')}
-                >
-                  Prev
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={pagination.currentPage >= pagination.totalPages || isTableLoading}
-                  onClick={() => updateQueryParams({ page: String(pagination.currentPage + 1) })}
-                  className={cn(uiOutlineBtn, 'text-xs h-8')}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
+            <CommonPagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              totalCount={pagination.totalCount}
+              onPageChange={(page) => updateQueryParams({ page: String(page) })}
+              isLoading={isTableLoading}
+              compact
+              className="lg:hidden"
+            />
           )}
 
           <AssetsTable
             assetsList={assetsList}
             isTableLoading={isTableLoading}
             pagination={pagination}
-            deleteTargetId={deleteTargetId}
-            isDeleting={isDeleting}
             onEdit={(a) => {
               setSelectedAsset(a)
               setIsAddOpen(true)
             }}
-            onDelete={(id) => setDeleteTargetId(id)}
+            onDispose={(id) => setDisposeTargetId(id)}
             onPageChange={(page) => updateQueryParams({ page: String(page) })}
-            onDeleteDialogChange={(open) => !open && setDeleteTargetId(null)}
-            onExecuteDelete={executeDelete}
           />
         </>
       )}
 
       <AddAssetModal
         open={isAddOpen}
-        onOpenChange={setIsAddOpen}
-        onSuccess={fetchAssets}
+        onOpenChange={(open) => {
+          setIsAddOpen(open)
+          if (!open) setSelectedAsset(null)
+        }}
+        onSuccess={handleRetry}
         editAsset={selectedAsset}
         dropdowns={dropdowns}
         departments={departments}
       />
+
+      {disposeTargetId !== null && (
+        <DisposeAssetDialog
+          open={disposeTargetId !== null}
+          onOpenChange={(open) => !open && setDisposeTargetId(null)}
+          assetId={disposeTargetId}
+          dropdowns={dropdowns}
+          onSuccess={() => {
+            setDisposeTargetId(null)
+            handleRetry()
+          }}
+        />
+      )}
     </div>
   )
 }

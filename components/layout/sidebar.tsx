@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   SHELL_SIDEBAR_WIDTH_COLLAPSED,
   SHELL_SIDEBAR_WIDTH_EXPANDED,
+  uiSquircleNav,
 } from '@/lib/ui/design-system'
 import {
   Bell,
@@ -76,7 +77,10 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen, us
           <button
             type="button"
             onClick={() => setCollapsed(false)}
-            className="flex items-center justify-center w-full h-9 hover:bg-carbon rounded-lg text-slate-400 hover:text-cloud transition-colors cursor-pointer"
+            className={cn(
+              'flex items-center justify-center w-full h-9 hover:bg-carbon text-slate-400 hover:text-cloud transition-colors cursor-pointer',
+              uiSquircleNav
+            )}
             aria-label="Expand sidebar"
           >
             <ChevronRight className="w-4 h-4" />
@@ -93,7 +97,12 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen, us
       <div className="p-4 border-t border-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 w-full hover:bg-carbon rounded-lg p-2 transition-colors cursor-pointer">
+            <button
+              className={cn(
+                'flex items-center gap-3 w-full hover:bg-carbon p-2 transition-colors cursor-pointer',
+                uiSquircleNav
+              )}
+            >
               <Avatar className="w-8 h-8 flex-shrink-0">
                 <AvatarImage src="/placeholder-user.jpg" />
                 <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-xs font-mono">

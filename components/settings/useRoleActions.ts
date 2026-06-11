@@ -15,10 +15,9 @@ export interface UseRoleActionsReturn {
   handleDeleteRole: (
     role: BackendRole,
     index: number,
-    roles: BackendRole[],
-    setRoles: React.Dispatch<React.SetStateAction<BackendRole[]>>,
     selectedRoleIndex: number | null,
-    setSelectedRoleIndex: (i: number | null) => void
+    setSelectedRoleIndex: (i: number | null) => void,
+    refreshData: () => Promise<void>
   ) => Promise<void>
 }
 
@@ -56,10 +55,9 @@ export function useRoleActions(): UseRoleActionsReturn {
   const handleDeleteRole = useCallback(async (
     role: BackendRole,
     index: number,
-    roles: BackendRole[],
-    setRoles: React.Dispatch<React.SetStateAction<BackendRole[]>>,
     selectedRoleIndex: number | null,
-    setSelectedRoleIndex: (i: number | null) => void
+    setSelectedRoleIndex: (i: number | null) => void,
+    refreshData: () => Promise<void>
   ): Promise<void> => {
     if (!confirm(`Are you sure you want to delete the role "${role.name}"?`)) return
 
@@ -67,15 +65,14 @@ export function useRoleActions(): UseRoleActionsReturn {
       try {
         await roleService.deleteRole(role.id)
         toast.success(`Role "${role.name}" deleted successfully`)
-        
-        const updatedRoles = roles.filter((r) => r.id !== role.id)
-        setRoles(updatedRoles)
-        
+
         if (selectedRoleIndex === index) {
-          setSelectedRoleIndex(updatedRoles.length > 0 ? 0 : null)
+          setSelectedRoleIndex(null)
         } else if (selectedRoleIndex !== null && selectedRoleIndex > index) {
           setSelectedRoleIndex(selectedRoleIndex - 1)
         }
+
+        await refreshData()
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Failed to delete role'
         toast.error(message)

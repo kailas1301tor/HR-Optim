@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { CommonEmptyState } from '@/components/common'
 import { Loader2, Search, UserCheck } from 'lucide-react'
 import { useAssignAssetDialog } from './useAssignAssetDialog'
 
@@ -23,7 +24,7 @@ export function AssignAssetDialog({ open, onOpenChange, assetId, onSuccess }: As
     isSubmitting,
     form,
     selectedEmployeeId,
-    filteredEmployees,
+    employees,
     selectedEmp,
     setSearchQuery,
     onSubmit,
@@ -45,7 +46,7 @@ export function AssignAssetDialog({ open, onOpenChange, assetId, onSuccess }: As
         setSearchQuery('')
       }
     }}>
-      <DialogContent className="bg-card text-foreground border border-border/80 rounded-2xl max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="bg-card text-foreground border border-border/80 rounded-[32px] [corner-shape:squircle] max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-cloud font-semibold text-lg flex items-center gap-2">
             <UserCheck className="w-5 h-5 text-violet-glow" /> Assign Asset
@@ -58,7 +59,7 @@ export function AssignAssetDialog({ open, onOpenChange, assetId, onSuccess }: As
             <Label className="text-xs text-slate-400">Select Employee</Label>
             
             {selectedEmp && (
-              <div className="bg-violet-core/10 border border-violet-core/30 rounded-xl p-3 flex justify-between items-center animate-in fade-in-50 duration-200">
+              <div className="bg-violet-core/10 border border-violet-core/30 rounded-[20px] [corner-shape:squircle] p-3 flex justify-between items-center animate-in fade-in-50 duration-200">
                 <div>
                   <p className="text-xs font-bold text-cloud">{selectedEmp.full_name}</p>
                   <p className="text-[10px] text-slate-400 mt-0.5">{selectedEmp.employee_id} • {selectedEmp.user?.email}</p>
@@ -68,7 +69,7 @@ export function AssignAssetDialog({ open, onOpenChange, assetId, onSuccess }: As
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setValue('assign_to_employee', 0, { shouldValidate: true })}
-                  className="text-xs text-slate-400 hover:text-rose-400 hover:bg-accent rounded-lg px-2 h-7"
+                  className="text-xs text-slate-400 hover:text-rose-400 hover:bg-accent rounded-[16px] [corner-shape:squircle] px-2 h-7"
                 >
                   Change
                 </Button>
@@ -87,17 +88,20 @@ export function AssignAssetDialog({ open, onOpenChange, assetId, onSuccess }: As
                   />
                 </div>
 
-                <div className="border border-border/50 rounded-xl overflow-hidden max-h-[160px] overflow-y-auto bg-midnight/35 divide-y divide-border/30">
+                <div className="border border-border/50 rounded-[20px] [corner-shape:squircle] overflow-hidden max-h-[160px] overflow-y-auto bg-midnight/35 divide-y divide-border/30">
                   {isLoadingEmployees ? (
                     <div className="flex p-4 items-center justify-center gap-2 text-xs text-slate-500">
                       <Loader2 className="w-4.5 h-4.5 animate-spin text-violet-glow" /> Loading employees...
                     </div>
-                  ) : filteredEmployees.length === 0 ? (
-                    <div className="p-4 text-xs text-slate-500 text-center">
-                      No employees match your search.
-                    </div>
+                  ) : employees.length === 0 ? (
+                    <CommonEmptyState
+                      icon={UserCheck}
+                      title="No employees match"
+                      description="Try a different search term."
+                      className="py-4 shadow-none border-0 bg-transparent"
+                    />
                   ) : (
-                    filteredEmployees.map((emp) => (
+                    employees.map((emp) => (
                       <button
                         key={emp.id}
                         type="button"
@@ -138,14 +142,14 @@ export function AssignAssetDialog({ open, onOpenChange, assetId, onSuccess }: As
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="rounded-xl h-10 w-full"
+              className="rounded-[20px] [corner-shape:squircle] h-10 w-full"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || !selectedEmployeeId}
-              className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl h-10 w-full"
+              className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-[20px] [corner-shape:squircle] h-10 w-full"
             >
               {isSubmitting ? (
                 <>

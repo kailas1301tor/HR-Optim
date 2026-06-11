@@ -25,16 +25,9 @@ interface SingleAssetCategoryResponse {
 }
 
 export const assetCategoryService = {
-  /** Fetch all asset categories from the API. Handles network failures gracefully. */
-  async getAssetCategories(fallback: AssetCategory[], signal?: AbortSignal): Promise<AssetCategory[]> {
-    try {
-      const response = await api.get<AssetCategoryListResponse>('/api/master/asset-categories/', { signal });
-      return response.results?.data ?? fallback;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') throw error;
-      console.warn('🔴 Network error fetching asset categories. Loading mock fallback.', error);
-      return fallback;
-    }
+  async getAssetCategories(signal?: AbortSignal): Promise<AssetCategory[]> {
+    const response = await api.get<AssetCategoryListResponse>('/api/master/asset-categories/', { signal })
+    return response.results?.data ?? []
   },
 
   /** Create a new asset category. */

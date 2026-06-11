@@ -9,7 +9,7 @@ export function DocumentCardSkeleton() {
   return (
     <div className={cn(uiCard, 'p-5 border-l-2 border-l-border/40 space-y-4')}>
       <div className="flex items-start justify-between">
-        <Skeleton className={cn('w-10 h-10 rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('w-10 h-10 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
         <Skeleton className={cn('w-16 h-5 rounded-full', uiSkeletonBlock)} />
       </div>
       <div className="space-y-2">

@@ -2,25 +2,19 @@
 'use client'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Bell, Shield, Palette } from 'lucide-react'
+import { Bell, Palette } from 'lucide-react'
+import type { NotificationPreferences } from '@/types/settings'
 import { useSystemSettings } from './useSystemSettings'
 
 interface SystemSettingsProps {
-  notifications: {
-    emailAlerts: boolean
-    documentExpiry: boolean
-    leaveRequests: boolean
-    payrollUpdates: boolean
-    systemUpdates: boolean
-  }
-  setNotifications: (notifs: SystemSettingsProps['notifications']) => void
+  notifications: NotificationPreferences
+  setNotifications: (notifs: NotificationPreferences) => void
 }
 
 export function SystemSettings({ notifications, setNotifications }: SystemSettingsProps) {
@@ -117,7 +111,7 @@ export function SystemSettings({ notifications, setNotifications }: SystemSettin
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Default Language</Label>
                 <Select value={lang} onValueChange={setLang}>
-                  <SelectTrigger className="bg-midnight border-border rounded-xl text-xs text-slate-300"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-xs text-slate-300"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="English (US)">English (US)</SelectItem>
                     <SelectItem value="English (UK)">English (UK)</SelectItem>
@@ -128,40 +122,19 @@ export function SystemSettings({ notifications, setNotifications }: SystemSettin
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Preferred Theme</Label>
                 {!mounted ? (
-                  <Skeleton className={cn('h-10 w-full rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-10 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                 ) : (
                   <Select value={theme} onValueChange={setTheme}>
-                    <SelectTrigger className="bg-midnight border-border rounded-xl text-xs text-slate-300 cursor-pointer">
+                    <SelectTrigger className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-xs text-slate-300 cursor-pointer">
                       <SelectValue placeholder="Select theme..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-card border border-border/80 rounded-xl">
+                    <SelectContent className="bg-card border border-border/80 rounded-[20px] [corner-shape:squircle]">
                       <SelectItem value="dark" className="cursor-pointer">Dark (Command Center)</SelectItem>
                       <SelectItem value="light" className="cursor-pointer">Light Mode</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-card/40 backdrop-blur border border-border/80 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-base text-cloud font-semibold flex items-center gap-2">
-                <Shield className="h-4.5 w-4.5 text-violet-glow" />
-                Backups & Reliability
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-xs font-semibold text-slate-200">Daily Cloud Backup</Label>
-                  <p className="text-[10px] text-slate-400">Auto backup database snapshots nightly</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Button variant="outline" className="w-full mt-2 rounded-xl text-xs py-2 bg-midnight/35 border-border/40 hover:bg-violet-core/10 text-slate-300">
-                Trigger Manual DB Snapshot
-              </Button>
             </CardContent>
           </Card>
         </div>

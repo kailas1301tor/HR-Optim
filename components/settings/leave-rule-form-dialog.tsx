@@ -1,6 +1,7 @@
 // components/settings/leave-rule-form-dialog.tsx
 'use client'
 
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
@@ -23,14 +24,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { uiSelect } from '@/lib/ui/design-system'
 import { leaveRuleSchema, type LeaveRuleInput } from '@/validations/leave-rule.schema'
 import type { LeaveType } from '@/services/leave-type-service'
-import type { ConfigureLeaveRulePayload } from '@/services/leave-rule-service'
+import type { ConfigureLeaveRulePayload, LeaveRule } from '@/services/leave-rule-service'
+import { mapLeaveRuleToFormValues } from '@/lib/mappers/leave-rule-mapper'
+
+const DEFAULT_FORM_VALUES: LeaveRuleInput = {
+  leave_type: 0,
+  max_days: 12,
+  is_carry_forward: true,
+  carry_forward_limit: 5,
+  accrual_rate: 1,
+  accrual_frequency: 'monthly',
+  is_paid_leave: true,
+  description: '',
+}
 
 interface LeaveRuleFormDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   leaveTypes: LeaveType[]
+  editingRule?: LeaveRule | null
   isSubmitting: boolean
   onSubmit: (payload: ConfigureLeaveRulePayload) => Promise<void>
 }
@@ -39,9 +54,12 @@ export function LeaveRuleFormDialog({
   open,
   onOpenChange,
   leaveTypes,
+  editingRule = null,
   isSubmitting,
   onSubmit,
 }: LeaveRuleFormDialogProps) {
+  const isEditing = Boolean(editingRule)
+
   const {
     register,
     handleSubmit,
@@ -51,17 +69,13 @@ export function LeaveRuleFormDialog({
     formState: { errors },
   } = useForm<LeaveRuleInput>({
     resolver: zodResolver(leaveRuleSchema),
-    defaultValues: {
-      leave_type: 0,
-      max_days: 12,
-      is_carry_forward: true,
-      carry_forward_limit: 5,
-      accrual_rate: 1,
-      accrual_frequency: 'monthly',
-      is_paid_leave: true,
-      description: '',
-    },
+    defaultValues: DEFAULT_FORM_VALUES,
   })
+
+  useEffect(() => {
+    if (!open) return
+    reset(editingRule ? mapLeaveRuleToFormValues(editingRule) : DEFAULT_FORM_VALUES)
+  }, [open, editingRule, reset])
 
   const isCarryForward = watch('is_carry_forward')
   const isPaidLeave = watch('is_paid_leave')
@@ -83,15 +97,17 @@ export function LeaveRuleFormDialog({
   }
 
   const handleOpenChange = (nextOpen: boolean): void => {
-    if (!nextOpen) reset()
+    if (!nextOpen) reset(DEFAULT_FORM_VALUES)
     onOpenChange(nextOpen)
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-xl bg-card border border-border/80 rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-w-xl bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="text-cloud font-semibold text-lg">Configure Leave Rule</DialogTitle>
+          <DialogTitle className="text-cloud font-semibold text-lg">
+            {isEditing ? 'Edit Leave Rule' : 'Configure Leave Rule'}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4 pt-2">
@@ -103,8 +119,9 @@ export function LeaveRuleFormDialog({
               <Select
                 value={leaveTypeValue ? String(leaveTypeValue) : ''}
                 onValueChange={(val) => setValue('leave_type', Number(val), { shouldValidate: true })}
+                disabled={isEditing}
               >
-                <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm">
+                <SelectTrigger className={uiSelect}>
                   <SelectValue placeholder="Select leave type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -128,7 +145,7 @@ export function LeaveRuleFormDialog({
                 type="number"
                 step="0.5"
                 {...register('max_days')}
-                className="bg-midnight border-border rounded-xl text-sm"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
               />
               {errors.max_days && (
                 <p className="text-xs text-destructive">{errors.max_days.message}</p>
@@ -147,7 +164,7 @@ export function LeaveRuleFormDialog({
                 step="0.5"
                 {...register('carry_forward_limit')}
                 disabled={!isCarryForward}
-                className="bg-midnight border-border rounded-xl text-sm"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
               />
               {errors.carry_forward_limit && (
                 <p className="text-xs text-destructive">{errors.carry_forward_limit.message}</p>
@@ -162,7 +179,7 @@ export function LeaveRuleFormDialog({
                 type="number"
                 step="0.1"
                 {...register('accrual_rate')}
-                className="bg-midnight border-border rounded-xl text-sm"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
               />
               {errors.accrual_rate && (
                 <p className="text-xs text-destructive">{errors.accrual_rate.message}</p>
@@ -181,7 +198,7 @@ export function LeaveRuleFormDialog({
                   setValue('accrual_frequency', val as 'monthly' | 'yearly', { shouldValidate: true })
                 }
               >
-                <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm">
+                <SelectTrigger className={uiSelect}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -220,7 +237,7 @@ export function LeaveRuleFormDialog({
               id="description"
               {...register('description')}
               placeholder="e.g. Standard leave rule for annual leaves."
-              className="bg-midnight border-border rounded-xl text-sm"
+              className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
             />
             {errors.description && (
               <p className="text-xs text-destructive">{errors.description.message}</p>
@@ -229,20 +246,22 @@ export function LeaveRuleFormDialog({
 
           <DialogFooter className="pt-4 border-t border-border/40 flex justify-end gap-2">
             <DialogClose asChild>
-              <Button type="button" variant="outline" className="h-10 rounded-xl">
+              <Button type="button" variant="outline" className="h-10 rounded-[20px] [corner-shape:squircle]">
                 Cancel
               </Button>
             </DialogClose>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-5"
+              className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-[20px] [corner-shape:squircle] px-5"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   Saving...
                 </>
+              ) : isEditing ? (
+                'Update Rule'
               ) : (
                 'Save Rule'
               )}

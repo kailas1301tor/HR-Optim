@@ -101,7 +101,7 @@ export function KPICard({
       )}
     >
       <div className="flex items-start justify-between mb-4">
-        <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', styles.iconBg)}>
+        <div className={cn('w-10 h-10 rounded-[20px] [corner-shape:squircle] flex items-center justify-center', styles.iconBg)}>
           <Icon className={cn('w-5 h-5', styles.iconColor)} />
         </div>
         {sparkline && (

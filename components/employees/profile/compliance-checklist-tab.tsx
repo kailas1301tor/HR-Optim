@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { onboardingOffboardingService, type MasterDocType, type EmployeeDocument } from '@/services/onboarding-offboarding-service'
+import { CommonEmptyState } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2, Upload, FileText, CheckCircle2, Clock, AlertCircle } from 'lucide-react'
@@ -55,7 +56,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
       setMasterTypes(typesData)
       setUploadedDocs(docsData)
     } catch (err: unknown) {
-      if (err instanceof DOMException && err.name === 'AbortError') return
+      if (err instanceof Error && err.name === 'AbortError') return
       const message = err instanceof Error ? err.message : `Failed to load ${config.label} checklist.`
       console.error(`Failed to load ${config.label} checklist data:`, err)
       setError(message)
@@ -93,17 +94,17 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
   if (isLoading) {
     return (
       <div className="space-y-4" aria-label="Loading checklist" role="status">
-        <Skeleton className={cn('h-4 w-40 rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-4 w-40 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
         {Array.from({ length: 3 }).map((_, idx) => (
-          <div key={idx} className="bg-midnight/40 border border-border/40 rounded-xl p-4 flex items-center justify-between">
+          <div key={idx} className="bg-midnight/40 border border-border/40 rounded-[20px] [corner-shape:squircle] p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Skeleton className={cn('w-8 h-8 rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('w-8 h-8 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               <div className="space-y-1.5">
-                <Skeleton className={cn('h-3.5 w-32 rounded-xl', uiSkeletonBlock)} />
-                <Skeleton className={cn('h-2 w-20 rounded-xl', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-3.5 w-32 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-2 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               </div>
             </div>
-            <Skeleton className={cn('w-24 h-9 rounded-xl', uiSkeletonBlock)} />
+            <Skeleton className={cn('w-24 h-9 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
           </div>
         ))}
       </div>
@@ -118,7 +119,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
         </div>
         <h4 className="text-sm font-semibold text-cloud mb-1">Failed to Load Checklist</h4>
         <p className="text-xs text-slate-400 max-w-xs mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={() => loadData()} className="h-9 rounded-xl">
+        <Button variant="outline" size="sm" onClick={() => loadData()} className="h-9 rounded-[20px] [corner-shape:squircle]">
           Try Again
         </Button>
       </div>
@@ -127,7 +128,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-3 bg-violet-core/5 border border-violet-core/20 rounded-xl p-4 text-xs">
+      <div className="flex items-start gap-3 bg-violet-core/5 border border-violet-core/20 rounded-[20px] [corner-shape:squircle] p-4 text-xs">
         <AlertCircle className="w-4 h-4 text-violet-glow shrink-0 mt-0.5" />
         <div className="text-slate-350 space-y-1">
           <p className="font-semibold text-violet-glow">Compliance Document Control</p>
@@ -137,9 +138,12 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
 
       <div className="space-y-3">
         {masterTypes.length === 0 ? (
-          <div className="text-center py-8 text-xs text-slate-500">
-            {config.emptyText}
-          </div>
+          <CommonEmptyState
+            icon={FileText}
+            title="No document types configured"
+            description={config.emptyText}
+            className="py-8 shadow-none border-0 bg-transparent"
+          />
         ) : (
           masterTypes.map((type) => {
             const matchingDoc = uploadedDocs.find((doc) => doc.document_type === type.name)
@@ -149,7 +153,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
               <div
                 key={type.id}
                 className={cn(
-                  'flex items-center justify-between border rounded-xl p-4 transition-all duration-200 bg-midnight/35',
+                  'flex items-center justify-between border rounded-[20px] [corner-shape:squircle] p-4 transition-all duration-200 bg-midnight/35',
                   matchingDoc
                     ? 'border-emerald-500/20 hover:border-emerald-500/30'
                     : 'border-border/60 hover:border-violet-core/30'
@@ -158,7 +162,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div
                     className={cn(
-                      'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border',
+                      'w-9 h-9 rounded-[20px] [corner-shape:squircle] flex items-center justify-center shrink-0 border',
                       matchingDoc
                         ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
                         : 'bg-slate-800/40 border-border/40 text-slate-400'
@@ -181,7 +185,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
                     <Button
                       variant="outline"
                       size="sm"
-                      className="h-9 px-3 rounded-lg text-xs font-medium border-border/80 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5"
+                      className="h-9 px-3 rounded-[16px] [corner-shape:squircle] text-xs font-medium border-border/80 hover:bg-slate-800 text-slate-300 flex items-center gap-1.5"
                       asChild
                     >
                       <a href={matchingDoc.file_url} target="_blank" rel="noopener noreferrer">
@@ -205,7 +209,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
                         variant="outline"
                         size="sm"
                         disabled={isUploading}
-                        className="h-9 px-3 rounded-lg text-xs font-semibold border-violet-core/35 text-violet-glow hover:bg-violet-core/10 flex items-center gap-1.5"
+                        className="h-9 px-3 rounded-[16px] [corner-shape:squircle] text-xs font-semibold border-violet-core/35 text-violet-glow hover:bg-violet-core/10 flex items-center gap-1.5"
                       >
                         {isUploading ? (
                           <>

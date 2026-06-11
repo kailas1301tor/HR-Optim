@@ -5,7 +5,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { uiCardInteractive, uiSkeletonBlock } from '@/lib/ui/design-system'
+import { uiCardInteractive, uiSkeletonBlock, uiSquircleSm, uiSquircleXs } from '@/lib/ui/design-system'
 
 export interface StatDisplayItem {
   key: string
@@ -50,12 +50,12 @@ export function CommonStatCardDisplay({
             <div>
               <p className="text-xs text-muted-foreground mb-1 font-medium">{card.label}</p>
               {isLoading ? (
-                <Skeleton className={cn('h-8 w-16 rounded-xl mt-1', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-8 w-16 mt-1', uiSquircleSm, uiSkeletonBlock)} />
               ) : (
                 <p className="text-2xl font-bold text-cloud font-mono tabular-nums">{card.displayValue}</p>
               )}
             </div>
-            <div className={cn('p-2.5 rounded-xl', card.iconClass)}>
+            <div className={cn('p-2.5', uiSquircleXs, card.iconClass)}>
               <Icon className="w-5 h-5" aria-hidden />
             </div>
           </div>

@@ -1,7 +1,8 @@
 // components/assets/asset-amc-tab.tsx
 'use client'
 
-import { type AssetDropdowns } from '@/services/asset-service'
+import { type AssetDropdowns } from '@/types/asset'
+import { CommonEmptyState, CommonErrorState } from '@/components/common'
 import { Loader2, Shield, Plus, Calendar, DollarSign } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,11 +36,13 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
   const {
     amcs,
     isLoading,
+    hasError,
     isAddOpen,
     isSubmitting,
     providers,
     form,
     setIsAddOpen,
+    handleRetry,
     onSubmit,
     getStatusBadge,
     formatDate,
@@ -61,56 +64,62 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
         </h3>
         <Button
           onClick={() => setIsAddOpen(true)}
-          className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl flex items-center gap-1.5"
+          className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-[20px] [corner-shape:squircle] flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" /> Add AMC Contract
         </Button>
       </div>
 
-      {isLoading ? (
+      {hasError ? (
+        <CommonErrorState
+          title="Failed to load AMC contracts"
+          message="AMC records could not be retrieved."
+          onRetry={handleRetry}
+          className="rounded-[32px] [corner-shape:squircle] border border-border bg-card"
+        />
+      ) : isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div key={i} className="bg-card border border-border/80 rounded-2xl p-5 space-y-4">
+            <div key={i} className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-5 space-y-4">
               <div className="flex justify-between items-start gap-3">
                 <div className="space-y-2">
-                  <Skeleton className={cn('h-4.5 w-32 rounded-xl', uiSkeletonBlock)} />
-                  <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-4.5 w-32 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-3.5 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                 </div>
                 <Skeleton className={cn('h-5 w-16 rounded-full', uiSkeletonBlock)} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-midnight/35 border border-border/40 p-3 rounded-xl">
+              <div className="grid grid-cols-2 gap-4 bg-midnight/35 border border-border/40 p-3 rounded-[20px] [corner-shape:squircle]">
                 <div className="flex items-center gap-2">
                   <Skeleton className={cn('w-4 h-4 rounded-full shrink-0', uiSkeletonBlock)} />
                   <div className="space-y-1 w-full">
-                    <Skeleton className={cn('h-2 w-10 rounded-xl', uiSkeletonBlock)} />
-                    <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-2 w-10 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Skeleton className={cn('w-4 h-4 rounded-full shrink-0', uiSkeletonBlock)} />
                   <div className="space-y-1 w-full">
-                    <Skeleton className={cn('h-2 w-12 rounded-xl', uiSkeletonBlock)} />
-                    <Skeleton className={cn('h-3.5 w-20 rounded-xl', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-2 w-12 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                   </div>
                 </div>
               </div>
-              <Skeleton className={cn('h-10 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-10 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
             </div>
           ))}
         </div>
       ) : amcs.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 rounded-2xl border border-border bg-card text-center">
-          <div className="w-12 h-12 rounded-full bg-slate-800 border border-border/40 flex items-center justify-center text-slate-500 mb-2">
-            <Shield className="w-5 h-5" />
-          </div>
-          <h4 className="text-sm font-semibold text-cloud">No AMC contract records</h4>
-          <p className="text-xs text-slate-500 mt-1 max-w-[280px]">Add warranties and service agreements to track maintenance schedules.</p>
-        </div>
+        <CommonEmptyState
+          icon={Shield}
+          title="No AMC contract records"
+          description="Add warranties and service agreements to track maintenance schedules."
+          className="py-16 rounded-[32px] [corner-shape:squircle] border border-border bg-card shadow-none"
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {amcs.map((amc) => (
-            <div key={amc.id} className="bg-card border border-border/80 rounded-2xl p-5 space-y-4 hover:border-border transition-colors">
+            <div key={amc.id} className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-5 space-y-4 hover:border-border transition-colors">
               <div className="flex justify-between items-start gap-3">
                 <div>
                   <h4 className="text-sm font-bold text-cloud font-mono">{amc.contract_number}</h4>
@@ -121,7 +130,7 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-midnight/35 border border-border/40 p-3 rounded-xl">
+              <div className="grid grid-cols-2 gap-4 bg-midnight/35 border border-border/40 p-3 rounded-[20px] [corner-shape:squircle]">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-slate-500 shrink-0" />
                   <div>
@@ -143,7 +152,7 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
               </div>
 
               {amc.coverage_details && (
-                <div className="text-xs text-slate-400 bg-midnight/35 p-3 rounded-lg border border-border/30">
+                <div className="text-xs text-slate-400 bg-midnight/35 p-3 rounded-[16px] [corner-shape:squircle] border border-border/30">
                   <span className="font-bold text-slate-500 block mb-1">Coverage Details</span>
                   {amc.coverage_details}
                 </div>
@@ -155,7 +164,7 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
 
       {/* Add AMC Dialog Form */}
       <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-        <DialogContent className="bg-card text-foreground border border-border/80 rounded-2xl max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <DialogContent className="bg-card text-foreground border border-border/80 rounded-[32px] [corner-shape:squircle] max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="text-cloud font-semibold text-lg flex items-center gap-2">
               Add AMC Contract
@@ -263,14 +272,14 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
                 variant="outline"
                 onClick={() => setIsAddOpen(false)}
                 disabled={isSubmitting}
-                className="rounded-xl h-10 w-full"
+                className="rounded-[20px] [corner-shape:squircle] h-10 w-full"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl h-10 w-full"
+                className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-[20px] [corner-shape:squircle] h-10 w-full"
               >
                 {isSubmitting ? (
                   <>

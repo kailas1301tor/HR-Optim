@@ -51,10 +51,10 @@ export function AttendanceHeatmap() {
 
   if (!mounted) {
     return (
-      <div className="bg-card border border-border rounded-2xl p-6 min-h-[220px]">
+      <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6 min-h-[220px]">
         <h3 className="text-lg font-semibold text-cloud mb-1">Attendance Overview</h3>
         <p className="text-sm text-muted-foreground mb-6">Last 12 weeks attendance distribution</p>
-        <Skeleton className={cn('h-[120px] w-full rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-[120px] w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
       </div>
     )
   }
@@ -70,7 +70,7 @@ export function AttendanceHeatmap() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-2xl p-6"
+      className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6"
     >
       <h3 className="text-lg font-semibold text-cloud mb-1">Attendance Overview</h3>
       <p className="text-sm text-muted-foreground mb-6">Last 12 weeks attendance distribution</p>

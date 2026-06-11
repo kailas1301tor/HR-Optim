@@ -28,6 +28,7 @@ import { LeaveDateRangeFields } from './leave-date-range-fields'
 
 interface LeaveRequestFormProps {
   leaveTypes: LeaveType[]
+  holidayDates?: Date[]
   sessionChoices: RequestChoiceItem[]
   isSubmitting: boolean
   onCalculate: (
@@ -57,6 +58,7 @@ function isInvalidSessionCombo(
 
 export function LeaveRequestForm({
   leaveTypes,
+  holidayDates = [],
   sessionChoices,
   isSubmitting,
   onCalculate,
@@ -66,6 +68,7 @@ export function LeaveRequestForm({
   const [calculateState, setCalculateState] = useState<CalculateState>('idle')
   const [calculateMessage, setCalculateMessage] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const calculateIdRef = useRef(0)
 
   const {
     handleSubmit,
@@ -112,6 +115,7 @@ export function LeaveRequestForm({
       return
     }
 
+    const calculateId = ++calculateIdRef.current
     setCalculateState('loading')
     setCalculateMessage(null)
 
@@ -122,6 +126,8 @@ export function LeaveRequestForm({
         start_session: startSession,
         end_session: endSession,
       })
+
+      if (calculateId !== calculateIdRef.current) return
 
       if (days <= 0) {
         setCalculateState('zero')
@@ -134,6 +140,7 @@ export function LeaveRequestForm({
       setCalculateState('success')
       setCalculateMessage(null)
     } catch (error: unknown) {
+      if (calculateId !== calculateIdRef.current) return
       setCalculateState('error')
       setCalculateMessage(getApiErrorMessage(error, 'Failed to calculate leave days'))
       setValue('number_of_days', 0)
@@ -192,6 +199,7 @@ export function LeaveRequestForm({
             fromDate={fromDate}
             toDate={toDate}
             onRangeChange={handleRangeChange}
+            holidayDates={holidayDates}
             className="h-full"
           />
         </div>
@@ -284,7 +292,7 @@ export function LeaveRequestForm({
 
           <div
             className={cn(
-              'flex items-center justify-between gap-3 rounded-xl border px-4 py-3',
+              'flex items-center justify-between gap-3 rounded-[20px] [corner-shape:squircle] border px-4 py-3',
               calculateState === 'success' && 'border-lime-400/30 bg-lime-400/10',
               calculateState === 'zero' && 'border-amber-500/30 bg-amber-500/10',
               calculateState === 'error' && 'border-red-500/30 bg-red-500/10',
@@ -327,7 +335,7 @@ export function LeaveRequestForm({
                 <button
                   type="button"
                   onClick={runCalculate}
-                  className="flex items-center justify-center size-8 rounded-lg border border-border/40 text-violet-glow hover:bg-violet-core/10 transition-colors"
+                  className="flex items-center justify-center size-8 rounded-[16px] [corner-shape:squircle] border border-border/40 text-violet-glow hover:bg-violet-core/10 transition-colors"
                   aria-label="Recalculate leave days"
                 >
                   <RefreshCw className="size-3.5" />
@@ -360,7 +368,13 @@ export function LeaveRequestForm({
             <PrimaryButton
               type="submit"
               isLoading={isSubmitting}
-              disabled={numberOfDays <= 0 || calculateState === 'loading'}
+              disabled={
+                numberOfDays <= 0 ||
+                calculateState === 'loading' ||
+                calculateState === 'error' ||
+                calculateState === 'invalid' ||
+                calculateState === 'zero'
+              }
               className="text-xs h-10"
             >
               Submit Request

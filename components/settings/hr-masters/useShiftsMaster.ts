@@ -1,7 +1,9 @@
 // components/settings/hr-masters/useShiftsMaster.ts
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
-import { shiftService, type FrontendShift } from '@/services/shift-service'
+import { invalidateAttendanceShifts } from '@/components/attendance/useAttendanceShifts'
+import { shiftService } from '@/services/shift-service'
+import type { FrontendShift } from '@/types/settings'
 
 export interface UseShiftsMasterProps {
   onRefresh: () => Promise<void>
@@ -88,6 +90,7 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
       }
       setIsShiftModalOpen(false)
       resetForm()
+      invalidateAttendanceShifts()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save shift'
@@ -105,6 +108,7 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
       await shiftService.deleteShift(deleteTarget.id)
       toast.success('Shift deleted successfully')
       setDeleteTarget(null)
+      invalidateAttendanceShifts()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete shift'
@@ -114,9 +118,16 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     }
   }
 
+  const handleDialogOpenChange = useCallback((open: boolean): void => {
+    if (!open && !isSubmitting) {
+      resetForm()
+    }
+    if (!isSubmitting) setIsShiftModalOpen(open)
+  }, [isSubmitting])
+
   return {
     isShiftModalOpen,
-    setIsShiftModalOpen,
+    setIsShiftModalOpen: handleDialogOpenChange,
     editingShift,
     isSubmitting,
     shiftName,

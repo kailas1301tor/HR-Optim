@@ -1,11 +1,13 @@
 // components/requests/useCreateRequest.ts
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { employeeRequestService } from '@/services/employee-request-service'
 import { leaveTypeService, type LeaveType } from '@/services/leave-type-service'
+import { holidayService } from '@/services/holiday-service'
+import { holidaysToDates } from '@/lib/mappers/leave-calendar-mapper'
 import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { useCurrentEmployee } from '@/hooks/use-current-employee'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
@@ -31,38 +33,59 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([])
   const [sessionChoices, setSessionChoices] = useState<RequestChoiceItem[]>([])
   const [documentTypeChoices, setDocumentTypeChoices] = useState<RequestChoiceItem[]>([])
+  const [holidayDates, setHolidayDates] = useState<Date[]>([])
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
+  const [hasMetadataError, setHasMetadataError] = useState(false)
+  const [metadataReloadToken, setMetadataReloadToken] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     setSelectedType(defaultType)
   }, [defaultType])
 
+  const reloadMetadata = useCallback(() => {
+    setMetadataReloadToken((prev) => prev + 1)
+  }, [])
+
+  const metadataFetchIdRef = useRef(0)
+
   useEffect(() => {
     const controller = new AbortController()
+    const fetchId = ++metadataFetchIdRef.current
 
     const loadMetadata = async (): Promise<void> => {
       setIsLoadingMetadata(true)
+      setHasMetadataError(false)
       try {
-        const [choices, types] = await Promise.all([
+        const [choices, types, holidays] = await Promise.all([
           employeeRequestService.getRequestChoices(controller.signal),
           leaveTypeService.getLeaveTypes(controller.signal),
+          holidayService.getHolidays(controller.signal),
         ])
-        if (controller.signal.aborted) return
+        if (controller.signal.aborted || fetchId !== metadataFetchIdRef.current) return
         setSessionChoices(choices.session_choices)
         setDocumentTypeChoices(choices.document_request_type_choices)
         setLeaveTypes(types)
+        setHolidayDates(holidaysToDates(holidays))
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') return
+        if (fetchId !== metadataFetchIdRef.current) return
+        setHasMetadataError(true)
+        setSessionChoices([])
+        setDocumentTypeChoices([])
+        setLeaveTypes([])
+        setHolidayDates([])
         toast.error('Failed to load form data')
       } finally {
-        if (!controller.signal.aborted) setIsLoadingMetadata(false)
+        if (fetchId === metadataFetchIdRef.current) {
+          setIsLoadingMetadata(false)
+        }
       }
     }
 
-    loadMetadata()
+    void loadMetadata()
     return () => controller.abort()
-  }, [])
+  }, [metadataReloadToken])
 
   const handleSuccess = useCallback((): void => {
     router.push('/requests?status=pending')
@@ -194,9 +217,12 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     employeeError,
     canSubmit,
     leaveTypes,
+    holidayDates,
     sessionChoices,
     documentTypeChoices,
     isLoadingMetadata,
+    hasMetadataError,
+    reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
     handleSubmitLeave,

@@ -2,7 +2,7 @@
 'use client'
 
 import { Calendar, DollarSign, Clock, MapPin, Building, Info, Settings, Shield } from 'lucide-react'
-import type { BackendAsset } from '@/services/asset-service'
+import type { BackendAsset } from '@/types/asset'
 import { cn } from '@/lib/utils'
 
 interface AssetOverviewTabProps {
@@ -28,12 +28,12 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in-50 duration-200">
       {/* Specifications & Details Card */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 md:col-span-2 space-y-6">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 md:col-span-2 space-y-6">
         <div>
           <h3 className="text-sm font-semibold text-cloud flex items-center gap-2 mb-4">
             <Settings className="w-4 h-4 text-violet-glow" /> Technical Specifications
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-midnight/30 border border-border/40 p-4 rounded-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-midnight/30 border border-border/40 p-4 rounded-[20px] [corner-shape:squircle]">
             {[
               { label: 'Asset Name', value: asset.name },
               { label: 'Serial Number', value: asset.serial_number || 'N/A', mono: true },
@@ -54,7 +54,7 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
           <h3 className="text-sm font-semibold text-cloud flex items-center gap-2 mb-4">
             <MapPin className="w-4 h-4 text-violet-glow" /> Assignment & Location
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-midnight/30 border border-border/40 p-4 rounded-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-midnight/30 border border-border/40 p-4 rounded-[20px] [corner-shape:squircle]">
             <div className="flex items-start gap-2.5">
               <Building className="w-4 h-4 text-violet-glow mt-1" />
               <div>
@@ -78,17 +78,17 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
       </div>
 
       {/* Financials & Lifespan Card */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 space-y-6">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 space-y-6">
         <div>
           <h3 className="text-sm font-semibold text-cloud flex items-center gap-2 mb-4">
             <DollarSign className="w-4 h-4 text-violet-glow" /> Financial Details
           </h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-xl">
+            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-[20px] [corner-shape:squircle]">
               <span className="text-xs text-slate-400 font-medium">Purchase Cost</span>
               <span className="text-sm font-bold font-mono text-cloud">{formatCost(asset.purchase_cost)}</span>
             </div>
-            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-xl">
+            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-[20px] [corner-shape:squircle]">
               <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-500" /> Purchase Date
               </span>
@@ -102,7 +102,7 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
             <Shield className="w-4 h-4 text-violet-glow" /> Warranty & Service
           </h3>
           <div className="space-y-4">
-            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-xl">
+            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-[20px] [corner-shape:squircle]">
               <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-slate-500" /> Warranty Limit
               </span>
@@ -110,7 +110,7 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
                 {asset.warranty_period ? `${asset.warranty_period} Months` : 'N/A'}
               </span>
             </div>
-            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-xl">
+            <div className="flex justify-between items-center bg-midnight/30 border border-border/40 p-3.5 rounded-[20px] [corner-shape:squircle]">
               <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-500" /> Service Due
               </span>
@@ -121,7 +121,7 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
       </div>
 
       {/* System Timestamps Panel */}
-      <div className="bg-card border border-border/80 rounded-2xl p-4 md:col-span-3 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] text-slate-500 font-medium">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-4 md:col-span-3 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] text-slate-500 font-medium">
         <div className="flex items-center gap-1">
           <Info className="w-3.5 h-3.5" />
           <span>System Record ID: {asset.id}</span>

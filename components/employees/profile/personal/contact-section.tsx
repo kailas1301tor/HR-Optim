@@ -2,7 +2,7 @@
 'use client'
 
 import { Mail, Phone, Globe, Calendar } from 'lucide-react'
-import type { Employee } from '../../employee-table'
+import type { Employee } from '@/types/employee'
 
 interface ContactSectionProps {
   employee: Employee
@@ -18,8 +18,8 @@ export function ContactSection({ employee }: ContactSectionProps) {
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 font-sans">Contact & Basic Information</h3>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-midnight/60 border border-border/40 rounded-xl p-3 flex flex-col gap-2">
-          <div className="w-8 h-8 rounded-lg bg-violet-core/10 flex items-center justify-center">
+        <div className="bg-midnight/60 border border-border/40 rounded-[20px] [corner-shape:squircle] p-3 flex flex-col gap-2">
+          <div className="w-8 h-8 rounded-[16px] [corner-shape:squircle] bg-violet-core/10 flex items-center justify-center">
             <Mail className="w-4 h-4 text-violet-glow" />
           </div>
           <div>
@@ -27,8 +27,8 @@ export function ContactSection({ employee }: ContactSectionProps) {
             <p className="text-xs text-slate-200 truncate font-medium" title={email}>{email}</p>
           </div>
         </div>
-        <div className="bg-midnight/60 border border-border/40 rounded-xl p-3 flex flex-col gap-2">
-          <div className="w-8 h-8 rounded-lg bg-violet-core/10 flex items-center justify-center">
+        <div className="bg-midnight/60 border border-border/40 rounded-[20px] [corner-shape:squircle] p-3 flex flex-col gap-2">
+          <div className="w-8 h-8 rounded-[16px] [corner-shape:squircle] bg-violet-core/10 flex items-center justify-center">
             <Phone className="w-4 h-4 text-violet-glow" />
           </div>
           <div>
@@ -36,8 +36,8 @@ export function ContactSection({ employee }: ContactSectionProps) {
             <p className="text-xs text-slate-200 truncate font-mono font-medium">{phone}</p>
           </div>
         </div>
-        <div className="bg-midnight/60 border border-border/40 rounded-xl p-3 flex flex-col gap-2">
-          <div className="w-8 h-8 rounded-lg bg-violet-core/10 flex items-center justify-center">
+        <div className="bg-midnight/60 border border-border/40 rounded-[20px] [corner-shape:squircle] p-3 flex flex-col gap-2">
+          <div className="w-8 h-8 rounded-[16px] [corner-shape:squircle] bg-violet-core/10 flex items-center justify-center">
             <Globe className="w-4 h-4 text-violet-glow" />
           </div>
           <div>
@@ -48,8 +48,8 @@ export function ContactSection({ employee }: ContactSectionProps) {
       </div>
       
       <div className="grid grid-cols-1 gap-3 mt-3">
-        <div className="bg-midnight/40 border border-border/45 rounded-xl p-3 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-slate-700/30 flex items-center justify-center shrink-0">
+        <div className="bg-midnight/40 border border-border/45 rounded-[20px] [corner-shape:squircle] p-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-[16px] [corner-shape:squircle] bg-slate-700/30 flex items-center justify-center shrink-0">
             <Calendar className="w-4 h-4 text-slate-400" />
           </div>
           <div>

@@ -49,16 +49,16 @@ export const departmentConfig = new Proxy<Record<string, { label: string; classN
     const normalized = prop.trim().toLowerCase();
     
     const map: Record<string, string> = {
-      engineering: 'bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium',
-      hr: 'bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium',
-      finance: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium',
-      marketing: 'bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium',
-      operations: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium',
+      engineering: 'bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium',
+      hr: 'bg-pink-500/10 text-pink-400 border border-pink-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium',
+      finance: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium',
+      marketing: 'bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium',
+      operations: 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium',
     };
     
     return {
       label: prop,
-      className: map[normalized] || 'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium'
+      className: map[normalized] || 'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium'
     }
   }
 });

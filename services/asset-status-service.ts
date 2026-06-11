@@ -26,15 +26,9 @@ interface SingleAssetStatusResponse {
 
 export const assetStatusService = {
   /** Fetch all asset statuses from the API. Handles network failures gracefully. */
-  async getAssetStatuses(fallback: AssetStatus[], signal?: AbortSignal): Promise<AssetStatus[]> {
-    try {
-      const response = await api.get<AssetStatusListResponse>('/api/master/asset-status/', { signal });
-      return response.results?.data ?? fallback;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') throw error;
-      console.warn('🔴 Network error fetching asset statuses. Loading mock fallback.', error);
-      return fallback;
-    }
+  async getAssetStatuses(signal?: AbortSignal): Promise<AssetStatus[]> {
+    const response = await api.get<AssetStatusListResponse>('/api/master/asset-status/', { signal })
+    return response.results?.data ?? []
   },
 
   /** Create a new asset status. */

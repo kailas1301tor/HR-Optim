@@ -39,7 +39,7 @@ export function EmployeeCard({ employee, index, onSelect, onEdit, onDelete }: Em
   const statusVariant = getEmployeeStatusBadgeVariant(employee.status)
   const deptClass =
     departmentConfig[employee.department]?.className ||
-    'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-0.5 rounded-lg text-[10px] font-medium'
+    'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-0.5 rounded-[16px] [corner-shape:squircle] text-[10px] font-medium'
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -87,7 +87,7 @@ export function EmployeeCard({ employee, index, onSelect, onEdit, onDelete }: Em
                 <MoreHorizontal className="w-4 h-4 text-slate-400" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-popover border border-border text-xs rounded-xl">
+            <DropdownMenuContent align="end" className="bg-popover border border-border text-xs rounded-[20px] [corner-shape:squircle]">
               <DropdownMenuItem onClick={onSelect} className="cursor-pointer">
                 <Eye className="w-4 h-4 mr-2 text-slate-400" />
                 View Profile

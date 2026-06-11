@@ -9,6 +9,7 @@ interface EmployeesStatsCardsProps {
   activeCount: number
   onLeaveCount: number
   onboardingCount: number
+  isPageScoped?: boolean
   isLoading?: boolean
 }
 
@@ -17,6 +18,7 @@ export function EmployeesStatsCards({
   activeCount,
   onLeaveCount,
   onboardingCount,
+  isPageScoped = false,
   isLoading = false,
 }: EmployeesStatsCardsProps) {
   const items: StatDisplayItem[] = [
@@ -50,5 +52,14 @@ export function EmployeesStatsCards({
     },
   ]
 
-  return <CommonStatCardDisplay items={items} isLoading={isLoading} columns="4" />
+  return (
+    <div className="space-y-2">
+      <CommonStatCardDisplay items={items} isLoading={isLoading} columns="4" />
+      {isPageScoped && !isLoading && (
+        <p className="text-xs text-muted-foreground">
+          Status breakdown reflects the current page or filter. Total count is from the server.
+        </p>
+      )}
+    </div>
+  )
 }

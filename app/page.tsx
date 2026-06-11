@@ -9,7 +9,7 @@ import { PendingApprovals } from '@/components/dashboard/pending-approvals'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
-  const username = cookieStore.get(AUTH_COOKIE_NAMES.username)?.value || 'john'
+  const username = cookieStore.get(AUTH_COOKIE_NAMES.username)?.value || 'User'
   const displayName = formatDisplayNameFromUsername(username)
 
   return (

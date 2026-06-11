@@ -8,10 +8,11 @@ import {
 } from '@/lib/mappers/attendance-mapper'
 import { parseContentDispositionFilename } from '@/lib/helpers/download-blob'
 import { cleanParams } from '@/lib/types'
-import type {
-  AttendanceRecord,
-  AttendanceStatusCounts,
-} from '@/components/attendance/attendance-constants'
+import {
+  EMPTY_ATTENDANCE_STATUS_COUNTS,
+  type AttendanceRecord,
+  type AttendanceStatusCounts,
+} from '@/types/attendance'
 import type { ApiSimpleListResponse, ApiSingleResponse } from '@/lib/types'
 
 export interface AttendanceListParams {
@@ -24,14 +25,6 @@ export interface AttendanceListParams {
 export interface AttendanceExportResult {
   blob: Blob
   filename: string
-}
-
-const EMPTY_STATUS_COUNTS: AttendanceStatusCounts = {
-  present: 0,
-  late: 0,
-  absent: 0,
-  leave: 0,
-  weekend: 0,
 }
 
 export const attendanceService = {
@@ -62,7 +55,7 @@ export const attendanceService = {
       },
     )
 
-    if (!response.results?.data) return EMPTY_STATUS_COUNTS
+    if (!response.results?.data) return EMPTY_ATTENDANCE_STATUS_COUNTS
     return mapBackendStatusCounts(response.results.data)
   },
 

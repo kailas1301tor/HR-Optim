@@ -42,7 +42,13 @@ export function SettingsFormDialog({
     size === 'xl' ? 'max-w-2xl' : size === 'lg' ? 'max-w-lg' : 'max-w-md'
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && isSubmitting) return
+        onOpenChange(nextOpen)
+      }}
+    >
       <DialogContent className={cn(uiDialog, sizeClass, 'max-h-[90vh] overflow-y-auto')}>
         <form onSubmit={onSubmit}>
           <DialogHeader>

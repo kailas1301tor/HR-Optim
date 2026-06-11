@@ -73,7 +73,7 @@ export function EmployeeTableRow({
         <span
           className={cn(
             departmentConfig[employee.department]?.className ||
-              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium'
+              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium'
           )}
         >
           {employee.department}
@@ -87,7 +87,7 @@ export function EmployeeTableRow({
       </td>
       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <Switch
-          checked={employee.status === 'Active'}
+          checked={employee.status?.toLowerCase() === 'active'}
           onCheckedChange={(checked) => onToggleStatus(employee, checked)}
         />
       </td>
@@ -110,7 +110,7 @@ export function EmployeeTableRow({
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover border border-border text-xs rounded-xl">
+          <DropdownMenuContent align="end" className="bg-popover border border-border text-xs rounded-[20px] [corner-shape:squircle]">
             <DropdownMenuItem onClick={onSelect} className="cursor-pointer">
               <Eye className="w-4 h-4 mr-2" />
               View Profile

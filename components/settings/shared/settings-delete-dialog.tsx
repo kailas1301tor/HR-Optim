@@ -42,7 +42,7 @@ export function SettingsDeleteDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="bg-card border border-border/80 rounded-2xl p-6 shadow-2xl max-w-md">
+      <AlertDialogContent className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl max-w-md">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-cloud font-semibold text-lg">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-slate-400 text-sm mt-2">{message}</AlertDialogDescription>
@@ -55,7 +55,7 @@ export function SettingsDeleteDialog({
           </AlertDialogCancel>
           <Button
             onClick={onConfirm}
-            className="h-10 bg-destructive text-white hover:bg-destructive/90 font-semibold rounded-xl px-5 flex items-center gap-2 text-xs"
+            className="h-10 bg-destructive text-white hover:bg-destructive/90 font-semibold rounded-[20px] [corner-shape:squircle] px-5 flex items-center gap-2 text-xs"
             disabled={isDeleting}
           >
             {isDeleting && <Loader2 className="w-4 h-4 animate-spin" />}

@@ -1,27 +1,8 @@
 // services/shift-service.ts
-import { api } from '@/lib/api';
+import { api } from '@/lib/api'
+import type { BackendShift, FrontendShift } from '@/types/settings'
 
-/** Shape returned by the backend */
-export interface BackendShift {
-  id: number;
-  name: string;
-  start_time: string;
-  end_time: string;
-  standard_work_hours: string;
-  is_active?: boolean;
-  deleted?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-/** Shape consumed by the UI layer */
-export interface FrontendShift {
-  id: number;
-  name: string;
-  startTime: string;
-  endTime: string;
-  standardWorkHours: number;
-}
+export type { BackendShift, FrontendShift } from '@/types/settings'
 
 interface ShiftListResponse {
   message: string;

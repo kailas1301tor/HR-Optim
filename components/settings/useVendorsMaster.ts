@@ -1,7 +1,9 @@
 // components/settings/useVendorsMaster.ts
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
-import { vendorService, type FrontendVendor } from '@/services/vendor-service'
+import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
+import { vendorService } from '@/services/vendor-service'
+import type { FrontendVendor } from '@/types/settings'
 import type { AssetType } from '@/services/asset-type-service'
 
 export interface UseVendorsMasterProps {
@@ -91,6 +93,7 @@ export function useVendorsMaster({
       }
       setIsVendorModalOpen(false)
       resetForm()
+      invalidateAssetDropdowns()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save vendor'
@@ -108,6 +111,7 @@ export function useVendorsMaster({
       await vendorService.deleteVendor(deleteTarget.id)
       toast.success('Vendor deleted successfully')
       setDeleteTarget(null)
+      invalidateAssetDropdowns()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete vendor'
@@ -122,9 +126,16 @@ export function useVendorsMaster({
     return found ? found.name : 'Unknown'
   }
 
+  const handleDialogOpenChange = useCallback((open: boolean): void => {
+    if (!open && !isSubmitting) {
+      resetForm()
+    }
+    if (!isSubmitting) setIsVendorModalOpen(open)
+  }, [isSubmitting])
+
   return {
     isVendorModalOpen,
-    setIsVendorModalOpen,
+    setIsVendorModalOpen: handleDialogOpenChange,
     editingVendor,
     isSubmitting,
     vendorName,

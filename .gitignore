@@ -16,6 +16,7 @@
 /build
 
 # misc
+/scratch/
 .DS_Store
 *.pem
 

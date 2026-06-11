@@ -2,6 +2,7 @@
 'use client'
 
 import { ShieldAlert, Edit3, Trash2 } from 'lucide-react'
+import { CommonEmptyState } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { BackendRole } from '@/services/role-service'
@@ -44,11 +45,12 @@ export function RoleCardList({
 }: RoleCardListProps) {
   if (roles.length === 0) {
     return (
-      <div className="text-center py-10 border border-dashed border-border/60 rounded-2xl bg-midnight/20">
-        <ShieldAlert className="h-8 w-8 text-slate-500 mx-auto mb-2" />
-        <p className="text-sm text-slate-400 font-medium">No roles configured</p>
-        <p className="text-xs text-slate-500 mt-1">Click "Configure Roles" to create a new role</p>
-      </div>
+      <CommonEmptyState
+        icon={ShieldAlert}
+        title="No roles configured"
+        description='Click "Configure Roles" to create a new role.'
+        className="py-10 border border-dashed border-border/60 rounded-[32px] [corner-shape:squircle] bg-midnight/20 shadow-none"
+      />
     )
   }
 
@@ -63,7 +65,7 @@ export function RoleCardList({
           <div
             key={role.id}
             className={cn(
-              'bg-midnight/40 border rounded-xl p-4 flex flex-col justify-between hover:border-violet-core/50 transition-all group relative min-h-[120px] shadow-sm cursor-pointer',
+              'bg-midnight/40 border rounded-[20px] [corner-shape:squircle] p-4 flex flex-col justify-between hover:border-violet-core/50 transition-all group relative min-h-[120px] shadow-sm cursor-pointer',
               isSelected ? 'border-violet-core ring-1 ring-violet-core/50' : 'border-border/80'
             )}
             onClick={() => setSelectedRoleIndex(index)}
@@ -77,7 +79,7 @@ export function RoleCardList({
 
             <div
               className={cn(
-                'absolute top-2.5 right-2.5 transition-opacity flex gap-1 bg-midnight/95 p-1 rounded-lg border border-border/50 shadow-lg z-10',
+                'absolute top-2.5 right-2.5 transition-opacity flex gap-1 bg-midnight/95 p-1 rounded-[16px] [corner-shape:squircle] border border-border/50 shadow-lg z-10',
                 isSelected ? 'opacity-100' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'
               )}
               onClick={(e) => e.stopPropagation()}
@@ -85,7 +87,7 @@ export function RoleCardList({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-violet-glow hover:bg-violet-core/20 rounded-md cursor-pointer"
+                className="h-6 w-6 text-violet-glow hover:bg-violet-core/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                 onClick={() => onEditRole(role)}
                 disabled={isPending}
                 title="Edit Role"
@@ -96,7 +98,7 @@ export function RoleCardList({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6 text-red-400 hover:bg-red-500/20 rounded-md cursor-pointer"
+                  className="h-6 w-6 text-red-400 hover:bg-red-500/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                   onClick={() => onDeleteRole(role, index)}
                   disabled={isPending}
                   title="Delete Role"

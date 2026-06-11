@@ -1,11 +1,12 @@
 // components/employees/employees-list.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { UserX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   CommonEmptyState,
+  CommonErrorBanner,
   CommonErrorState,
   CommonFilterChips,
   CommonMobileCardGrid,
@@ -14,6 +15,7 @@ import {
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { uiOutlineBtn } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
+import type { Employee } from '@/types/employee'
 import { EmployeesPageHeader } from './employees-page-header'
 import { EmployeesStatsCards } from './employees-stats-cards'
 import { EmployeesToolbar } from './employees-toolbar'
@@ -43,14 +45,14 @@ export function EmployeesList() {
     dropdowns,
     deleteTargetId,
     isDeleting,
-    searchQuery,
+    localSearch,
+    setLocalSearch,
     departmentFilter,
     statusFilter,
-    sortField,
-    sortOrder,
     activeTab,
-    sortedEmployees,
     hasError,
+    dropdownsError,
+    reloadDropdowns,
     workforceStats,
     setSelectedEmployee,
     setDrawerOpen,
@@ -59,39 +61,29 @@ export function EmployeesList() {
     setEditTarget,
     fetchEmployees,
     updateQueryParams,
+    handleClearFilters,
     handleToggleStatus,
-    handleSort,
     handleDelete,
     executeDelete,
     handleEdit,
   } = useEmployeeTable()
 
-  const [localSearch, setLocalSearch] = useState(searchQuery)
-
-  useEffect(() => {
-    setLocalSearch(searchQuery)
-  }, [searchQuery])
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (localSearch !== searchQuery) {
-        updateQueryParams({ search: localSearch, page: '1' })
-      }
-    }, 300)
-    return () => clearTimeout(handler)
-  }, [localSearch, searchQuery])
+  const [detailVersion, setDetailVersion] = useState(0)
 
   const handleAddEmployee = () => {
     setEditTarget(null)
     setIsAddModalOpen(true)
   }
 
-  const handleClearFilters = () => {
-    setLocalSearch('')
-    updateQueryParams({ search: '', department: '', status: '', tab: null, page: '1' })
+  const handleEmployeeSaved = (employee: Employee) => {
+    fetchEmployees()
+    if (selectedEmployee?.id === employee.id) {
+      setSelectedEmployee(employee)
+    }
+    setDetailVersion((v) => v + 1)
   }
 
-  const showEmpty = !isTableLoading && !hasError && sortedEmployees.length === 0
+  const showEmpty = !isTableLoading && !hasError && employeeList.length === 0
 
   return (
     <div className="space-y-6">
@@ -102,6 +94,7 @@ export function EmployeesList() {
         activeCount={workforceStats.active}
         onLeaveCount={workforceStats.onLeave}
         onboardingCount={workforceStats.onboarding}
+        isPageScoped={workforceStats.isPageScoped}
         isLoading={isTableLoading}
       />
 
@@ -110,6 +103,13 @@ export function EmployeesList() {
         value={activeTab}
         onChange={(val) => updateQueryParams({ tab: val === 'all' ? null : val, page: '1' })}
       />
+
+      {dropdownsError && (
+        <CommonErrorBanner
+          message="Filter options could not be loaded. Department and status filters may be unavailable."
+          onRetry={() => void reloadDropdowns()}
+        />
+      )}
 
       <EmployeesToolbar
         localSearch={localSearch}
@@ -122,15 +122,13 @@ export function EmployeesList() {
         onAddEmployee={handleAddEmployee}
       />
 
-      {hasError && (
+      {hasError ? (
         <CommonErrorState
           title="Failed to load employees"
           message="We couldn't retrieve the employee directory. Check your connection and try again."
           onRetry={() => fetchEmployees()}
         />
-      )}
-
-      {isTableLoading ? (
+      ) : isTableLoading ? (
         <>
           <CommonMobileCardGrid>
             {Array.from({ length: 4 }).map((_, idx) => (
@@ -140,10 +138,7 @@ export function EmployeesList() {
           <EmployeesTable
             employees={[]}
             isLoading
-            sortField={sortField}
-            sortOrder={sortOrder}
             pagination={pagination}
-            onSort={handleSort}
             onSelect={() => {}}
             onToggleStatus={() => {}}
             onEdit={() => {}}
@@ -175,7 +170,7 @@ export function EmployeesList() {
       ) : (
         <>
           <CommonMobileCardGrid>
-            {sortedEmployees.map((employee, index) => (
+            {employeeList.map((employee, index) => (
               <EmployeeCard
                 key={employee.id}
                 employee={employee}
@@ -203,12 +198,9 @@ export function EmployeesList() {
           )}
 
           <EmployeesTable
-            employees={sortedEmployees}
+            employees={employeeList}
             isLoading={isTableLoading}
-            sortField={sortField}
-            sortOrder={sortOrder}
             pagination={pagination}
-            onSort={handleSort}
             onSelect={(employee) => {
               setSelectedEmployee(employee)
               setDrawerOpen(true)
@@ -224,13 +216,14 @@ export function EmployeesList() {
       <AddEmployeeModal
         open={isAddModalOpen}
         onOpenChange={setIsAddModalOpen}
-        onSuccess={() => fetchEmployees()}
+        onSuccess={handleEmployeeSaved}
         editEmployee={editTarget}
       />
 
       <EmployeeProfileDrawer
         employee={selectedEmployee}
         open={drawerOpen}
+        detailVersion={detailVersion}
         onClose={() => setDrawerOpen(false)}
         onEdit={handleEdit}
       />

@@ -26,14 +26,9 @@ interface SingleMaintenanceShopResponse {
 
 export const maintenanceShopService = {
   /** Fetch all maintenance shops from the API. Handles network failures gracefully. */
-  async getMaintenanceShops(fallback: MaintenanceShop[], signal?: AbortSignal): Promise<MaintenanceShop[]> {
-    try {
-      const response = await api.get<MaintenanceShopListResponse>('/api/master/maintenance-shops/', { signal });
-      return response.results?.data ?? fallback;
-    } catch (error) {
-      console.warn('🔴 Network error fetching maintenance shops. Loading mock fallback.', error);
-      return fallback;
-    }
+  async getMaintenanceShops(signal?: AbortSignal): Promise<MaintenanceShop[]> {
+    const response = await api.get<MaintenanceShopListResponse>('/api/master/maintenance-shops/', { signal })
+    return response.results?.data ?? []
   },
 
   /** Create a new maintenance shop. */

@@ -1,7 +1,7 @@
 // components/assets/assets-toolbar.tsx
 'use client'
 
-import { Download, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { CommonListToolbar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { PrimaryButton } from '@/components/ui/primary-button'
@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { AssetDropdowns } from '@/services/asset-service'
+import type { AssetDropdowns } from '@/types/asset'
 
 interface AssetsToolbarProps {
   localSearch: string
@@ -24,7 +24,6 @@ interface AssetsToolbarProps {
   dropdowns: AssetDropdowns | null
   onStatusChange: (val: string) => void
   onTypeChange: (val: string) => void
-  onExport: () => void
   onAddAsset: () => void
 }
 
@@ -36,7 +35,6 @@ export function AssetsToolbar({
   dropdowns,
   onStatusChange,
   onTypeChange,
-  onExport,
   onAddAsset,
 }: AssetsToolbarProps) {
   return (
@@ -77,15 +75,6 @@ export function AssetsToolbar({
       }
       actions={
         <>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onExport}
-            className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
           <PrimaryButton type="button" onClick={onAddAsset} className="gap-2 text-xs flex-1 sm:flex-none">
             <Plus className="w-4 h-4" />
             <span className="sm:hidden">Add</span>

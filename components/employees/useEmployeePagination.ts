@@ -1,23 +1,23 @@
 // components/employees/useEmployeePagination.ts
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 
-type SortField = 'full_name' | 'department' | 'designation' | 'joined_date' | 'status'
-type SortOrder = 'asc' | 'desc'
+const SEARCH_DEBOUNCE_MS = 300
 
 export interface UseEmployeePaginationReturn {
   searchQuery: string
+  localSearch: string
+  setLocalSearch: (query: string) => void
   departmentFilter: string
   statusFilter: string
   pageParam: number
-  sortField: SortField
-  sortOrder: SortOrder
   activeTab: string
   pagination: { totalCount: number; totalPages: number; currentPage: number }
   setPagination: React.Dispatch<React.SetStateAction<{ totalCount: number; totalPages: number; currentPage: number }>>
   updateQueryParams: (updates: Record<string, string | null>) => void
+  handleClearFilters: () => void
 }
 
 export function useEmployeePagination(): UseEmployeePaginationReturn {
@@ -31,32 +31,54 @@ export function useEmployeePagination(): UseEmployeePaginationReturn {
   const departmentFilter = searchParams.get('department') || ''
   const statusFilter = searchParams.get('status') || ''
   const pageParam = Number(searchParams.get('page')) || 1
-  const sortField = (searchParams.get('sortField') as SortField) || 'full_name'
-  const sortOrder = (searchParams.get('sortOrder') as SortOrder) || 'asc'
   const activeTab = searchParams.get('tab') || 'all'
 
-  const updateQueryParams = (updates: Record<string, string | null>) => {
-    const nextParams = new URLSearchParams(searchParams.toString())
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === '') {
-        nextParams.delete(key)
-      } else {
-        nextParams.set(key, value)
+  const [localSearch, setLocalSearch] = useState(searchQuery)
+
+  const updateQueryParams = useCallback(
+    (updates: Record<string, string | null>) => {
+      const nextParams = new URLSearchParams(searchParams.toString())
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === '') {
+          nextParams.delete(key)
+        } else {
+          nextParams.set(key, value)
+        }
+      })
+      router.push(`${pathname}?${nextParams.toString()}`)
+    },
+    [pathname, router, searchParams]
+  )
+
+  useEffect(() => {
+    setLocalSearch(searchQuery)
+  }, [searchQuery])
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch !== searchQuery) {
+        updateQueryParams({ search: localSearch, page: '1' })
       }
-    })
-    router.push(`${pathname}?${nextParams.toString()}`)
-  }
+    }, SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(handler)
+  }, [localSearch, searchQuery, updateQueryParams])
+
+  const handleClearFilters = useCallback(() => {
+    setLocalSearch('')
+    updateQueryParams({ search: '', department: '', status: '', tab: null, page: '1' })
+  }, [updateQueryParams])
 
   return {
     searchQuery,
+    localSearch,
+    setLocalSearch,
     departmentFilter,
     statusFilter,
     pageParam,
-    sortField,
-    sortOrder,
     activeTab,
     pagination,
     setPagination,
     updateQueryParams,
+    handleClearFilters,
   }
 }

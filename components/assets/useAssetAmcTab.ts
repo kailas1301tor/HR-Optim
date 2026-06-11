@@ -1,22 +1,25 @@
 // components/assets/useAssetAmcTab.ts
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { assetService, type AssetAMC, type AssetDropdowns } from '@/services/asset-service'
+import { assetService } from '@/services/asset-service'
+import type { AssetAMC, AssetDropdowns } from '@/types/asset'
 import { addAMCSchema, type AddAMCInput } from '@/validations/asset-actions.schema'
 import { toast } from 'sonner'
 
 export interface UseAssetAmcTabReturn {
   amcs: AssetAMC[]
   isLoading: boolean
+  hasError: boolean
   isAddOpen: boolean
   isSubmitting: boolean
   providers: Array<{ id: number; name: string }>
   form: UseFormReturn<AddAMCInput>
   setIsAddOpen: (open: boolean) => void
-  fetchAMCs: () => Promise<void>
+  fetchAMCs: () => void
+  handleRetry: () => void
   onSubmit: (data: AddAMCInput) => Promise<void>
   getStatusBadge: (statusStr?: string) => string
   formatDate: (dateStr: string) => string
@@ -28,8 +31,11 @@ export function useAssetAmcTab(
 ): UseAssetAmcTabReturn {
   const [amcs, setAmcs] = useState<AssetAMC[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [reloadToken, setReloadToken] = useState(0)
+  const fetchIdRef = useRef(0)
 
   const providers = dropdowns?.maintenance_shops || []
 
@@ -38,35 +44,54 @@ export function useAssetAmcTab(
     defaultValues: {
       contract_number: '',
       amc_cost: 0,
-      coverage_details: ''
-    }
+      coverage_details: '',
+    },
   })
 
   const { reset } = form
 
-  const fetchAMCs = async (signal?: AbortSignal) => {
-    setIsLoading(true)
-    try {
-      const data = await assetService.getAssetAMC(assetId, signal)
-      if (signal?.aborted) return
-      setAmcs(data)
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') return
-      console.error('Failed to load asset AMC records:', err)
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoading(false)
-      }
-    }
-  }
+  const fetchAMCs = useCallback(() => {
+    setReloadToken((prev) => prev + 1)
+  }, [])
+
+  const handleRetry = fetchAMCs
+
+  useEffect(() => {
+    setIsAddOpen(false)
+    reset({
+      contract_number: '',
+      amc_cost: 0,
+      coverage_details: '',
+    })
+  }, [assetId, reset])
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchAMCs(controller.signal)
-    return () => {
-      controller.abort()
+    const fetchId = ++fetchIdRef.current
+
+    async function loadAmcs(): Promise<void> {
+      setIsLoading(true)
+      setHasError(false)
+      try {
+        const data = await assetService.getAssetAMC(assetId, controller.signal)
+        if (controller.signal.aborted || fetchId !== fetchIdRef.current) return
+        setAmcs(data)
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        if (fetchId !== fetchIdRef.current) return
+        setHasError(true)
+        setAmcs([])
+        toast.error('Failed to load AMC records')
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setIsLoading(false)
+        }
+      }
     }
-  }, [assetId])
+
+    void loadAmcs()
+    return () => controller.abort()
+  }, [assetId, reloadToken])
 
   const onSubmit = async (data: AddAMCInput) => {
     setIsSubmitting(true)
@@ -78,7 +103,7 @@ export function useAssetAmcTab(
         start_date: data.start_date,
         end_date: data.end_date,
         amc_cost: data.amc_cost,
-        coverage_details: data.coverage_details
+        coverage_details: data.coverage_details,
       })
       toast.success('AMC contract added successfully')
       setIsAddOpen(false)
@@ -107,19 +132,21 @@ export function useAssetAmcTab(
     return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
   return {
     amcs,
     isLoading,
+    hasError,
     isAddOpen,
     isSubmitting,
     providers,
     form,
     setIsAddOpen,
     fetchAMCs,
+    handleRetry,
     onSubmit,
     getStatusBadge,
     formatDate,

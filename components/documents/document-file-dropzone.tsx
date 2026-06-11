@@ -19,7 +19,7 @@ export function DocumentFileDropzone({ file, errorMessage, onFileChange }: Docum
       <div
         className={cn(
           'flex flex-col items-center justify-center border border-dashed border-border/80',
-          'hover:border-violet-glow/65 rounded-xl p-6 bg-midnight/25 cursor-pointer relative group transition-colors'
+          'hover:border-violet-glow/65 rounded-[20px] [corner-shape:squircle] p-6 bg-midnight/25 cursor-pointer relative group transition-colors'
         )}
       >
         <input
@@ -36,7 +36,7 @@ export function DocumentFileDropzone({ file, errorMessage, onFileChange }: Docum
           {file ? file.name : 'Click to select / drop document'}
         </p>
         <p className="text-[10px] text-slate-500 text-center mt-1">
-          {file ? `${(file.size / 1024).toFixed(1)} KB` : 'PDF, JPG, PNG, DOCX up to 10MB'}
+          {file ? `${(file.size / 1024).toFixed(1)} KB` : 'PDF, JPG, PNG, WEBP up to 10MB'}
         </p>
       </div>
       <CommonFormFieldError message={errorMessage} />

@@ -1,17 +1,18 @@
 // components/assets/useDisposeAssetDialog.ts
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { disposeAssetSchema, type DisposeAssetInput } from '@/validations/asset-actions.schema'
-import { assetService, type AssetDropdowns } from '@/services/asset-service'
-import { DISPOSAL_METHOD_FALLBACKS } from './assets-constants'
+import { assetService } from '@/services/asset-service'
+import type { AssetDropdowns } from '@/types/asset'
 import { toast } from 'sonner'
 
 export interface UseDisposeAssetDialogReturn {
   isSubmitting: boolean
-  disposalChoices: readonly { id: string; name: string }[]
+  disposalChoices: { id: string; name: string }[]
+  hasDisposalChoicesError: boolean
   form: UseFormReturn<DisposeAssetInput>
   onSubmit: (data: DisposeAssetInput) => Promise<void>
 }
@@ -25,26 +26,40 @@ export function useDisposeAssetDialog(
 ): UseDisposeAssetDialogReturn {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const disposalChoices = dropdowns?.disposal_choices || DISPOSAL_METHOD_FALLBACKS
+  const disposalChoices = dropdowns?.disposal_choices ?? []
+  const hasDisposalChoicesError = open && disposalChoices.length === 0
 
   const form = useForm<DisposeAssetInput>({
     resolver: zodResolver(disposeAssetSchema),
     defaultValues: {
       disposal_date: new Date().toISOString().split('T')[0],
-      disposal_value: 0
-    }
+      disposal_value: 0,
+    },
   })
 
   const { reset } = form
 
+  useEffect(() => {
+    if (!open) {
+      reset({
+        disposal_date: new Date().toISOString().split('T')[0],
+        disposal_value: 0,
+      })
+    }
+  }, [open, reset])
+
   const onSubmit = async (data: DisposeAssetInput) => {
+    if (hasDisposalChoicesError) {
+      toast.error('Disposal methods are unavailable. Please try again later.')
+      return
+    }
     setIsSubmitting(true)
     try {
       await assetService.disposeAsset({
         asset: assetId,
         disposal_date: data.disposal_date,
         disposal_method: data.disposal_method,
-        disposal_value: data.disposal_value
+        disposal_value: data.disposal_value,
       })
       toast.success('Asset disposed successfully')
       onOpenChange(false)
@@ -61,6 +76,7 @@ export function useDisposeAssetDialog(
   return {
     isSubmitting,
     disposalChoices,
+    hasDisposalChoicesError,
     form,
     onSubmit,
   }

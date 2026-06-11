@@ -9,6 +9,7 @@ interface AssetsStatsCardsProps {
   inServiceCount: number
   utilizationRate: number
   totalValue: string
+  isPageScoped?: boolean
   isLoading?: boolean
 }
 
@@ -17,6 +18,7 @@ export function AssetsStatsCards({
   inServiceCount,
   utilizationRate,
   totalValue,
+  isPageScoped = false,
   isLoading = false,
 }: AssetsStatsCardsProps) {
   const items: StatDisplayItem[] = [
@@ -50,5 +52,14 @@ export function AssetsStatsCards({
     },
   ]
 
-  return <CommonStatCardDisplay items={items} isLoading={isLoading} columns="4" />
+  return (
+    <div className="space-y-2">
+      <CommonStatCardDisplay items={items} isLoading={isLoading} columns="4" />
+      {isPageScoped && !isLoading && (
+        <p className="text-xs text-muted-foreground">
+          In-service, utilization, and value reflect the current page or active filters. Total count is from the server.
+        </p>
+      )}
+    </div>
+  )
 }

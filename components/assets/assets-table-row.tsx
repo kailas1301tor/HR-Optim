@@ -2,7 +2,6 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
 import { Eye, Pencil, Trash2, MoreHorizontal, Building2, MapPin, UserCheck, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CommonStatusBadge } from '@/components/common'
@@ -15,19 +14,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import type { BackendAsset } from '@/services/asset-service'
+import type { BackendAsset } from '@/types/asset'
+import { isAssetDisposed, isAssetInService } from '@/lib/helpers/asset-status'
 import { getAssetTypeConfig, getStatusConfig } from './assets-constants'
 
 interface AssetsTableRowProps {
   asset: BackendAsset
-  index: number
   onEdit: (asset: BackendAsset) => void
   onDelete: (id: number) => void
 }
 
 export function AssetsTableRow({
   asset,
-  index,
   onEdit,
   onDelete,
 }: AssetsTableRowProps) {
@@ -43,65 +41,61 @@ export function AssetsTableRow({
   }
 
   const statusLower = asset.status?.toLowerCase() || ''
-  const isDisposed = statusLower.includes('dispose') || statusLower.includes('delete')
-  const isAssigned = statusLower.includes('assign') || statusLower.includes('in use') || statusLower.includes('in-use')
+  const isDisposed = isAssetDisposed(asset.status)
+  const isAssigned = isAssetInService(asset.status)
   const inRepair = statusLower.includes('repair') || statusLower.includes('maintenance')
 
   return (
-    <motion.tr
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ delay: index * 0.02 }}
+    <tr
       className="border-b border-border/50 hover:bg-violet-core/5 transition-colors cursor-pointer"
       onClick={() => router.push(`/assets/${asset.id}`)}
     >
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center', category.color)}>
+      <td className="px-4 py-3 align-middle min-w-[200px] max-w-[280px]">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={cn('w-10 h-10 shrink-0 rounded-[16px] [corner-shape:squircle] flex items-center justify-center', category.color)}>
             <CategoryIcon className="w-5 h-5" />
           </div>
-          <div>
-            <p className="text-sm font-medium text-cloud">{asset.name}</p>
-            <p className="text-xs font-mono text-violet-glow">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-cloud truncate">{asset.name}</p>
+            <p className="text-xs font-mono text-violet-glow truncate">
               AST-{String(asset.id).padStart(3, '0')}
             </p>
+            {asset.serial_number && (
+              <p className="text-xs font-mono text-muted-foreground mt-0.5 truncate">{asset.serial_number}</p>
+            )}
           </div>
         </div>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 align-middle whitespace-nowrap">
         <span className="text-sm text-slate-350">{asset.asset_type || 'Other'}</span>
       </td>
-      <td className="px-4 py-3">
-        <span className="text-sm font-mono text-slate-355">{asset.serial_number || '—'}</span>
-      </td>
-      <td className="px-4 py-3">
-        <div className="flex flex-col gap-1 items-start">
+      <td className="px-4 py-3 align-middle min-w-[140px]">
+        <div className="space-y-1 min-w-0">
           {asset.department ? (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-violet-glow bg-violet-core/10 border border-violet-core/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-              <Building2 className="w-2.5 h-2.5 text-violet-glow" />
-              {asset.department}
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-violet-glow bg-violet-core/10 border border-violet-core/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1 max-w-full">
+              <Building2 className="w-2.5 h-2.5 shrink-0 text-violet-glow" />
+              <span className="truncate">{asset.department}</span>
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">Unassigned</span>
           )}
           {asset.location && (
-            <span className="text-xs text-slate-400 flex items-center gap-1 font-sans">
-              <MapPin className="w-3 h-3 text-slate-500" />
-              {asset.location}
+            <span className="text-xs text-slate-400 flex items-center gap-1 min-w-0">
+              <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+              <span className="truncate">{asset.location}</span>
             </span>
           )}
         </div>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3 align-middle whitespace-nowrap">
         <CommonStatusBadge variant={getAssetStatusBadgeVariant(asset.status)} label={status.label} />
       </td>
-      <td className="px-4 py-3 text-right">
+      <td className="px-4 py-3 align-middle text-right whitespace-nowrap">
         <span className="text-sm font-mono text-cloud tabular-nums font-medium">
           {formatCost(asset.purchase_cost)}
         </span>
       </td>
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+      <td className="px-4 py-3 align-middle text-right w-12" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-accent">
@@ -113,7 +107,7 @@ export function AssetsTableRow({
               <Eye className="w-4 h-4 mr-2 text-slate-400" />
               View Details
             </DropdownMenuItem>
-            
+
             {!isDisposed && (
               <>
                 <DropdownMenuSeparator className="border-border/40" />
@@ -145,6 +139,6 @@ export function AssetsTableRow({
           </DropdownMenuContent>
         </DropdownMenu>
       </td>
-    </motion.tr>
+    </tr>
   )
 }

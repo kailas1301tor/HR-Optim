@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { assetService, type AssetDropdowns, type BackendAsset } from '@/services/asset-service'
+import type { Asset, AssetDropdowns } from '@/types/asset'
 import type { Department } from '@/services/department-service'
 import { useAddAssetModal } from './useAddAssetModal'
 
@@ -28,7 +28,7 @@ interface AddAssetModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
-  editAsset?: BackendAsset | null
+  editAsset?: Asset | null
   dropdowns: AssetDropdowns | null
   departments: Department[]
 }
@@ -59,7 +59,7 @@ export function AddAssetModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border border-border/80 rounded-2xl max-w-2xl overflow-y-auto max-h-[90vh] p-6 shadow-2xl">
+      <DialogContent className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] max-w-xl md:max-w-2xl overflow-y-auto max-h-[90vh] p-6 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-cloud font-semibold text-lg">
             {editAsset ? 'Edit Asset' : 'Add New Asset'}
@@ -268,12 +268,13 @@ export function AddAssetModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="min-h-11"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-violet-core hover:bg-violet-deep text-white"
+              className="bg-violet-core hover:bg-violet-deep text-white min-h-11"
               disabled={isSubmitting}
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}

@@ -1,7 +1,7 @@
 // components/employees/profile/personal-tab.tsx
 'use client'
 
-import type { Employee } from '../employee-table'
+import type { Employee } from '@/types/employee'
 import { ContactSection } from './personal/contact-section'
 import { EmploymentSection } from './personal/employment-section'
 import { RegulatorySection } from './personal/regulatory-section'

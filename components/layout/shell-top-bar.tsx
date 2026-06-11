@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Settings,
 } from 'lucide-react'
+import { PRODUCT_NAME, PRODUCT_TAGLINE } from '@/lib/brand'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,8 @@ import {
   uiShellHeaderInset,
   SHELL_SIDEBAR_WIDTH_COLLAPSED,
   SHELL_SIDEBAR_WIDTH_EXPANDED,
+  uiSquircleNav,
+  uiSquircleXs,
 } from '@/lib/ui/design-system'
 import { useSidebar } from './useSidebar'
 import type { UserProfile } from './app-shell'
@@ -79,7 +82,10 @@ export function ShellTopBar({
           <button
             type="button"
             onClick={onMenuClick}
-            className="p-2 hover:bg-carbon rounded-lg text-slate-400 hover:text-cloud transition-colors cursor-pointer shrink-0"
+            className={cn(
+              'p-2 hover:bg-carbon text-slate-400 hover:text-cloud transition-colors cursor-pointer shrink-0',
+              uiSquircleNav
+            )}
             aria-label="Open main menu"
           >
             <Menu className="w-5 h-5" />
@@ -92,13 +98,18 @@ export function ShellTopBar({
             collapsed && !isMobile && 'justify-center flex-none'
           )}
         >
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center shrink-0">
+          <div
+            className={cn(
+              'w-8 h-8 bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center shrink-0',
+              uiSquircleXs
+            )}
+          >
             <Building2 className="w-4 h-4 text-white" />
           </div>
           {(!collapsed || isMobile) && (
             <div className="min-w-0 leading-tight">
-              <p className="text-sm font-semibold text-cloud truncate leading-none">HRMS Portal</p>
-              <p className="text-[11px] text-muted-foreground truncate mt-0.5">Management</p>
+              <p className="text-sm font-semibold text-cloud truncate leading-none">{PRODUCT_NAME}</p>
+              <p className="text-[11px] text-muted-foreground truncate mt-0.5">{PRODUCT_TAGLINE}</p>
             </div>
           )}
         </div>
@@ -107,7 +118,10 @@ export function ShellTopBar({
           <button
             type="button"
             onClick={() => setCollapsed(true)}
-            className="shrink-0 ml-auto p-1.5 hover:bg-carbon rounded-md text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+            className={cn(
+              'shrink-0 ml-auto p-1.5 hover:bg-carbon text-slate-500 hover:text-slate-300 transition-colors cursor-pointer',
+              uiSquircleNav
+            )}
             aria-label="Collapse sidebar"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
@@ -163,7 +177,7 @@ export function ShellTopBar({
 
           <button
             type="button"
-            className="relative p-2 hover:bg-carbon rounded-lg transition-colors cursor-pointer"
+            className={cn('relative p-2 hover:bg-carbon transition-colors cursor-pointer', uiSquircleNav)}
             aria-label="Notifications"
           >
             <Bell className="w-5 h-5 text-slate-300" />
@@ -174,7 +188,7 @@ export function ShellTopBar({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex items-center p-1 hover:bg-carbon rounded-lg transition-colors cursor-pointer"
+                className={cn('flex items-center p-1 hover:bg-carbon transition-colors cursor-pointer', uiSquircleNav)}
               >
                 <Avatar className="w-8 h-8">
                   <AvatarImage src="/placeholder-user.jpg" />

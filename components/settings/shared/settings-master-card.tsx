@@ -9,13 +9,10 @@ import { PrimaryButton } from '@/components/ui/primary-button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiCard, uiSkeletonBlock } from '@/lib/ui/design-system'
+import type { SettingsMasterItem } from '@/types/settings'
 import { SettingsListRow } from './settings-list-row'
 
-export interface SettingsMasterItem {
-  id: number
-  name: string
-  subtitle?: string
-}
+export type { SettingsMasterItem }
 
 interface SettingsMasterCardProps {
   title: string
@@ -63,7 +60,7 @@ export function SettingsMasterCard({
       <div className="p-4 space-y-2">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className={cn('h-12 w-full rounded-xl', uiSkeletonBlock)} />
+            <Skeleton key={i} className={cn('h-12 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
           ))
         ) : items.length === 0 ? (
           <CommonEmptyState

@@ -2,13 +2,9 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { AUTH_COOKIE_NAMES, SESSION_MAX_AGE_SECONDS } from '@/lib/cookies'
-
-interface SessionBody {
-  token?: string
-  username?: string
-  email?: string
-  userId?: number | string
-}
+import { isJwtShaped } from '@/lib/helpers/jwt-decode-exp'
+import { isSameOriginRequest } from '@/lib/helpers/is-same-origin-request'
+import type { PersistSessionInput } from '@/types/auth'
 
 function getSessionCookieOptions(): {
   path: string
@@ -33,16 +29,20 @@ function clearAuthCookies(response: NextResponse): void {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
-  let body: SessionBody
+  if (!isSameOriginRequest(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  let body: PersistSessionInput
   try {
-    body = (await request.json()) as SessionBody
+    body = (await request.json()) as PersistSessionInput
   } catch {
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
   const { token, username = '', email = '', userId } = body
-  if (!token || typeof token !== 'string') {
-    return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+  if (!token || typeof token !== 'string' || !isJwtShaped(token)) {
+    return NextResponse.json({ error: 'Valid token is required' }, { status: 400 })
   }
 
   const parsedUserId =
@@ -53,7 +53,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const response = NextResponse.json({ success: true })
   const options = getSessionCookieOptions()
 
-  // Not httpOnly: client-side api wrapper reads this for Bearer Authorization
+  // SECURITY: Not httpOnly — client api wrapper reads this for Bearer Authorization.
+  // Long-term: migrate to httpOnly BFF proxy (see module-by-module auth plan).
   response.cookies.set(AUTH_COOKIE_NAMES.session, token, options)
   response.cookies.set(AUTH_COOKIE_NAMES.username, username, options)
   response.cookies.set(AUTH_COOKIE_NAMES.email, email, options)

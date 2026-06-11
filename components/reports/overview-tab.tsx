@@ -32,7 +32,7 @@ export function OverviewTab() {
         <Card className="bg-card/50 backdrop-blur border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[16px] [corner-shape:squircle] bg-primary/10">
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
@@ -50,7 +50,7 @@ export function OverviewTab() {
         <Card className="bg-card/50 backdrop-blur border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[16px] [corner-shape:squircle] bg-emerald-500/10">
                 <Clock className="h-5 w-5 text-emerald-500" />
               </div>
               <div>
@@ -68,7 +68,7 @@ export function OverviewTab() {
         <Card className="bg-card/50 backdrop-blur border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/10">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[16px] [corner-shape:squircle] bg-amber-500/10">
                 <DollarSign className="h-5 w-5 text-amber-500" />
               </div>
               <div>
@@ -86,7 +86,7 @@ export function OverviewTab() {
         <Card className="bg-card/50 backdrop-blur border-border/50">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
+              <div className="flex h-10 w-10 items-center justify-center rounded-[16px] [corner-shape:squircle] bg-blue-500/10">
                 <Calendar className="h-5 w-5 text-blue-500" />
               </div>
               <div>

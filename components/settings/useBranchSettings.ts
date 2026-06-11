@@ -1,11 +1,16 @@
 // components/settings/useBranchSettings.ts
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
-import { branchService, type Branch } from '@/services/branch-service'
+import { invalidateUploadBranchesCache } from '@/components/documents/useUploadDocumentModal'
+import { loadMasterList } from '@/lib/helpers/load-master-list'
+import { branchService } from '@/services/branch-service'
+import type { Branch } from '@/types/settings'
 
 export interface UseBranchSettingsReturn {
   branches: Branch[]
   isLoading: boolean
+  hasError: boolean
+  reload: () => Promise<void>
   isOpen: boolean
   editId: number | null
   formName: string
@@ -26,33 +31,30 @@ export interface UseBranchSettingsReturn {
 export function useBranchSettings(): UseBranchSettingsReturn {
   const [branches, setBranches] = useState<Branch[]>([])
   const [isLoading, setIsLoading] = useState(true)
-
-  // Add/Edit Dialog State
+  const [hasError, setHasError] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [editId, setEditId] = useState<number | null>(null)
   const [formName, setFormName] = useState('')
   const [formAddress, setFormAddress] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Delete Dialog State
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const requestIdRef = useRef(0)
 
-  const loadBranches = async (): Promise<void> => {
-    setIsLoading(true)
-    try {
-      const data = await branchService.getBranches()
-      setBranches(data)
-    } catch {
-      toast.error('Failed to load branches')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const reload = useCallback(async (): Promise<void> => {
+    await loadMasterList({
+      setLoading: setIsLoading,
+      setHasError,
+      fetcher: () => branchService.getBranches(),
+      onSuccess: setBranches,
+      errorMessage: 'Failed to load branches',
+      requestIdRef,
+    })
+  }, [])
 
   useEffect(() => {
-    loadBranches()
-  }, [])
+    reload()
+  }, [reload])
 
   const handleOpenAdd = (): void => {
     setFormName('')
@@ -83,7 +85,8 @@ export function useBranchSettings(): UseBranchSettingsReturn {
         toast.success('Branch created successfully')
       }
       setIsOpen(false)
-      await loadBranches()
+      invalidateUploadBranchesCache()
+      await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save branch'
       toast.error(message)
@@ -99,7 +102,8 @@ export function useBranchSettings(): UseBranchSettingsReturn {
       await branchService.deleteBranch(deleteId)
       toast.success('Branch deleted successfully')
       setDeleteId(null)
-      await loadBranches()
+      invalidateUploadBranchesCache()
+      await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete branch'
       toast.error(message)
@@ -108,9 +112,20 @@ export function useBranchSettings(): UseBranchSettingsReturn {
     }
   }
 
+  const handleDialogOpenChange = (open: boolean): void => {
+    if (!open && !isSubmitting) {
+      setEditId(null)
+      setFormName('')
+      setFormAddress('')
+    }
+    if (!isSubmitting) setIsOpen(open)
+  }
+
   return {
     branches,
     isLoading,
+    hasError,
+    reload,
     isOpen,
     editId,
     formName,
@@ -118,7 +133,7 @@ export function useBranchSettings(): UseBranchSettingsReturn {
     isSubmitting,
     deleteId,
     isDeleting,
-    setIsOpen,
+    setIsOpen: handleDialogOpenChange,
     setFormName,
     setFormAddress,
     setDeleteId,

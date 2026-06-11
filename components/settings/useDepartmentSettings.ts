@@ -1,15 +1,21 @@
 // components/settings/useDepartmentSettings.ts
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { departmentService, type Department } from '@/services/department-service'
+import { departmentService } from '@/services/department-service'
+import type { Department } from '@/types/settings'
 import { toast } from 'sonner'
+import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
+import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeDropdowns'
+import { loadMasterList } from '@/lib/helpers/load-master-list'
 
 export interface UseDepartmentSettingsReturn {
   selectedDeptId: string
   departments: Department[]
   isLoading: boolean
+  hasError: boolean
+  reload: () => Promise<void>
   isOpen: boolean
   editId: number | null
   formName: string
@@ -47,6 +53,7 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
 
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   // Add/Edit Dialog State
   const [isOpen, setIsOpen] = useState(false)
@@ -58,22 +65,29 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
   // Delete Dialog State
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const requestIdRef = useRef(0)
 
-  const loadDepartments = async () => {
-    setIsLoading(true)
-    try {
-      const data = await departmentService.getDepartments()
-      setDepartments(data)
-    } catch (error) {
-      toast.error('Failed to load departments')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const reload = useCallback(async (): Promise<void> => {
+    await loadMasterList({
+      setLoading: setIsLoading,
+      setHasError,
+      fetcher: () => departmentService.getDepartments(),
+      onSuccess: setDepartments,
+      errorMessage: 'Failed to load departments',
+      requestIdRef,
+    })
+  }, [])
 
   useEffect(() => {
-    loadDepartments()
-  }, [])
+    reload()
+  }, [reload])
+
+  useEffect(() => {
+    if (isLoading || departments.length === 0) return
+    if (selectedDeptId && !departments.some((dept) => String(dept.id) === selectedDeptId)) {
+      setSelectedDeptId('')
+    }
+  }, [isLoading, departments, selectedDeptId, setSelectedDeptId])
 
   const handleOpenAdd = () => {
     setFormName('')
@@ -103,7 +117,9 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
         toast.success('Department created successfully')
       }
       setIsOpen(false)
-      await loadDepartments()
+      invalidateEmployeeDropdowns()
+      invalidateAssetDropdowns()
+      await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save department'
       toast.error(message)
@@ -122,7 +138,9 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
         setSelectedDeptId('')
       }
       setDeleteId(null)
-      await loadDepartments()
+      invalidateEmployeeDropdowns()
+      invalidateAssetDropdowns()
+      await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete department'
       toast.error(message)
@@ -131,10 +149,21 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
     }
   }
 
+  const handleDialogOpenChange = (open: boolean): void => {
+    if (!open && !isSubmitting) {
+      setEditId(null)
+      setFormName('')
+      setFormDescription('')
+    }
+    if (!isSubmitting) setIsOpen(open)
+  }
+
   return {
     selectedDeptId,
     departments,
     isLoading,
+    hasError,
+    reload,
     isOpen,
     editId,
     formName,
@@ -142,7 +171,7 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
     isSubmitting,
     deleteId,
     isDeleting,
-    setIsOpen,
+    setIsOpen: handleDialogOpenChange,
     setFormName,
     setFormDescription,
     setDeleteId,

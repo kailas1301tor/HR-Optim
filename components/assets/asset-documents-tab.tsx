@@ -1,7 +1,8 @@
 // components/assets/asset-documents-tab.tsx
 'use client'
 
-import { type AssetDropdowns } from '@/services/asset-service'
+import { type AssetDropdowns } from '@/types/asset'
+import { CommonEmptyState, CommonErrorState } from '@/components/common'
 import { Loader2, FileText, Upload, Trash2, Download, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -26,11 +27,14 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
   const {
     documents,
     isLoading,
+    hasError,
     isUploading,
     isDeletingId,
     docTypes,
+    hasDocTypesError,
     form,
     selectedFile,
+    handleRetry,
     onUploadSubmit,
     handleDelete,
     getDocTypeName,
@@ -45,16 +49,23 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-200">
       {/* Upload Form Panel */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 h-fit space-y-4">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 h-fit space-y-4">
         <h3 className="text-sm font-semibold text-cloud flex items-center gap-2">
           <Upload className="w-4 h-4 text-violet-glow" /> Upload Asset Document
         </h3>
+
+        {hasDocTypesError && (
+          <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-[20px] [corner-shape:squircle] p-3">
+            Document types could not be loaded. Upload is unavailable until metadata loads.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onUploadSubmit)} className="space-y-4 pt-2">
           {/* Document Type select */}
           <div className="space-y-1.5">
             <Label htmlFor="document_type" className="text-xs text-slate-400">Document Category</Label>
             <Select
+              disabled={hasDocTypesError}
               onValueChange={(val) => setValue('document_type', Number(val), { shouldValidate: true })}
             >
               <SelectTrigger className="w-full bg-midnight border-border">
@@ -76,7 +87,7 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
           {/* File input */}
           <div className="space-y-2">
             <Label htmlFor="file" className="text-xs text-slate-400">Select File</Label>
-            <div className="flex flex-col items-center justify-center border border-dashed border-border/80 hover:border-violet-glow/65 rounded-xl p-6 bg-midnight/25 cursor-pointer relative group transition-colors">
+            <div className="flex flex-col items-center justify-center border border-dashed border-border/80 hover:border-violet-glow/65 rounded-[20px] [corner-shape:squircle] p-6 bg-midnight/25 cursor-pointer relative group transition-colors">
               <input
                 type="file"
                 id="file"
@@ -104,7 +115,7 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
           <Button
             type="submit"
             disabled={isUploading}
-            className="w-full bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl flex items-center justify-center gap-2 mt-2"
+            className="w-full bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-[20px] [corner-shape:squircle] flex items-center justify-center gap-2 mt-2"
           >
             {isUploading ? (
               <>
@@ -124,40 +135,46 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
       </div>
 
       {/* Uploaded Documents List */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 lg:col-span-2 space-y-4">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 lg:col-span-2 space-y-4">
         <h3 className="text-sm font-semibold text-cloud flex items-center gap-2">
           <FileText className="w-4 h-4 text-violet-glow" /> Uploaded Document Records
         </h3>
 
-        {isLoading ? (
+        {hasError ? (
+          <CommonErrorState
+            title="Failed to load documents"
+            message="Uploaded document records could not be retrieved."
+            onRetry={handleRetry}
+            className="shadow-none border-0 bg-transparent py-8"
+          />
+        ) : isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-midnight/35 border border-border/50 p-4 rounded-xl flex items-start justify-between gap-3">
+              <div key={i} className="bg-midnight/35 border border-border/50 p-4 rounded-[20px] [corner-shape:squircle] flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3 min-w-0 w-full">
-                  <Skeleton className={cn('w-10 h-10 rounded-xl shrink-0', uiSkeletonBlock)} />
+                  <Skeleton className={cn('w-10 h-10 rounded-[20px] [corner-shape:squircle] shrink-0', uiSkeletonBlock)} />
                   <div className="space-y-2 w-full">
-                    <Skeleton className={cn('h-4 w-28 rounded-xl', uiSkeletonBlock)} />
-                    <Skeleton className={cn('h-3.5 w-20 rounded-xl', uiSkeletonBlock)} />
-                    <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-4 w-28 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-3.5 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : documents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="w-10 h-10 rounded-full bg-slate-800 border border-border/40 flex items-center justify-center text-slate-500 mb-2">
-              <FileText className="w-4 h-4" />
-            </div>
-            <p className="text-sm font-semibold text-cloud">No documents uploaded</p>
-            <p className="text-xs text-slate-500 mt-1 max-w-[280px]">Add warranties, invoices, or compliance certificates on the left.</p>
-          </div>
+          <CommonEmptyState
+            icon={FileText}
+            title="No documents uploaded"
+            description="Add warranties, invoices, or compliance certificates using the form on the left."
+            className="py-12 shadow-none border-0 bg-transparent"
+          />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {documents.map((doc) => (
-              <div key={doc.id} className="bg-midnight/35 border border-border/50 hover:border-border p-4 rounded-xl flex items-start justify-between gap-3 transition-colors group">
+              <div key={doc.id} className="bg-midnight/35 border border-border/50 hover:border-border p-4 rounded-[20px] [corner-shape:squircle] flex items-start justify-between gap-3 transition-colors group">
                 <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-lg bg-violet-core/10 text-violet-glow flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-[16px] [corner-shape:squircle] bg-violet-core/10 text-violet-glow flex items-center justify-center shrink-0">
                     <FileText className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">
@@ -183,7 +200,7 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
                   size="icon"
                   disabled={isDeletingId === doc.id}
                   onClick={() => handleDelete(doc.id)}
-                  className="h-8 w-8 text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-lg opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                  className="h-8 w-8 text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-[16px] [corner-shape:squircle] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
                 >
                   {isDeletingId === doc.id ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />

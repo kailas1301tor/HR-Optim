@@ -35,7 +35,7 @@ export function SettingsListRow({
           : undefined
       }
       className={cn(
-        'flex items-center justify-between bg-midnight border border-border/60 rounded-xl p-3 transition-all group',
+        'flex items-center justify-between bg-midnight border border-border/60 rounded-[20px] [corner-shape:squircle] p-3 transition-all group',
         isSelected ? 'border-violet-core/40 bg-violet-core/5' : 'hover:border-violet-core/40',
         onClick && 'cursor-pointer',
         className
@@ -43,7 +43,7 @@ export function SettingsListRow({
     >
       <div className="min-w-0 flex-1">{label}</div>
       <div
-        className="flex items-center gap-1.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+        className="flex items-center gap-1.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity"
         onClick={(e) => e.stopPropagation()}
       >
         {actions}

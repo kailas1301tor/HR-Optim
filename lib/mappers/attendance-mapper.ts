@@ -4,7 +4,7 @@ import type {
   AttendanceRecord,
   AttendanceStatus,
   AttendanceStatusCounts,
-} from '@/components/attendance/attendance-constants'
+} from '@/types/attendance'
 export interface BackendAttendanceRecord {
   employee_id: string
   employee_name: string

@@ -2,7 +2,8 @@
 'use client'
 
 import { Landmark } from 'lucide-react'
-import type { Employee } from '../../employee-table'
+import { maskAccountNumber } from '@/lib/helpers/mask-sensitive'
+import type { Employee } from '@/types/employee'
 
 interface BankSectionProps {
   employee: Employee
@@ -10,20 +11,20 @@ interface BankSectionProps {
 
 export function BankSection({ employee }: BankSectionProps) {
   const bankName = employee.bank_details?.bank_name || '—'
-  const accountNo = employee.bank_details?.account_number || '—'
+  const accountNo = maskAccountNumber(employee.bank_details?.account_number)
   const ifsc = employee.bank_details?.ifsc || '—'
   const branch = employee.bank_details?.branch || '—'
 
   return (
     <div>
       <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 font-sans">Bank & Payment Details</h3>
-      <div className="bg-gradient-to-br from-[#1e293b]/70 to-[#0f172a]/70 border border-violet-core/20 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-br from-[#1e293b]/70 to-[#0f172a]/70 border border-violet-core/20 rounded-[32px] [corner-shape:squircle] p-5 shadow-lg relative overflow-hidden">
         <div className="absolute right-4 bottom-4 opacity-5 pointer-events-none">
           <Landmark className="w-24 h-24 text-cloud" />
         </div>
         
         <div className="flex items-center gap-3.5 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-violet-core/15 border border-violet-core/30 flex items-center justify-center shrink-0 text-violet-glow">
+          <div className="w-10 h-10 rounded-[20px] [corner-shape:squircle] bg-violet-core/15 border border-violet-core/30 flex items-center justify-center shrink-0 text-violet-glow">
             <Landmark className="w-5.5 h-5.5" />
           </div>
           <div>

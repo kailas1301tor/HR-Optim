@@ -7,14 +7,15 @@ export interface LeaveRule {
   leave_type: number
   max_days: string
   is_carry_forward: boolean
-  carry_forward_limit: string
+  carry_forward_limit: string | null
   accrual_rate: string
   accrual_frequency: string
   is_paid_leave: boolean
-  description: string
+  description: string | null
 }
 
 export interface ConfigureLeaveRulePayload {
+  id?: number
   leave_type: number
   max_days: number
   is_carry_forward: boolean
@@ -27,22 +28,17 @@ export interface ConfigureLeaveRulePayload {
 
 export const leaveRuleService = {
   async getLeaveRules(signal?: AbortSignal): Promise<LeaveRule[]> {
-    try {
-      const response = await api.get<ApiSimpleListResponse<LeaveRule>>(
-        '/api/master/leave-rules/',
-        { signal }
-      )
-      return response.results?.data ?? []
-    } catch (error) {
-      console.warn('🔴 Network error fetching leave rules. Loading fallback.', error)
-      return []
-    }
+    const response = await api.get<ApiSimpleListResponse<LeaveRule>>(
+      '/api/master/leave-rules/',
+      { signal },
+    )
+    return response.results?.data ?? []
   },
 
   async configureLeaveRule(payload: ConfigureLeaveRulePayload): Promise<LeaveRule> {
     const response = await api.post<ApiSingleResponse<LeaveRule>>(
       '/api/master/leave-rules/',
-      payload
+      payload,
     )
     return response.results.data
   },

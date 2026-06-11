@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { CommonPageHeader } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import type { RequestTypeFilter } from './useRequestsList'
+import type { RequestTypeFilter } from '@/types/request'
 
 interface RequestsPageHeaderProps {
   typeFilter: RequestTypeFilter

@@ -1,17 +1,26 @@
+import { toast } from 'sonner'
 import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
 import { API_BASE_URL } from '@/lib/env'
 import { parseAuthErrorPayload } from '@/lib/helpers/parse-auth-form-errors'
+import { attemptSilentReauth } from '@/lib/auth/silent-reauth'
+import { clearRefreshToken } from '@/lib/auth/refresh-token-storage'
 
 let isRedirectingToLogin = false
 
 async function handleUnauthorized(): Promise<void> {
   if (typeof window === 'undefined' || isRedirectingToLogin) return
+
+  const refreshed = await attemptSilentReauth()
+  if (refreshed) return
+
   isRedirectingToLogin = true
+  toast.error('Your session has expired. Please sign in again.')
   try {
     await fetch('/api/auth/session', { method: 'DELETE' })
   } catch {
     // Best-effort session clear before redirect
   }
+  clearRefreshToken()
   window.location.href = '/login'
 }
 
@@ -33,6 +42,8 @@ interface RequestOptions extends RequestInit {
   skipAuthHeader?: boolean
   /** Do not hard-redirect to /login on 401 (e.g. failed login attempt). */
   skipSessionRedirect?: boolean
+  /** Internal: prevents infinite retry after silent reauth. */
+  isRetryAfterRefresh?: boolean
 }
 
 function resolveErrorMessage(responseData: unknown, status: number, fallback: string): string {
@@ -105,7 +116,11 @@ async function requestBlob(
     const hadActiveSession = Boolean(sessionToken)
     const shouldRedirect = hadActiveSession && !options.skipSessionRedirect
 
-    if (shouldRedirect) {
+    if (shouldRedirect && !options.isRetryAfterRefresh) {
+      const refreshed = await attemptSilentReauth()
+      if (refreshed) {
+        return requestBlob(endpoint, { ...options, isRetryAfterRefresh: true })
+      }
       await handleUnauthorized()
     }
 
@@ -188,7 +203,11 @@ async function request<T>(
       const hadActiveSession = Boolean(sessionToken)
       const shouldRedirect = hadActiveSession && !options.skipSessionRedirect
 
-      if (shouldRedirect) {
+      if (shouldRedirect && !options.isRetryAfterRefresh) {
+        const refreshed = await attemptSilentReauth()
+        if (refreshed) {
+          return request<T>(method, endpoint, body, { ...options, isRetryAfterRefresh: true })
+        }
         await handleUnauthorized()
       }
 

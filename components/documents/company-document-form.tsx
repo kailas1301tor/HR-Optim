@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
 import { CommonFormFieldError } from '@/components/common'
 import { Button } from '@/components/ui/button'
+import { DialogFooter } from '@/components/ui/dialog'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,13 +43,19 @@ export function CompanyDocumentForm({
   })
 
   const file = watch('file')
+  const selectedDocumentType = watch('company_document_type')
+  const selectedBranch = watch('branch')
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-4 pt-2 pr-1">
       <div className="space-y-1.5">
         <Label className="text-xs text-slate-400">Document Category</Label>
-        <Select onValueChange={(val) => setValue('company_document_type', val, { shouldValidate: true })}>
-          <SelectTrigger className={cn('w-full text-xs', uiSelect)}>
+        <Select
+          value={selectedDocumentType}
+          onValueChange={(val) => setValue('company_document_type', val, { shouldValidate: true })}
+        >
+          <SelectTrigger className={cn('w-full text-xs min-h-11', uiSelect)}>
             <SelectValue placeholder="Select type..." />
           </SelectTrigger>
           <SelectContent className="bg-popover border border-border text-xs">
@@ -64,8 +71,11 @@ export function CompanyDocumentForm({
 
       <div className="space-y-1.5">
         <Label className="text-xs text-slate-400">Branch</Label>
-        <Select onValueChange={(val) => setValue('branch', val, { shouldValidate: true })}>
-          <SelectTrigger className={cn('w-full text-xs', uiSelect)}>
+        <Select
+          value={selectedBranch}
+          onValueChange={(val) => setValue('branch', val, { shouldValidate: true })}
+        >
+          <SelectTrigger className={cn('w-full text-xs min-h-11', uiSelect)}>
             <SelectValue placeholder="Select branch..." />
           </SelectTrigger>
           <SelectContent className="bg-popover border border-border text-xs">
@@ -85,7 +95,7 @@ export function CompanyDocumentForm({
           <Input
             id="issue_date"
             type="date"
-            className={cn(uiInput, 'text-xs')}
+            className={cn(uiInput, 'text-xs min-h-11')}
             {...register('issue_date')}
           />
           <CommonFormFieldError message={errors.issue_date?.message} />
@@ -95,7 +105,7 @@ export function CompanyDocumentForm({
           <Input
             id="company_expiry_date"
             type="date"
-            className={cn(uiInput, 'text-xs')}
+            className={cn(uiInput, 'text-xs min-h-11')}
             {...register('expiry_date')}
           />
           <CommonFormFieldError message={errors.expiry_date?.message} />
@@ -107,22 +117,28 @@ export function CompanyDocumentForm({
         errorMessage={errors.file?.message as string | undefined}
         onFileChange={(fileObj) => setValue('file', fileObj, { shouldValidate: true })}
       />
+      </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-2 pt-4 border-t border-border/40 mt-4">
+      <DialogFooter className="shrink-0 flex flex-col-reverse sm:flex-row gap-2 pt-4 border-t border-border/40 mt-4">
         <Button
           type="button"
           variant="outline"
           onClick={onCancel}
           disabled={isSubmitting}
-          className={cn(uiOutlineBtn, 'w-full text-xs')}
+          className={cn(uiOutlineBtn, 'w-full sm:w-auto text-xs min-h-11')}
         >
           Cancel
         </Button>
-        <PrimaryButton type="submit" disabled={isSubmitting} isLoading={isSubmitting} className="w-full text-xs">
+        <PrimaryButton
+          type="submit"
+          disabled={isSubmitting}
+          isLoading={isSubmitting}
+          className="w-full sm:w-auto text-xs min-h-11"
+        >
           <Plus className="w-4 h-4" />
           Add Document
         </PrimaryButton>
-      </div>
+      </DialogFooter>
     </form>
   )
 }

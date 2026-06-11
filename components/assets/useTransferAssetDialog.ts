@@ -6,7 +6,8 @@ import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { transferAssetSchema, type TransferAssetInput } from '@/validations/asset-actions.schema'
 import { assetService } from '@/services/asset-service'
-import { departmentService, type Department } from '@/services/department-service'
+import { departmentService } from '@/services/department-service'
+import type { Department } from '@/types/settings'
 import { toast } from 'sonner'
 
 export interface UseTransferAssetDialogReturn {
@@ -37,21 +38,30 @@ export function useTransferAssetDialog(
   const { reset } = form
 
   useEffect(() => {
-    async function loadDepts() {
-      if (!open) return
+    if (!open) {
+      reset({ remarks: '' })
+      return
+    }
+
+    const controller = new AbortController()
+
+    async function loadDepts(): Promise<void> {
       setIsLoadingDepts(true)
       try {
-        const data = await departmentService.getDepartments()
-        setDepartments(data)
-      } catch (err) {
-        console.error('Failed to load departments:', err)
+        const data = await departmentService.getDepartments(controller.signal)
+        if (!controller.signal.aborted) setDepartments(data)
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') return
         toast.error('Failed to load departments')
+        setDepartments([])
       } finally {
-        setIsLoadingDepts(false)
+        if (!controller.signal.aborted) setIsLoadingDepts(false)
       }
     }
-    loadDepts()
-  }, [open])
+
+    void loadDepts()
+    return () => controller.abort()
+  }, [open, reset])
 
   const onSubmit = async (data: TransferAssetInput) => {
     setIsSubmitting(true)

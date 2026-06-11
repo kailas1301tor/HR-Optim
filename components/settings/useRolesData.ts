@@ -1,5 +1,5 @@
 // components/settings/useRolesData.ts
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { roleService, type BackendRole } from '@/services/role-service'
 import { permissionService, type BackendPermission } from '@/services/permission-service'
 import { toast } from 'sonner'
@@ -8,6 +8,7 @@ export interface UseRolesDataReturn {
   roles: BackendRole[]
   allPermissions: BackendPermission[]
   isLoading: boolean
+  hasError: boolean
   selectedRoleIndex: number | null
   setSelectedRoleIndex: (index: number | null) => void
   explorerSearch: string
@@ -22,23 +23,35 @@ export function useRolesData(): UseRolesDataReturn {
   const [roles, setRoles] = useState<BackendRole[]>([])
   const [allPermissions, setAllPermissions] = useState<BackendPermission[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [selectedRoleIndex, setSelectedRoleIndex] = useState<number | null>(0)
+  const [hasError, setHasError] = useState(false)
+  const [selectedRoleIndex, setSelectedRoleIndex] = useState<number | null>(null)
   const [explorerSearch, setExplorerSearch] = useState('')
+  const requestIdRef = useRef(0)
 
-  const loadData = async () => {
+  const loadData = async (): Promise<void> => {
+    const requestId = ++requestIdRef.current
     setIsLoading(true)
+    setHasError(false)
     try {
       const [fetchedRoles, fetchedPermissions] = await Promise.all([
         roleService.getRoles(),
-        permissionService.getPermissions()
+        permissionService.getPermissions(),
       ])
+      if (requestId !== requestIdRef.current) return
       setRoles(fetchedRoles)
       setAllPermissions(fetchedPermissions)
       setSelectedRoleIndex(fetchedRoles.length > 0 ? 0 : null)
     } catch {
+      if (requestId !== requestIdRef.current) return
+      setHasError(true)
+      setRoles([])
+      setAllPermissions([])
+      setSelectedRoleIndex(null)
       toast.error('Failed to load roles and permissions')
     } finally {
-      setIsLoading(false)
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -46,7 +59,10 @@ export function useRolesData(): UseRolesDataReturn {
     loadData()
   }, [])
 
-  const activeRole = selectedRoleIndex !== null && selectedRoleIndex < roles.length ? roles[selectedRoleIndex] : null
+  const activeRole =
+    selectedRoleIndex !== null && selectedRoleIndex < roles.length
+      ? roles[selectedRoleIndex]
+      : null
 
   const filteredExplorerPermissions = useMemo(() => {
     return allPermissions.filter((perm) => {
@@ -59,6 +75,7 @@ export function useRolesData(): UseRolesDataReturn {
     roles,
     allPermissions,
     isLoading,
+    hasError,
     selectedRoleIndex,
     setSelectedRoleIndex,
     explorerSearch,
@@ -66,6 +83,6 @@ export function useRolesData(): UseRolesDataReturn {
     filteredExplorerPermissions,
     activeRole,
     setRoles,
-    refreshData: loadData
+    refreshData: loadData,
   }
 }

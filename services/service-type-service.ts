@@ -26,14 +26,9 @@ interface SingleServiceTypeResponse {
 
 export const serviceTypeService = {
   /** Fetch all service types from the API. Handles network failures gracefully. */
-  async getServiceTypes(fallback: ServiceType[], signal?: AbortSignal): Promise<ServiceType[]> {
-    try {
-      const response = await api.get<ServiceTypeListResponse>('/api/master/service-types/', { signal });
-      return response.results?.data ?? fallback;
-    } catch (error) {
-      console.warn('🔴 Network error fetching service types. Loading mock fallback.', error);
-      return fallback;
-    }
+  async getServiceTypes(signal?: AbortSignal): Promise<ServiceType[]> {
+    const response = await api.get<ServiceTypeListResponse>('/api/master/service-types/', { signal })
+    return response.results?.data ?? []
   },
 
   /** Create a new service type. */

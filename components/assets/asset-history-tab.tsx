@@ -1,6 +1,7 @@
 // components/assets/asset-history-tab.tsx
 'use client'
 
+import { CommonEmptyState, CommonErrorState } from '@/components/common'
 import { History } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -12,13 +13,13 @@ interface AssetHistoryTabProps {
 }
 
 export function AssetHistoryTab({ assetId }: AssetHistoryTabProps) {
-  const { history, isLoading, getActionConfig } = useAssetHistoryTab(assetId)
+  const { history, isLoading, hasError, handleRetry, getActionConfig } = useAssetHistoryTab(assetId)
 
   if (isLoading) {
     return (
-      <div className="bg-card border border-border/80 rounded-2xl p-6 space-y-6">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 space-y-6">
         <div className="flex items-center gap-2 mb-2">
-          <Skeleton className={cn('h-5 w-48 rounded-xl', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-5 w-48 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
         </div>
         <div className="relative pl-6 border-l-2 border-border/40 ml-3 space-y-6">
           {Array.from({ length: 3 }).map((_, idx) => (
@@ -26,16 +27,16 @@ export function AssetHistoryTab({ assetId }: AssetHistoryTabProps) {
               {/* Timeline marker */}
               <Skeleton className={cn('absolute -left-[37px] top-1.5 w-6 h-6 rounded-full', uiSkeletonBlock)} />
               {/* Card shimmer */}
-              <div className="bg-midnight/35 border border-border/40 p-4 rounded-xl space-y-3">
+              <div className="bg-midnight/35 border border-border/40 p-4 rounded-[20px] [corner-shape:squircle] space-y-3">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                  <Skeleton className={cn('h-4 w-32 rounded-xl', uiSkeletonBlock)} />
-                  <Skeleton className={cn('h-3 w-24 rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-4 w-32 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-3 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <Skeleton className={cn('h-3.5 w-20 rounded-xl', uiSkeletonBlock)} />
-                  <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-3.5 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-3.5 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                 </div>
-                <Skeleton className={cn('h-8 w-full rounded-xl', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-8 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               </div>
             </div>
           ))}
@@ -44,20 +45,30 @@ export function AssetHistoryTab({ assetId }: AssetHistoryTabProps) {
     )
   }
 
+  if (hasError) {
+    return (
+      <CommonErrorState
+        title="Failed to load history"
+        message="Asset lifecycle events could not be retrieved."
+        onRetry={handleRetry}
+        className="rounded-[32px] [corner-shape:squircle] border border-border bg-card"
+      />
+    )
+  }
+
   if (history.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 rounded-2xl border border-border bg-card text-center">
-        <div className="w-12 h-12 rounded-full bg-slate-800 border border-border/40 flex items-center justify-center text-slate-500 mb-2">
-          <History className="w-5 h-5" />
-        </div>
-        <h4 className="text-sm font-semibold text-cloud">No logs found</h4>
-        <p className="text-xs text-slate-500 mt-1 max-w-[280px]">No dynamic lifecycle events have been logged for this asset yet.</p>
-      </div>
+      <CommonEmptyState
+        icon={History}
+        title="No logs found"
+        description="No lifecycle events have been logged for this asset yet."
+        className="py-12 rounded-[32px] [corner-shape:squircle] border border-border bg-card shadow-none"
+      />
     )
   }
 
   return (
-    <div className="bg-card border border-border/80 rounded-2xl p-6 relative overflow-hidden animate-in fade-in-50 duration-200">
+    <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 relative overflow-hidden animate-in fade-in-50 duration-200">
       <h3 className="text-sm font-semibold text-cloud flex items-center gap-2 mb-6">
         <History className="w-4 h-4 text-violet-glow" /> Asset Lifecycle Timeline
       </h3>
@@ -85,7 +96,7 @@ export function AssetHistoryTab({ assetId }: AssetHistoryTabProps) {
               </div>
 
               {/* Log Details */}
-              <div className="bg-midnight/35 border border-border/40 p-4 rounded-xl space-y-1.5 transition-colors group-hover:border-border/80">
+              <div className="bg-midnight/35 border border-border/40 p-4 rounded-[20px] [corner-shape:squircle] space-y-1.5 transition-colors group-hover:border-border/80">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1">
                   <h4 className="text-sm font-bold text-cloud uppercase tracking-wide">
                     {entry.action}
@@ -99,7 +110,7 @@ export function AssetHistoryTab({ assetId }: AssetHistoryTabProps) {
                   <span className="font-medium text-cloud">{entry.performed_by || 'System Admin'}</span>
                 </div>
                 {entry.remarks && (
-                  <div className="text-xs bg-midnight/35 p-2.5 rounded-lg border border-border/30 text-slate-400 mt-2 italic">
+                  <div className="text-xs bg-midnight/35 p-2.5 rounded-[16px] [corner-shape:squircle] border border-border/30 text-slate-400 mt-2 italic">
                     "{entry.remarks}"
                   </div>
                 )}

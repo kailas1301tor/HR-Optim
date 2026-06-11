@@ -1,11 +1,12 @@
 // components/assets/useMaintenanceDialog.ts
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { maintenanceSchema, type MaintenanceInput } from '@/validations/asset-actions.schema'
-import { assetService, type AssetDropdowns } from '@/services/asset-service'
+import { assetService } from '@/services/asset-service'
+import type { AssetDropdowns } from '@/types/asset'
 import { toast } from 'sonner'
 
 export interface UseMaintenanceDialogReturn {
@@ -36,6 +37,12 @@ export function useMaintenanceDialog(
   })
 
   const { reset } = form
+
+  useEffect(() => {
+    if (!open) {
+      reset({ estimated_cost: 0 })
+    }
+  }, [open, reset])
 
   const onSubmit = async (data: MaintenanceInput) => {
     setIsSubmitting(true)

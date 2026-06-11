@@ -3,6 +3,7 @@
 
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { uiSquircleNav, uiSquircleSm } from '@/lib/ui/design-system'
 import {
   motion,
   useMotionValue,
@@ -53,7 +54,10 @@ function NavItemTooltip({ label, isHovered, anchorRef }: NavItemTooltipProps) {
           exit={{ opacity: 0, x: -4 }}
           transition={{ duration: 0.2 }}
           style={{ top: coords.top, left: coords.left }}
-          className="pointer-events-none fixed z-[100] w-fit -translate-y-1/2 whitespace-nowrap rounded-xl border border-border bg-card px-2 py-1 text-xs text-cloud shadow-sm"
+          className={cn(
+            'pointer-events-none fixed z-[100] w-fit -translate-y-1/2 whitespace-nowrap border border-border bg-card px-2 py-1 text-xs text-cloud shadow-sm',
+            uiSquircleSm
+          )}
           role="tooltip"
         >
           {label}
@@ -116,7 +120,8 @@ export function MagnificationNavItem({
       onFocus={() => isHovered.set(1)}
       onBlur={() => isHovered.set(0)}
       className={cn(
-        'relative flex items-center gap-3 h-10 rounded-lg transition-colors duration-150 overflow-visible',
+        'relative flex items-center gap-3 h-10 transition-colors duration-150 overflow-visible',
+        uiSquircleNav,
         collapsed ? 'justify-center px-0' : 'px-3',
         isActive
           ? 'bg-gradient-to-r from-violet-core to-violet-deep text-white font-medium shadow-md shadow-violet-core/10'
@@ -128,7 +133,7 @@ export function MagnificationNavItem({
         style={{ width: baseItemSize, height: baseItemSize, scale }}
         onHoverStart={() => isHovered.set(1)}
         onHoverEnd={() => isHovered.set(0)}
-        className="relative inline-flex shrink-0 items-center justify-center rounded-lg"
+        className={cn('relative inline-flex shrink-0 items-center justify-center', uiSquircleNav)}
       >
         <Icon
           className={cn(

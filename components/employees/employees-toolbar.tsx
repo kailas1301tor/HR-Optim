@@ -1,7 +1,7 @@
 // components/employees/employees-toolbar.tsx
 'use client'
 
-import { Download, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { CommonListToolbar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { PrimaryButton } from '@/components/ui/primary-button'
@@ -14,9 +14,7 @@ import {
 } from '@/components/ui/select'
 import { uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { DropdownData } from '@/services/employee-service'
-import { toast } from 'sonner'
-
+import type { DropdownData } from '@/types/employee'
 interface EmployeesToolbarProps {
   localSearch: string
   onSearchChange: (query: string) => void
@@ -38,10 +36,6 @@ export function EmployeesToolbar({
   onStatusChange,
   onAddEmployee,
 }: EmployeesToolbarProps) {
-  const handleExport = () => {
-    toast.success('Exporting employees...')
-  }
-
   return (
     <CommonListToolbar
       searchQuery={localSearch}
@@ -76,7 +70,7 @@ export function EmployeesToolbar({
             <SelectContent className="bg-popover border border-border text-xs">
               <SelectItem value="all">All Statuses</SelectItem>
               {dropdowns?.status_choices.map((item) => (
-                <SelectItem key={item.id} value={String(item.id)}>
+                <SelectItem key={item.id} value={item.name}>
                   {item.name}
                 </SelectItem>
               ))}
@@ -86,15 +80,6 @@ export function EmployeesToolbar({
       }
       actions={
         <>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleExport}
-            className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
           <PrimaryButton type="button" onClick={onAddEmployee} className="gap-2 text-xs flex-1 sm:flex-none sm:hidden">
             <Plus className="w-4 h-4" />
             Add

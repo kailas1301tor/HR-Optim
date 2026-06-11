@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader2, ArrowLeft } from 'lucide-react'
-import { type Department } from '@/services/department-service'
+import { type Department } from '@/types/settings'
 import { useReturnAssetDialog } from './useReturnAssetDialog'
 
 interface ReturnAssetDialogProps {
@@ -45,7 +45,7 @@ export function ReturnAssetDialog({ open, onOpenChange, assetId, onSuccess }: Re
       onOpenChange(val)
       if (!val) reset()
     }}>
-      <DialogContent className="bg-card text-foreground border border-border/80 rounded-2xl max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="bg-card text-foreground border border-border/80 rounded-[32px] [corner-shape:squircle] max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-cloud font-semibold text-lg flex items-center gap-2">
             <ArrowLeft className="w-5 h-5 text-violet-glow" /> Return Asset
@@ -112,14 +112,14 @@ export function ReturnAssetDialog({ open, onOpenChange, assetId, onSuccess }: Re
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="rounded-xl h-10 w-full"
+              className="rounded-[20px] [corner-shape:squircle] h-10 w-full"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl h-10 w-full"
+              className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-[20px] [corner-shape:squircle] h-10 w-full"
             >
               {isSubmitting ? (
                 <>

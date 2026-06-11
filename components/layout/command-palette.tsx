@@ -19,6 +19,8 @@ import {
   Plus,
   ArrowRight,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { uiSquircleLg, uiSquircleNav, uiSquircleXs } from '@/lib/ui/design-system'
 import { useCommandPalette } from './useCommandPalette'
 
 const pages = [
@@ -79,7 +81,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-2xl z-50"
           >
             <Command
-              className="bg-carbon border border-border rounded-2xl shadow-2xl overflow-hidden"
+              className={cn('bg-carbon border border-border shadow-2xl overflow-hidden', uiSquircleLg)}
               shouldFilter={true}
             >
               <div className="flex items-center gap-3 px-4 border-b border-border">
@@ -110,9 +112,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       key={action.action}
                       value={action.name}
                       onSelect={() => handleSelect(`/${action.action}`)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-slate-300 data-[selected=true]:bg-violet-core/20 data-[selected=true]:text-cloud"
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 cursor-pointer text-slate-300 data-[selected=true]:bg-violet-core/20 data-[selected=true]:text-cloud',
+                        uiSquircleNav
+                      )}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-midnight flex items-center justify-center">
+                      <div className={cn('w-8 h-8 bg-midnight flex items-center justify-center', uiSquircleNav)}>
                         <action.icon className="w-4 h-4 text-violet-glow" />
                       </div>
                       <span className="flex-1 text-sm">{action.name}</span>
@@ -131,9 +136,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       key={page.href}
                       value={`${page.name} ${page.keywords.join(' ')}`}
                       onSelect={() => handleSelect(page.href)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-slate-300 data-[selected=true]:bg-violet-core/20 data-[selected=true]:text-cloud"
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 cursor-pointer text-slate-300 data-[selected=true]:bg-violet-core/20 data-[selected=true]:text-cloud',
+                        uiSquircleNav
+                      )}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-midnight flex items-center justify-center">
+                      <div className={cn('w-8 h-8 bg-midnight flex items-center justify-center', uiSquircleNav)}>
                         <page.icon className="w-4 h-4 text-slate-400" />
                       </div>
                       <span className="flex-1 text-sm">{page.name}</span>
@@ -152,7 +160,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       key={employee.id}
                       value={`${employee.name} ${employee.id} ${employee.department}`}
                       onSelect={() => handleSelect(`/employees/${employee.id}`)}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-slate-300 data-[selected=true]:bg-violet-core/20 data-[selected=true]:text-cloud"
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 cursor-pointer text-slate-300 data-[selected=true]:bg-violet-core/20 data-[selected=true]:text-cloud',
+                        uiSquircleNav
+                      )}
                     >
                       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center">
                         <User className="w-4 h-4 text-white" />

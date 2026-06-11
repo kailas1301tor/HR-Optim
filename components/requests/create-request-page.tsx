@@ -5,7 +5,12 @@ import { useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
-import { CommonErrorBanner, CommonFilterChips, CommonPageHeader } from '@/components/common'
+import {
+  CommonErrorBanner,
+  CommonErrorState,
+  CommonFilterChips,
+  CommonPageHeader,
+} from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
@@ -44,9 +49,12 @@ export function CreateRequestPage() {
     employeeError,
     canSubmit,
     leaveTypes,
+    holidayDates,
     sessionChoices,
     documentTypeChoices,
     isLoadingMetadata,
+    hasMetadataError,
+    reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
     handleSubmitLeave,
@@ -71,7 +79,7 @@ export function CreateRequestPage() {
 
   const employeeBanner = useMemo(() => {
     if (isEmployeeLoading) {
-      return <Skeleton className={cn('h-4 w-64 rounded-xl', uiSkeletonBlock)} />
+      return <Skeleton className={cn('h-4 w-64 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
     }
     if (employee) {
       return (
@@ -118,16 +126,22 @@ export function CreateRequestPage() {
       />
 
       <div className="max-w-6xl">
-      {isFormLoading ? (
+      {hasMetadataError && !isFormLoading ? (
+        <CommonErrorState
+          title="Failed to load form data"
+          message="Request choices, leave types, or holidays could not be loaded."
+          onRetry={reloadMetadata}
+        />
+      ) : isFormLoading ? (
         selectedType === 'leave' ? (
           <LeaveRequestFormSkeleton />
         ) : (
           <div className="max-w-xl space-y-4">
-            <Skeleton className={cn('h-10 w-full rounded-xl', uiSkeletonBlock)} />
-            <Skeleton className={cn('h-48 w-full rounded-2xl', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-10 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-48 w-full rounded-[32px] [corner-shape:squircle]', uiSkeletonBlock)} />
             <div className="flex justify-end gap-2">
-              <Skeleton className={cn('h-10 w-20 rounded-xl', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-10 w-32 rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-10 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-10 w-32 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
             </div>
           </div>
         )
@@ -143,6 +157,7 @@ export function CreateRequestPage() {
           {selectedType === 'leave' && (
             <LeaveRequestForm
               leaveTypes={leaveTypes}
+              holidayDates={holidayDates}
               sessionChoices={sessionChoices}
               isSubmitting={isSubmitting || !canSubmit}
               onCalculate={handleCalculateLeaveDays}
@@ -152,7 +167,7 @@ export function CreateRequestPage() {
           )}
 
           {selectedType !== 'leave' && (
-            <div className="max-w-xl rounded-2xl border border-border/60 bg-card/40 p-6">
+            <div className="max-w-xl rounded-[32px] [corner-shape:squircle] border border-border/60 bg-card/40 p-6">
               {selectedType === 'salary-advance' && (
                 <SalaryAdvanceRequestForm
                   isSubmitting={isSubmitting || !canSubmit}

@@ -1,19 +1,28 @@
 // lib/mappers/request-mapper.ts
 import { formatDistanceToNow } from 'date-fns'
 import { initialsFromName } from '@/lib/cookies'
+import { statusConfig } from '@/components/requests/requests-constants'
 import type {
   DocumentRequestRecord,
   LeaveRequestRecord,
   LoanRequestRecord,
+  Request,
+  RequestStatus,
+  RequestStatusFilter,
+  RequestType,
   SalaryAdvanceRequestRecord,
-} from '@/services/employee-request-service'
-import type { Request, RequestStatus, RequestType } from '@/components/requests/requests-constants'
+} from '@/types/request'
 
 function mapApiStatus(status: string): RequestStatus {
   const normalized = status.toLowerCase()
   if (normalized === 'approved') return 'approved'
   if (normalized === 'rejected') return 'rejected'
   return 'pending'
+}
+
+export function uiStatusToApiFilter(status: RequestStatusFilter): string | undefined {
+  if (!status || status === 'all') return undefined
+  return statusConfig[status].apiValue
 }
 
 function buildTimeline(
@@ -84,7 +93,6 @@ export function mapLeaveRequest(record: LeaveRequestRecord): Request {
     requester: baseRequester(record.employee),
     submittedAt: formatSubmittedAt(record.created_at),
     status,
-    priority: 'medium',
     timeline: buildTimeline(status, record.created_at, record.approved_date, record.rejected_date),
   }
 }
@@ -101,7 +109,6 @@ export function mapSalaryAdvanceRequest(record: SalaryAdvanceRequestRecord): Req
     requester: baseRequester(record.employee),
     submittedAt: formatSubmittedAt(record.created_at),
     status,
-    priority: 'medium',
     timeline: buildTimeline(status, record.created_at, record.approved_date, record.rejected_date),
   }
 }
@@ -118,7 +125,6 @@ export function mapLoanRequest(record: LoanRequestRecord): Request {
     requester: baseRequester(record.employee),
     submittedAt: formatSubmittedAt(record.created_at),
     status,
-    priority: 'medium',
     timeline: buildTimeline(status, record.created_at, record.approved_date, record.rejected_date),
   }
 }
@@ -135,17 +141,8 @@ export function mapDocumentRequest(record: DocumentRequestRecord): Request {
     requester: baseRequester(record.employee),
     submittedAt: formatSubmittedAt(record.created_at),
     status,
-    priority: 'medium',
     timeline: buildTimeline(status, record.created_at, record.approved_date, record.rejected_date),
   }
-}
-
-export function mergeAndSortRequests(requests: Request[]): Request[] {
-  return [...requests].sort((a, b) => {
-    const aTime = a.submittedAt
-    const bTime = b.submittedAt
-    return aTime.localeCompare(bTime)
-  })
 }
 
 export type { RequestType }

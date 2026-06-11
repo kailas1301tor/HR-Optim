@@ -33,7 +33,7 @@ function SidebarStaticNavItem({
       href={href}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 h-10 px-3 rounded-lg transition-all duration-150',
+        'flex items-center gap-3 h-10 px-3 rounded-[16px] [corner-shape:squircle] transition-all duration-150',
         isActive
           ? 'bg-gradient-to-r from-violet-core to-violet-deep text-white font-medium shadow-md shadow-violet-core/10'
           : 'text-slate-300 hover:bg-carbon hover:text-cloud'

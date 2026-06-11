@@ -21,8 +21,8 @@ import { Plus, Trash2, Edit3, Loader2, Building2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
-import { CommonEmptyState } from '@/components/common'
-import { type Department } from '@/services/department-service'
+import { CommonEmptyState, CommonErrorState } from '@/components/common'
+import { type Department } from '@/types/settings'
 import { useDepartmentSettings } from './useDepartmentSettings'
 
 export function DepartmentSettingsCard() {
@@ -30,6 +30,8 @@ export function DepartmentSettingsCard() {
     selectedDeptId,
     departments,
     isLoading,
+    hasError,
+    reload,
     isOpen,
     editId,
     formName,
@@ -48,6 +50,17 @@ export function DepartmentSettingsCard() {
     handleDelete,
   } = useDepartmentSettings()
 
+  if (hasError) {
+    return (
+      <CommonErrorState
+        title="Failed to load departments"
+        message="Please check your connection and try again."
+        onRetry={reload}
+        className="min-h-[200px]"
+      />
+    )
+  }
+
   return (
     <>
       <Card className="bg-card/40 backdrop-blur border-border/80 shadow-lg">
@@ -63,9 +76,9 @@ export function DepartmentSettingsCard() {
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
             </div>
           ) : departments.length === 0 ? (
             <CommonEmptyState
@@ -81,7 +94,7 @@ export function DepartmentSettingsCard() {
                 <div
                   key={dept.id}
                   onClick={() => setSelectedDeptId(String(dept.id))}
-                  className={`flex items-center justify-between border rounded-xl p-3.5 transition-all duration-300 group cursor-pointer ${
+                  className={`flex items-center justify-between border rounded-[20px] [corner-shape:squircle] p-3.5 transition-all duration-300 group cursor-pointer ${
                     isSelected
                       ? 'bg-violet-core/10 border-violet-core shadow-[0_0_15px_rgba(139,92,246,0.12)]'
                       : 'bg-midnight border-border/60 hover:border-violet-core/40'
@@ -101,7 +114,7 @@ export function DepartmentSettingsCard() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-lg cursor-pointer"
+                      className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                       onClick={() => handleOpenEdit(dept)}
                     >
                       <Edit3 className="h-4 w-4" />
@@ -109,7 +122,7 @@ export function DepartmentSettingsCard() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-lg cursor-pointer"
+                      className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                       onClick={() => setDeleteId(dept.id)}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -124,7 +137,7 @@ export function DepartmentSettingsCard() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl">
+        <DialogContent className="max-w-md bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-cloud font-semibold text-lg font-sans">
               {editId !== null ? 'Edit Department' : 'Add Department'}
@@ -140,7 +153,7 @@ export function DepartmentSettingsCard() {
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g. ENGINEERING"
-                className="bg-midnight border-border rounded-xl text-sm"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
                 required
                 disabled={isSubmitting}
               />
@@ -154,19 +167,19 @@ export function DepartmentSettingsCard() {
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
                 placeholder="e.g. Software Development Team"
-                className="bg-midnight border-border rounded-xl text-sm min-h-20"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm min-h-20"
                 disabled={isSubmitting}
               />
             </div>
             <DialogFooter className="pt-4 border-t border-border/40">
               <DialogClose asChild>
-                <Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer" disabled={isSubmitting}>
+                <Button type="button" variant="outline" className="h-10 rounded-[20px] [corner-shape:squircle] cursor-pointer" disabled={isSubmitting}>
                   Cancel
                 </Button>
               </DialogClose>
               <Button
                 type="submit"
-                className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-5 cursor-pointer flex items-center gap-2"
+                className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer flex items-center gap-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -179,7 +192,7 @@ export function DepartmentSettingsCard() {
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl">
+        <AlertDialogContent className="max-w-md bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-cloud font-semibold text-lg font-sans">
               Are you absolutely sure?
@@ -189,11 +202,11 @@ export function DepartmentSettingsCard() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 border-t border-border/40 gap-2">
-            <AlertDialogCancel className="h-10 rounded-xl cursor-pointer" disabled={isDeleting}>
+            <AlertDialogCancel className="h-10 rounded-[20px] [corner-shape:squircle] cursor-pointer" disabled={isDeleting}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="h-10 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-5 cursor-pointer flex items-center gap-2"
+              className="h-10 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer flex items-center gap-2"
               onClick={(e) => {
                 e.preventDefault()
                 handleDelete()

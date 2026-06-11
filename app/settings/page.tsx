@@ -15,6 +15,6 @@ export default function SettingsPage() {
 }
 
 export const metadata = {
-  title: 'Settings | HRMS',
+  title: 'Settings',
   description: 'Manage your organization, users, and system preferences',
 }

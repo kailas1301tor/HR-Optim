@@ -1,5 +1,5 @@
 // components/settings/useRoleForm.ts
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { roleService, type BackendRole } from '@/services/role-service'
 import { type BackendPermission } from '@/services/permission-service'
 import { toast } from 'sonner'
@@ -21,6 +21,7 @@ export interface UseRoleFormReturn {
   formSearchQuery: string
   setFormSearchQuery: (query: string) => void
   isSaving: boolean
+  isLoadingDetails: boolean
   sortedPermissions: BackendPermission[]
   filteredFormPermissions: BackendPermission[]
   handleTogglePermissionId: (id: number, checked: boolean) => void
@@ -40,56 +41,60 @@ export function useRoleForm({
   const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([])
   const [formSearchQuery, setFormSearchQuery] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false)
+  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     if (action === 'edit' && roleEditId !== null) {
       const role = roles.find((r) => r.id === roleEditId)
       if (role) {
-        if (roleFormName !== role.name) {
-          setRoleFormName(role.name)
-        }
-        const newIds = role.permissions.map((p) => p.id)
-        const hasChanged = selectedPermissionIds.length !== newIds.length || selectedPermissionIds.some((v, i) => v !== newIds[i])
-        if (hasChanged) {
-          setSelectedPermissionIds(newIds)
-        }
-      } else if (roles.length > 0) {
-        const fetchRoleDetails = async () => {
-          setIsSaving(true)
-          try {
-            const roleDetails = await roleService.getRoleById(roleEditId)
-            if (roleDetails) {
-              if (roleFormName !== roleDetails.name) {
-                setRoleFormName(roleDetails.name)
-              }
-              const newIds = roleDetails.permissions.map((p) => p.id)
-              const hasChanged = selectedPermissionIds.length !== newIds.length || selectedPermissionIds.some((v, i) => v !== newIds[i])
-              if (hasChanged) {
-                setSelectedPermissionIds(newIds)
-              }
-            } else {
-              toast.error('Role not found')
-              handleCancelForm()
-            }
-          } catch {
-            toast.error('Failed to load role details')
+        setRoleFormName(role.name)
+        setSelectedPermissionIds(role.permissions.map((p) => p.id))
+        setIsLoadingDetails(false)
+        return
+      }
+
+      if (roles.length === 0) return
+
+      const fetchId = ++fetchIdRef.current
+      setIsLoadingDetails(true)
+
+      const fetchRoleDetails = async (): Promise<void> => {
+        try {
+          const roleDetails = await roleService.getRoleById(roleEditId)
+          if (fetchId !== fetchIdRef.current) return
+          if (roleDetails) {
+            setRoleFormName(roleDetails.name)
+            setSelectedPermissionIds(roleDetails.permissions.map((p) => p.id))
+          } else {
+            toast.error('Role not found')
             handleCancelForm()
-          } finally {
-            setIsSaving(false)
+          }
+        } catch {
+          if (fetchId !== fetchIdRef.current) return
+          toast.error('Failed to load role details')
+          handleCancelForm()
+        } finally {
+          if (fetchId === fetchIdRef.current) {
+            setIsLoadingDetails(false)
           }
         }
-        fetchRoleDetails()
       }
+
+      void fetchRoleDetails()
     } else if (action === 'add') {
-      if (roleFormName !== '' || selectedPermissionIds.length > 0 || formSearchQuery !== '') {
-        setRoleFormName('')
-        setSelectedPermissionIds([])
-        setFormSearchQuery('')
-      }
+      setRoleFormName('')
+      setSelectedPermissionIds([])
+      setFormSearchQuery('')
+      setIsLoadingDetails(false)
+    }
+
+    return () => {
+      fetchIdRef.current += 1
     }
   }, [action, roleEditId, roles, handleCancelForm])
 
-  const handleTogglePermissionId = (id: number, checked: boolean) => {
+  const handleTogglePermissionId = (id: number, checked: boolean): void => {
     if (checked) {
       setSelectedPermissionIds((prev) => [...prev, id])
     } else {
@@ -97,7 +102,7 @@ export function useRoleForm({
     }
   }
 
-  const handleToggleAllPermissions = (ids: number[], check: boolean) => {
+  const handleToggleAllPermissions = (ids: number[], check: boolean): void => {
     if (check) {
       setSelectedPermissionIds((prev) => Array.from(new Set([...prev, ...ids])))
     } else {
@@ -115,7 +120,7 @@ export function useRoleForm({
     return sortedPermissions.filter((p) => p.name.toLowerCase().includes(query))
   }, [sortedPermissions, formSearchQuery])
 
-  const handleSaveRole = async (e: React.FormEvent) => {
+  const handleSaveRole = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
     if (!roleFormName.trim()) return
 
@@ -146,6 +151,7 @@ export function useRoleForm({
     formSearchQuery,
     setFormSearchQuery,
     isSaving,
+    isLoadingDetails,
     sortedPermissions,
     filteredFormPermissions,
     handleTogglePermissionId,

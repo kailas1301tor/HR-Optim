@@ -15,7 +15,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { uiCardInteractive } from '@/lib/ui/design-system'
-import type { BackendAsset } from '@/services/asset-service'
+import type { BackendAsset } from '@/types/asset'
+import { isAssetDisposed, isAssetInService, formatAssetCost } from '@/lib/helpers/asset-status'
 import { getAssetTypeConfig, getAssetStatusBadgeVariant } from './assets-constants'
 
 interface AssetCardProps {
@@ -31,15 +32,9 @@ export function AssetCard({ asset, index, onEdit, onDelete }: AssetCardProps) {
   const CategoryIcon = category.icon
   const statusVariant = getAssetStatusBadgeVariant(asset.status)
 
-  const formatCost = (costStr: string | null) => {
-    if (!costStr) return '0'
-    const value = parseFloat(costStr)
-    return isNaN(value) ? '0' : value.toLocaleString()
-  }
-
   const statusLower = asset.status?.toLowerCase() || ''
-  const isDisposed = statusLower.includes('dispose') || statusLower.includes('delete')
-  const isAssigned = statusLower.includes('assign') || statusLower.includes('in use') || statusLower.includes('in-use')
+  const isDisposed = isAssetDisposed(asset.status)
+  const isAssigned = isAssetInService(asset.status)
   const inRepair = statusLower.includes('repair') || statusLower.includes('maintenance')
 
   const handleCardClick = () => {
@@ -67,7 +62,7 @@ export function AssetCard({ asset, index, onEdit, onDelete }: AssetCardProps) {
     >
       <div className="flex items-start justify-between gap-2 mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', category.color)}>
+          <div className={cn('w-10 h-10 rounded-[20px] [corner-shape:squircle] flex items-center justify-center shrink-0', category.color)}>
             <CategoryIcon className="w-5 h-5" aria-hidden />
           </div>
           <div className="min-w-0">
@@ -92,7 +87,7 @@ export function AssetCard({ asset, index, onEdit, onDelete }: AssetCardProps) {
                 <MoreHorizontal className="w-4 h-4 text-slate-400" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-card border-border/80 text-xs rounded-xl">
+            <DropdownMenuContent align="end" className="bg-card border-border/80 text-xs rounded-[20px] [corner-shape:squircle]">
               <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}`)} className="cursor-pointer">
                 <Eye className="w-4 h-4 mr-2 text-slate-400" />
                 View Details
@@ -150,7 +145,7 @@ export function AssetCard({ asset, index, onEdit, onDelete }: AssetCardProps) {
           {asset.serial_number || '—'}
         </span>
         <span className="text-sm font-mono text-cloud tabular-nums font-medium">
-          AED {formatCost(asset.purchase_cost)}
+          {formatAssetCost(asset.purchase_cost)}
         </span>
       </div>
     </motion.div>

@@ -4,7 +4,7 @@
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
-import { uiCardInteractive, uiSkeletonBlock } from '@/lib/ui/design-system'
+import { uiCardInteractive, uiSkeletonBlock, uiSquircleXs } from '@/lib/ui/design-system'
 
 export interface StatCardItem {
   key: string
@@ -63,12 +63,12 @@ export function CommonStatCards({
             <div>
               <p className="text-xs text-muted-foreground mb-1 font-medium">{card.label}</p>
               {isLoading ? (
-                <Skeleton className={cn('h-8 w-12 rounded-xl mt-1', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-8 w-12 rounded-[20px] [corner-shape:squircle] mt-1', uiSkeletonBlock)} />
               ) : (
                 <p className="text-2xl font-bold text-cloud font-mono tabular-nums">{displayValue}</p>
               )}
             </div>
-            <div className={cn('p-2.5 rounded-xl', card.iconClass)}>
+            <div className={cn('p-2.5', uiSquircleXs, card.iconClass)}>
               <Icon className="w-5 h-5" aria-hidden />
             </div>
           </button>

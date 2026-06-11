@@ -31,26 +31,13 @@ export const roleService = {
    * Fetch all roles (groups) from the backend.
    */
   async getRoles(signal?: AbortSignal): Promise<BackendRole[]> {
-    try {
-      const response = await api.get<RoleResponse>('/api/auth/groups/', { signal });
-      return response.results?.data || [];
-    } catch (error) {
-      console.warn('🔴 Network error fetching roles. Loading mock fallback.', error);
-      return this.getFallbackRoles();
-    }
+    const response = await api.get<RoleResponse>('/api/auth/groups/', { signal })
+    return response.results?.data ?? []
   },
 
-  /**
-   * Fetch a single role by ID.
-   */
   async getRoleById(id: number, signal?: AbortSignal): Promise<BackendRole | null> {
-    try {
-      const response = await api.get<SingleRoleResponse>(`/api/auth/groups/?id=${id}`, { signal });
-      return response.results?.data || null;
-    } catch (error) {
-      console.warn(`🔴 Error fetching role ID ${id}.`, error);
-      return null;
-    }
+    const response = await api.get<SingleRoleResponse>(`/api/auth/groups/?id=${id}`, { signal })
+    return response.results?.data ?? null
   },
 
   /**
@@ -87,29 +74,4 @@ export const roleService = {
     });
   },
 
-  /**
-   * Fallback mock roles in case of backend network failure.
-   */
-  getFallbackRoles(): BackendRole[] {
-    return [
-      {
-        id: 1,
-        name: 'Super Admin',
-        permissions: [
-          { id: 1, name: 'Can add log entry' },
-          { id: 2, name: 'Can change log entry' },
-          { id: 3, name: 'Can delete log entry' }
-        ]
-      },
-      {
-        id: 2,
-        name: 'Admin',
-        permissions: [
-          { id: 1, name: 'Can add log entry' },
-          { id: 2, name: 'Can change log entry' },
-          { id: 3, name: 'Can delete log entry' }
-        ]
-      }
-    ];
-  }
-};
+}

@@ -19,7 +19,7 @@ export function DepartmentDistribution() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-2xl p-6"
+      className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6"
     >
       <h3 className="text-lg font-semibold text-cloud mb-1">Department Distribution</h3>
       <p className="text-sm text-muted-foreground mb-6">Employee count by department</p>
@@ -48,7 +48,7 @@ export function DepartmentDistribution() {
                   if (active && payload && payload.length) {
                     const data = payload[0].payload
                     return (
-                      <div className="bg-carbon border border-border rounded-lg px-3 py-2 shadow-lg">
+                      <div className="bg-carbon border border-border rounded-[16px] [corner-shape:squircle] px-3 py-2 shadow-lg">
                         <p className="text-sm font-medium text-cloud">{data.name}</p>
                         <p className="text-xs text-muted-foreground">
                           {data.value} employees ({((data.value / total) * 100).toFixed(1)}%)

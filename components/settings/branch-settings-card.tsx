@@ -26,6 +26,7 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2, MapPin } from 'lucide-react'
+import { CommonEmptyState, CommonErrorState } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
@@ -35,6 +36,8 @@ export function BranchSettingsCard() {
   const {
     branches,
     isLoading,
+    hasError,
+    reload,
     isOpen,
     editId,
     formName,
@@ -52,6 +55,17 @@ export function BranchSettingsCard() {
     handleDelete,
   } = useBranchSettings()
 
+  if (hasError) {
+    return (
+      <CommonErrorState
+        title="Failed to load branches"
+        message="Please check your connection and try again."
+        onRetry={reload}
+        className="min-h-[200px]"
+      />
+    )
+  }
+
   return (
     <>
       <Card className="bg-card/40 backdrop-blur border-border/80 shadow-lg">
@@ -68,21 +82,22 @@ export function BranchSettingsCard() {
         <CardContent className="space-y-3">
           {isLoading ? (
             <div className="space-y-2">
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-14 w-full rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-14 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
             </div>
           ) : branches.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <MapPin className="h-8 w-8 text-slate-500" />
-              <p className="text-sm text-slate-400">No branches found.</p>
-              <p className="text-xs text-slate-500">Add your first branch to get started.</p>
-            </div>
+            <CommonEmptyState
+              icon={MapPin}
+              title="No branches found"
+              description="Add your first branch to get started."
+              className="py-8 shadow-none border-0 bg-transparent"
+            />
           ) : (
             branches.map((branch) => (
               <div
                 key={branch.id}
-                className="flex items-center justify-between bg-midnight border border-border/60 rounded-xl p-3 hover:border-violet-core/40 transition-all group"
+                className="flex items-center justify-between bg-midnight border border-border/60 rounded-[20px] [corner-shape:squircle] p-3 hover:border-violet-core/40 transition-all group"
               >
                 <div className="space-y-0.5">
                   <span className="text-sm font-semibold text-slate-200">{branch.name}</span>
@@ -94,7 +109,7 @@ export function BranchSettingsCard() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-lg cursor-pointer"
+                    className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                     onClick={() => handleOpenEdit(branch)}
                     aria-label={`Edit branch ${branch.name}`}
                   >
@@ -103,7 +118,7 @@ export function BranchSettingsCard() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-lg cursor-pointer"
+                    className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                     onClick={() => setDeleteId(branch.id)}
                     aria-label={`Delete branch ${branch.name}`}
                   >
@@ -118,7 +133,7 @@ export function BranchSettingsCard() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={isOpen} onOpenChange={(open) => { if (!isSubmitting) setIsOpen(open) }}>
-        <DialogContent className="max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl">
+        <DialogContent className="max-w-md bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-cloud font-semibold text-lg font-sans">
               {editId !== null ? 'Edit Branch' : 'Add Branch'}
@@ -137,7 +152,7 @@ export function BranchSettingsCard() {
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g. Head Office"
-                className="bg-midnight border-border rounded-xl text-sm"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
                 required
                 disabled={isSubmitting}
               />
@@ -151,19 +166,19 @@ export function BranchSettingsCard() {
                 value={formAddress}
                 onChange={(e) => setFormAddress(e.target.value)}
                 placeholder="e.g. 123 Main St, Cityville"
-                className="bg-midnight border-border rounded-xl text-sm min-h-20"
+                className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm min-h-20"
                 disabled={isSubmitting}
               />
             </div>
             <DialogFooter className="pt-4 border-t border-border/40">
               <DialogClose asChild>
-                <Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer" disabled={isSubmitting}>
+                <Button type="button" variant="outline" className="h-10 rounded-[20px] [corner-shape:squircle] cursor-pointer" disabled={isSubmitting}>
                   Cancel
                 </Button>
               </DialogClose>
               <Button
                 type="submit"
-                className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-5 cursor-pointer flex items-center gap-2"
+                className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer flex items-center gap-2"
                 disabled={isSubmitting}
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -176,7 +191,7 @@ export function BranchSettingsCard() {
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null) }}>
-        <AlertDialogContent className="max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl">
+        <AlertDialogContent className="max-w-md bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-cloud font-semibold text-lg font-sans">
               Are you absolutely sure?
@@ -186,11 +201,11 @@ export function BranchSettingsCard() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="pt-4 border-t border-border/40 gap-2">
-            <AlertDialogCancel className="h-10 rounded-xl cursor-pointer" disabled={isDeleting}>
+            <AlertDialogCancel className="h-10 rounded-[20px] [corner-shape:squircle] cursor-pointer" disabled={isDeleting}>
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="h-10 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl px-5 cursor-pointer flex items-center gap-2"
+              className="h-10 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer flex items-center gap-2"
               onClick={(e) => {
                 e.preventDefault()
                 handleDelete()

@@ -1,20 +1,14 @@
 // components/attendance/useAttendanceSheet.ts
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
-import { formatApiDate, parseApiDate } from '@/lib/helpers/format-api-date'
 import { downloadBlob } from '@/lib/helpers/download-blob'
 import { attendanceService } from '@/services/attendance-service'
-import { shiftService, type FrontendShift } from '@/services/shift-service'
-import {
-  EMPTY_STATUS_COUNTS,
-  type AttendanceRecord,
-  type AttendanceStatusCounts,
-} from './attendance-constants'
-
-const SEARCH_DEBOUNCE_MS = 300
+import type { AttendanceRecord, AttendanceStatusCounts } from '@/types/attendance'
+import { EMPTY_ATTENDANCE_STATUS_COUNTS } from '@/types/attendance'
+import { useAttendanceFilters } from './useAttendanceFilters'
+import { useAttendanceShifts } from './useAttendanceShifts'
 
 export interface UseAttendanceSheetReturn {
   searchQuery: string
@@ -24,7 +18,9 @@ export interface UseAttendanceSheetReturn {
   setShiftFilter: (value: string) => void
   records: AttendanceRecord[]
   statusCounts: AttendanceStatusCounts
-  shifts: FrontendShift[]
+  shifts: ReturnType<typeof useAttendanceShifts>['shifts']
+  shiftsError: boolean
+  reloadShifts: () => Promise<void>
   isLoading: boolean
   isExporting: boolean
   hasError: boolean
@@ -37,82 +33,32 @@ export interface UseAttendanceSheetReturn {
 }
 
 export function useAttendanceSheet(): UseAttendanceSheetReturn {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedDate,
+    shiftFilter,
+    setShiftFilter,
+    listParams,
+    formatDisplayDate,
+    navigateDate,
+    setSelectedDate,
+    handleClearFilters,
+  } = useAttendanceFilters()
 
-  const dateParam = searchParams.get('date') || formatApiDate(new Date())
-  const shiftParam = searchParams.get('shift') || 'all'
-  const urlSearchQuery = searchParams.get('search') || ''
+  const { shifts, hasError: shiftsError, reload: reloadShifts } = useAttendanceShifts()
 
-  const selectedDate = useMemo(() => parseApiDate(dateParam) ?? new Date(), [dateParam])
-
-  const [localSearch, setLocalSearch] = useState(urlSearchQuery)
   const [records, setRecords] = useState<AttendanceRecord[]>([])
-  const [statusCounts, setStatusCounts] = useState<AttendanceStatusCounts>(EMPTY_STATUS_COUNTS)
-  const [shifts, setShifts] = useState<FrontendShift[]>([])
+  const [statusCounts, setStatusCounts] = useState<AttendanceStatusCounts>(EMPTY_ATTENDANCE_STATUS_COUNTS)
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
   const [hasError, setHasError] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
-
-  const updateQueryParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const nextParams = new URLSearchParams(searchParams.toString())
-      Object.entries(updates).forEach(([key, value]) => {
-        if (value === null || value === '') {
-          nextParams.delete(key)
-        } else {
-          nextParams.set(key, value)
-        }
-      })
-      router.replace(`${pathname}?${nextParams.toString()}`)
-    },
-    [pathname, router, searchParams],
-  )
-
-  const listParams = useMemo(
-    () => ({
-      date: dateParam,
-      ...(shiftParam !== 'all' ? { shift: Number(shiftParam) } : {}),
-      ...(urlSearchQuery ? { search: urlSearchQuery } : {}),
-    }),
-    [dateParam, shiftParam, urlSearchQuery],
-  )
-
-  useEffect(() => {
-    setLocalSearch(urlSearchQuery)
-  }, [urlSearchQuery])
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      if (localSearch !== urlSearchQuery) {
-        updateQueryParams({ search: localSearch || null })
-      }
-    }, SEARCH_DEBOUNCE_MS)
-
-    return () => clearTimeout(handler)
-  }, [localSearch, urlSearchQuery, updateQueryParams])
+  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     const controller = new AbortController()
-
-    async function loadShifts(): Promise<void> {
-      try {
-        const data = await shiftService.getShifts(controller.signal)
-        if (!controller.signal.aborted) setShifts(data)
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') return
-        console.warn('Failed to load shifts for attendance filter:', err)
-      }
-    }
-
-    loadShifts()
-    return () => controller.abort()
-  }, [])
-
-  useEffect(() => {
-    const controller = new AbortController()
+    const fetchId = ++fetchIdRef.current
 
     async function loadAttendance(): Promise<void> {
       setIsLoading(true)
@@ -124,47 +70,26 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
           attendanceService.getStatusCounts(listParams, controller.signal),
         ])
 
-        if (controller.signal.aborted) return
+        if (controller.signal.aborted || fetchId !== fetchIdRef.current) return
 
         setRecords(list)
         setStatusCounts(counts)
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return
+        if (fetchId !== fetchIdRef.current) return
         setHasError(true)
         setRecords([])
-        setStatusCounts(EMPTY_STATUS_COUNTS)
+        setStatusCounts(EMPTY_ATTENDANCE_STATUS_COUNTS)
       } finally {
-        if (!controller.signal.aborted) {
+        if (fetchId === fetchIdRef.current) {
           setIsLoading(false)
         }
       }
     }
 
-    loadAttendance()
+    void loadAttendance()
     return () => controller.abort()
   }, [listParams, reloadToken])
-
-  const formatDate = (date: Date): string =>
-    date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-
-  const setSelectedDate = (date: Date): void => {
-    updateQueryParams({ date: formatApiDate(date) })
-  }
-
-  const navigateDate = (days: number): void => {
-    const nextDate = new Date(selectedDate)
-    nextDate.setDate(nextDate.getDate() + days)
-    setSelectedDate(nextDate)
-  }
-
-  const setShiftFilter = (value: string): void => {
-    updateQueryParams({ shift: value === 'all' ? null : value })
-  }
 
   const handleExport = async (): Promise<void> => {
     setIsExporting(true)
@@ -181,27 +106,25 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
   }
 
   const handleRetry = (): void => {
+    void reloadShifts()
     setReloadToken((prev) => prev + 1)
   }
 
-  const handleClearFilters = (): void => {
-    setLocalSearch('')
-    updateQueryParams({ search: null, shift: null })
-  }
-
   return {
-    searchQuery: localSearch,
-    setSearchQuery: setLocalSearch,
+    searchQuery,
+    setSearchQuery,
     selectedDate,
-    shiftFilter: shiftParam,
+    shiftFilter,
     setShiftFilter,
     records,
     statusCounts,
     shifts,
+    shiftsError,
+    reloadShifts,
     isLoading,
     isExporting,
     hasError,
-    formatDate,
+    formatDate: formatDisplayDate,
     navigateDate,
     setSelectedDate,
     handleExport,

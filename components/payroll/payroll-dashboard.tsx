@@ -36,9 +36,9 @@ export function PayrollDashboard() {
     <div className="space-y-6">
       {/* Summary Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-[20px] [corner-shape:squircle] p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 rounded-lg bg-violet-core/20">
+            <div className="p-2 rounded-[16px] [corner-shape:squircle] bg-violet-core/20">
               <DollarSign className="w-5 h-5 text-violet-glow" />
             </div>
             <TrendingUp className="w-4 h-4 text-lime-400" />
@@ -48,9 +48,9 @@ export function PayrollDashboard() {
             AED {totalPayroll.toLocaleString()}
           </p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-[20px] [corner-shape:squircle] p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 rounded-lg bg-red-400/20">
+            <div className="p-2 rounded-[16px] [corner-shape:squircle] bg-red-400/20">
               <TrendingUp className="w-5 h-5 text-red-400 rotate-180" />
             </div>
           </div>
@@ -59,9 +59,9 @@ export function PayrollDashboard() {
             AED {totalDeductions.toLocaleString()}
           </p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-[20px] [corner-shape:squircle] p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 rounded-lg bg-lime-400/20">
+            <div className="p-2 rounded-[16px] [corner-shape:squircle] bg-lime-400/20">
               <DollarSign className="w-5 h-5 text-lime-400" />
             </div>
           </div>
@@ -70,9 +70,9 @@ export function PayrollDashboard() {
             AED {totalNetPayout.toLocaleString()}
           </p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-5">
+        <div className="bg-card border border-border rounded-[20px] [corner-shape:squircle] p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="p-2 rounded-lg bg-teal-400/20">
+            <div className="p-2 rounded-[16px] [corner-shape:squircle] bg-teal-400/20">
               <Users className="w-5 h-5 text-teal-400" />
             </div>
           </div>
@@ -92,7 +92,7 @@ export function PayrollDashboard() {
           <Button variant="outline" size="icon">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <div className="px-4 py-2 bg-midnight rounded-lg min-w-32 text-center">
+          <div className="px-4 py-2 bg-midnight rounded-[16px] [corner-shape:squircle] min-w-32 text-center">
             <span className="text-sm font-medium text-cloud">{selectedMonth}</span>
           </div>
           <Button variant="outline" size="icon">
@@ -121,7 +121,7 @@ export function PayrollDashboard() {
       </div>
 
       {/* Payroll Table */}
-      <div className="bg-carbon border border-border rounded-2xl overflow-hidden">
+      <div className="bg-carbon border border-border rounded-[32px] [corner-shape:squircle] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>

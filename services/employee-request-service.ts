@@ -2,138 +2,38 @@
 import { api } from '@/lib/api'
 import { cleanParams } from '@/lib/types'
 import type { ApiListResponse, ApiSingleResponse } from '@/lib/types'
-export interface RequestChoiceItem {
-  id: string
-  name: string
-}
+import type {
+  CreateDocumentPayload,
+  CreateLeaveRequestPayload,
+  CreateLoanPayload,
+  CreateSalaryAdvancePayload,
+  DocumentRequestRecord,
+  LeaveCalculatePayload,
+  LeaveRequestRecord,
+  LoanRequestRecord,
+  PaginatedRequestResult,
+  RequestActionType,
+  RequestChoices,
+  RequestListParams,
+  RequestType,
+  SalaryAdvanceRequestRecord,
+} from '@/types/request'
 
-export interface RequestListParams {
-  status?: string
-  employee_id?: number
-  page?: number
-  page_size?: number
-}
-
-export interface LeaveRequestRecord {
-  id: number
-  employee: string
-  leave_type: string
-  created_at: string
-  updated_at: string
-  is_active: boolean
-  deleted: boolean
-  start_session: string
-  end_session: string
-  number_of_days: string
-  from_date: string
-  to_date: string
-  reason: string
-  status: string
-  rejected_reason: string | null
-  approved_date: string | null
-  rejected_date: string | null
-}
-
-export interface SalaryAdvanceRequestRecord {
-  id: number
-  employee: string
-  created_at: string
-  updated_at: string
-  is_active: boolean
-  deleted: boolean
-  request_amount: string
-  status: string
-  tenure: number
-  reason: string
-  rejected_reason: string | null
-  approved_date: string | null
-  rejected_date: string | null
-}
-
-export interface LoanRequestRecord {
-  id: number
-  employee: string
-  created_at: string
-  updated_at: string
-  is_active: boolean
-  deleted: boolean
-  request_amount: string
-  status: string
-  tenure: number
-  reason: string
-  interest_rate: string | null
-  rejected_reason: string | null
-  approved_date: string | null
-  rejected_date: string | null
-}
-
-export interface DocumentRequestRecord {
-  id: number
-  employee: string
-  file_url: string | null
-  created_at: string
-  updated_at: string
-  is_active: boolean
-  deleted: boolean
-  document_type: string
-  status: string
-  purpose: string
-  rejected_reason: string | null
-  approved_date: string | null
-  rejected_date: string | null
-  file: string | null
-}
-
-export interface RequestChoices {
-  session_choices: RequestChoiceItem[]
-  request_status_choices: RequestChoiceItem[]
-  document_request_type_choices: RequestChoiceItem[]
-}
-
-export interface LeaveCalculatePayload {
-  from_date: string
-  to_date: string
-  start_session: string
-  end_session: string
-}
-
-export interface CreateLeaveRequestPayload {
-  employee: number
-  leave_type: number
-  start_session: string
-  end_session: string
-  number_of_days: number
-  from_date: string
-  to_date: string
-  reason: string
-}
-
-export interface CreateSalaryAdvancePayload {
-  employee: number
-  request_amount: string
-  tenure: number
-  reason: string
-}
-
-export interface CreateLoanPayload {
-  employee: number
-  request_amount: string
-  tenure: number
-  reason: string
-}
-
-export interface CreateDocumentPayload {
-  employee: number
-  document_type: string
-  purpose: string
-}
-
-interface PaginatedResult<T> {
-  data: T[]
-  total_count: number
-  total_pages: number
-  current_page: number
-}
+export type {
+  CreateDocumentPayload,
+  CreateLeaveRequestPayload,
+  CreateLoanPayload,
+  CreateSalaryAdvancePayload,
+  DocumentRequestRecord,
+  LeaveCalculatePayload,
+  LeaveRequestRecord,
+  LoanRequestRecord,
+  RequestActionType,
+  RequestChoiceItem,
+  RequestChoices,
+  RequestListParams,
+  SalaryAdvanceRequestRecord,
+} from '@/types/request'
 
 interface SoftDeletableRecord {
   deleted?: boolean
@@ -148,80 +48,125 @@ async function fetchPaginatedList<T extends SoftDeletableRecord>(
   endpoint: string,
   params: RequestListParams,
   signal?: AbortSignal
-): Promise<PaginatedResult<T>> {
-  try {
-    const response = await api.get<ApiListResponse<T>>(endpoint, {
-      params: cleanParams(params as Record<string, string | number | boolean | undefined | null>),
-      signal,
-    })
-    const activeData = filterActiveRecords(response.results?.data ?? [])
-    const apiTotal = response.results?.total_count ?? activeData.length
-    const removedCount = (response.results?.data?.length ?? 0) - activeData.length
-    return {
-      data: activeData,
-      total_count: Math.max(0, apiTotal - removedCount),
-      total_pages: response.results?.total_pages ?? 1,
-      current_page: response.results?.current_page ?? 1,
-    }
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') throw error
-    console.warn(`🔴 Network error fetching ${endpoint}.`, error)
-    return { data: [], total_count: 0, total_pages: 1, current_page: 1 }
+): Promise<PaginatedRequestResult<T>> {
+  const response = await api.get<ApiListResponse<T>>(endpoint, {
+    params: cleanParams(params as Record<string, string | number | boolean | undefined | null>),
+    signal,
+  })
+  const activeData = filterActiveRecords(response.results?.data ?? [])
+  const apiTotal = response.results?.total_count ?? activeData.length
+  const removedCount = (response.results?.data?.length ?? 0) - activeData.length
+  return {
+    data: activeData,
+    total_count: Math.max(0, apiTotal - removedCount),
+    total_pages: response.results?.total_pages ?? 1,
+    current_page: response.results?.current_page ?? 1,
   }
+}
+
+const LIST_ENDPOINTS: Record<RequestType, string> = {
+  leave: '/api/employee/leave-requests/',
+  document: '/api/employee/document-requests/',
+  'salary-advance': '/api/employee/salary-advance-requests/',
+  loan: '/api/employee/loan-application-requests/',
+}
+
+const APPROVE_ENDPOINTS: Record<RequestActionType, string> = {
+  leave: '/api/employee/leave-request-approve/',
+  document: '/api/employee/document-request-approve/',
+  'salary-advance': '/api/employee/salary-advance-request-approve/',
+  loan: '/api/employee/loan-application-request-approve/',
+}
+
+const REJECT_ENDPOINTS: Record<RequestActionType, string> = {
+  leave: '/api/employee/leave-request-reject/',
+  document: '/api/employee/document-request-reject/',
+  'salary-advance': '/api/employee/salary-advance-request-reject/',
+  loan: '/api/employee/loan-application-request-reject/',
+}
+
+export async function fetchRequestsByType(
+  type: RequestType,
+  params: RequestListParams,
+  signal?: AbortSignal
+): Promise<PaginatedRequestResult<LeaveRequestRecord | SalaryAdvanceRequestRecord | LoanRequestRecord | DocumentRequestRecord>> {
+  switch (type) {
+    case 'leave':
+      return fetchPaginatedList<LeaveRequestRecord>(LIST_ENDPOINTS.leave, params, signal)
+    case 'salary-advance':
+      return fetchPaginatedList<SalaryAdvanceRequestRecord>(LIST_ENDPOINTS['salary-advance'], params, signal)
+    case 'loan':
+      return fetchPaginatedList<LoanRequestRecord>(LIST_ENDPOINTS.loan, params, signal)
+    case 'document':
+      return fetchPaginatedList<DocumentRequestRecord>(LIST_ENDPOINTS.document, params, signal)
+    default:
+      return { data: [], total_count: 0, total_pages: 1, current_page: 1 }
+  }
+}
+
+export async function fetchStatusCountForType(
+  type: RequestType,
+  params: RequestListParams,
+  signal?: AbortSignal
+): Promise<number> {
+  const result = await fetchRequestsByType(type, { ...params, page_size: 1, page: 1 }, signal)
+  return result.total_count
 }
 
 export const employeeRequestService = {
   async getLeaveRequests(params: RequestListParams, signal?: AbortSignal) {
-    return fetchPaginatedList<LeaveRequestRecord>(
-      '/api/employee/leave-requests/',
-      params,
-      signal
-    )
+    return fetchPaginatedList<LeaveRequestRecord>(LIST_ENDPOINTS.leave, params, signal)
   },
 
   async getSalaryAdvanceRequests(params: RequestListParams, signal?: AbortSignal) {
     return fetchPaginatedList<SalaryAdvanceRequestRecord>(
-      '/api/employee/salary-advance-requests/',
+      LIST_ENDPOINTS['salary-advance'],
       params,
       signal
     )
   },
 
   async getLoanRequests(params: RequestListParams, signal?: AbortSignal) {
-    return fetchPaginatedList<LoanRequestRecord>(
-      '/api/employee/loan-application-requests/',
-      params,
-      signal
-    )
+    return fetchPaginatedList<LoanRequestRecord>(LIST_ENDPOINTS.loan, params, signal)
   },
 
   async getDocumentRequests(params: RequestListParams, signal?: AbortSignal) {
-    return fetchPaginatedList<DocumentRequestRecord>(
-      '/api/employee/document-requests/',
-      params,
-      signal
-    )
+    return fetchPaginatedList<DocumentRequestRecord>(LIST_ENDPOINTS.document, params, signal)
   },
 
   async getRequestChoices(signal?: AbortSignal): Promise<RequestChoices> {
-    try {
-      const response = await api.get<ApiSingleResponse<RequestChoices>>(
-        '/api/employee/request-choices/',
-        { signal }
-      )
-      return response.results?.data ?? {
+    const response = await api.get<ApiSingleResponse<RequestChoices>>(
+      '/api/employee/request-choices/',
+      { signal }
+    )
+    return (
+      response.results?.data ?? {
         session_choices: [],
         request_status_choices: [],
         document_request_type_choices: [],
       }
-    } catch (error) {
-      console.warn('🔴 Network error fetching request choices.', error)
-      return {
-        session_choices: [],
-        request_status_choices: [],
-        document_request_type_choices: [],
-      }
-    }
+    )
+  },
+
+  async approveRequest(
+    type: RequestActionType,
+    id: number,
+    signal?: AbortSignal
+  ): Promise<void> {
+    await api.put(APPROVE_ENDPOINTS[type], { id }, { signal })
+  },
+
+  async rejectRequest(
+    type: RequestActionType,
+    id: number,
+    rejectedReason: string,
+    signal?: AbortSignal
+  ): Promise<void> {
+    await api.put(
+      REJECT_ENDPOINTS[type],
+      { id, rejected_reason: rejectedReason },
+      { signal }
+    )
   },
 
   async calculateLeaveDays(
