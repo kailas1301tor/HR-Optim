@@ -24,6 +24,7 @@ interface EmployeesToolbarProps {
   onDepartmentChange: (val: string) => void
   onStatusChange: (val: string) => void
   onAddEmployee: () => void
+  canManage?: boolean
 }
 
 export function EmployeesToolbar({
@@ -35,6 +36,7 @@ export function EmployeesToolbar({
   onDepartmentChange,
   onStatusChange,
   onAddEmployee,
+  canManage = false,
 }: EmployeesToolbarProps) {
   return (
     <CommonListToolbar
@@ -79,12 +81,12 @@ export function EmployeesToolbar({
         </>
       }
       actions={
-        <>
+        canManage ? (
           <PrimaryButton type="button" onClick={onAddEmployee} className="gap-2 text-xs flex-1 sm:flex-none sm:hidden">
             <Plus className="w-4 h-4" />
             Add
           </PrimaryButton>
-        </>
+        ) : null
       }
     />
   )

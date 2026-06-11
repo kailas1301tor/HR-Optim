@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { uiCard, uiSkeletonBlock } from '@/lib/ui/design-system'
 import type { SettingsMasterItem } from '@/types/settings'
 import { SettingsListRow } from './settings-list-row'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 export type { SettingsMasterItem }
 
@@ -45,16 +46,21 @@ export function SettingsMasterCard({
   onSelect,
   className,
 }: SettingsMasterCardProps) {
+  const { canManage } = usePermissions()
+  const canManageSettings = canManage('settings')
+
   return (
     <div className={cn(uiCard, 'p-0 overflow-hidden', className)}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b border-border/40">
         <h3 className="text-base text-cloud font-semibold">{title}</h3>
         <div className="flex items-center gap-2">
           {headerExtra}
+          {canManageSettings ? (
           <PrimaryButton type="button" onClick={onAdd} className="gap-1.5 text-xs h-9">
             <Plus className="w-3.5 h-3.5" />
             Add
           </PrimaryButton>
+          ) : null}
         </div>
       </div>
       <div className="p-4 space-y-2">
@@ -69,10 +75,12 @@ export function SettingsMasterCard({
             description={emptyDescription}
             className="py-10 shadow-none border-0 bg-transparent"
             actions={
+              canManageSettings ? (
               <PrimaryButton type="button" onClick={onAdd} className="gap-1.5 text-xs h-9">
                 <Plus className="w-3.5 h-3.5" />
                 Add first item
               </PrimaryButton>
+              ) : undefined
             }
           />
         ) : (
@@ -87,7 +95,7 @@ export function SettingsMasterCard({
                   )}
                 </div>
               }
-              actions={renderActions(item)}
+              actions={canManageSettings ? renderActions(item) : null}
               isSelected={selectedId === item.id}
               onClick={onSelect ? () => onSelect(item) : undefined}
             />

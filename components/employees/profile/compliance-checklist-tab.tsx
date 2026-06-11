@@ -10,6 +10,7 @@ import { Loader2, Upload, FileText, CheckCircle2, Clock, AlertCircle } from 'luc
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 type ChecklistVariant = 'onboarding' | 'offboarding'
 
@@ -39,6 +40,8 @@ const VARIANT_CONFIG = {
 
 function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabProps) {
   const config = VARIANT_CONFIG[variant]
+  const { canManage } = usePermissions()
+  const canUpload = canManage(variant)
   const [masterTypes, setMasterTypes] = useState<MasterDocType[]>([])
   const [uploadedDocs, setUploadedDocs] = useState<EmployeeDocument[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -192,7 +195,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
                         <FileText className="w-3.5 h-3.5" /> View File
                       </a>
                     </Button>
-                  ) : (
+                  ) : canUpload ? (
                     <div className="relative">
                       <input
                         type="file"
@@ -224,6 +227,8 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
                         )}
                       </Button>
                     </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Not uploaded</span>
                   )}
                 </div>
               </div>

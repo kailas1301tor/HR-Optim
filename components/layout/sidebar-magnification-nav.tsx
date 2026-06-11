@@ -4,6 +4,9 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
+import { Skeleton } from '@/components/ui/skeleton'
+import { usePermissions } from '@/components/auth/permissions-provider'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { SIDEBAR_NAV_ITEMS, SIDEBAR_SECTIONS } from './sidebar-nav-config'
 import { MagnificationNavItem } from './magnification-nav-item'
 
@@ -64,6 +67,29 @@ export function SidebarMagnificationNav({
   const mouseY = useMotionValue(Infinity)
   const showSectionHeaders = !collapsed || isMobile
   const showLabels = !collapsed || isMobile
+  const { isLoading, canView } = usePermissions()
+
+  const visibleItems = SIDEBAR_NAV_ITEMS.filter((item) => canView(item.moduleKey))
+
+  if (isLoading) {
+    return (
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4" aria-label="Loading navigation">
+        {SIDEBAR_SECTIONS.map((section) => (
+          <div key={section} className="space-y-2">
+            {showSectionHeaders && (
+              <Skeleton className={cn('h-3 w-16 ml-3', uiSkeletonBlock)} />
+            )}
+            {Array.from({ length: 2 }).map((_, index) => (
+              <Skeleton
+                key={`${section}-${index}`}
+                className={cn('h-10 w-full rounded-[16px] [corner-shape:squircle]', uiSkeletonBlock)}
+              />
+            ))}
+          </div>
+        ))}
+      </nav>
+    )
+  }
 
   return (
     <nav
@@ -83,7 +109,11 @@ export function SidebarMagnificationNav({
           : undefined
       }
     >
-      {SIDEBAR_SECTIONS.map((section) => (
+      {SIDEBAR_SECTIONS.map((section) => {
+        const sectionItems = visibleItems.filter((item) => item.section === section)
+        if (sectionItems.length === 0) return null
+
+        return (
         <div key={section} className="mb-6">
           <AnimatePresence>
             {showSectionHeaders && (
@@ -98,7 +128,7 @@ export function SidebarMagnificationNav({
             )}
           </AnimatePresence>
           <div className="space-y-1">
-            {SIDEBAR_NAV_ITEMS.filter((item) => item.section === section).map((item) => {
+            {sectionItems.map((item) => {
               const isActive = pathname === item.href
 
               if (isMobile) {
@@ -132,7 +162,8 @@ export function SidebarMagnificationNav({
             })}
           </div>
         </div>
-      ))}
+        )
+      })}
     </nav>
   )
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Building2, Users, Package, Settings, ShieldCheck, Calculator, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -19,11 +19,14 @@ import {
   INITIAL_NOTIFICATIONS,
 } from './settings-constants'
 import type { NotificationPreferences, WorkflowTemplate } from '@/types/settings'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 export function SettingsPanel() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
+  const canManageSettings = canManage('settings')
 
   const activeTab = searchParams.get('tab') || 'company'
 
@@ -35,6 +38,13 @@ export function SettingsPanel() {
 
   const [workflowTemplates, setWorkflowTemplates] = useState<WorkflowTemplate[]>(INITIAL_WORKFLOW_TEMPLATES)
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS)
+
+  useEffect(() => {
+    if (isPermissionsLoading) return
+    if (!canManageSettings && activeTab === 'roles') {
+      setActiveTab('company')
+    }
+  }, [activeTab, canManageSettings, isPermissionsLoading])
 
   const tabTriggerClass = cn(
     uiTabChipBase,
@@ -56,10 +66,12 @@ export function SettingsPanel() {
             <Building2 className="h-4 w-4" />
             Company Structure
           </TabsTrigger>
+          {canManageSettings ? (
           <TabsTrigger value="roles" className={tabTriggerClass}>
             <ShieldCheck className="h-4 w-4" />
             Roles & Permissions
           </TabsTrigger>
+          ) : null}
           <TabsTrigger value="hr" className={tabTriggerClass}>
             <Users className="h-4 w-4" />
             HR Management

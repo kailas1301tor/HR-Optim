@@ -25,6 +25,7 @@ interface AssetsTableProps {
   onDispose: (id: number) => void
   onAssign: (asset: BackendAsset) => void
   onPageChange: (page: number) => void
+  canManage?: boolean
 }
 
 export function AssetsTable({
@@ -35,6 +36,7 @@ export function AssetsTable({
   onDispose,
   onAssign,
   onPageChange,
+  canManage = false,
 }: AssetsTableProps) {
   return (
     <div className={cn(uiTableShell, 'hidden lg:block')}>
@@ -79,6 +81,7 @@ export function AssetsTable({
                   onEdit={onEdit}
                   onDelete={onDispose}
                   onAssign={onAssign}
+                  canManage={canManage}
                 />
               ))
             )}

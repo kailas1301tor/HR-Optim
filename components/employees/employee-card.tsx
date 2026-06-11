@@ -24,9 +24,10 @@ interface EmployeeCardProps {
   onSelect: () => void
   onEdit: (employee: Employee) => void
   onDelete: (id: number) => void
+  canManage?: boolean
 }
 
-export function EmployeeCard({ employee, index, onSelect, onEdit, onDelete }: EmployeeCardProps) {
+export function EmployeeCard({ employee, index, onSelect, onEdit, onDelete, canManage = false }: EmployeeCardProps) {
   const initials = employee.full_name
     ? employee.full_name
         .split(' ')
@@ -92,6 +93,8 @@ export function EmployeeCard({ employee, index, onSelect, onEdit, onDelete }: Em
                 <Eye className="w-4 h-4 mr-2 text-slate-400" />
                 View Profile
               </DropdownMenuItem>
+              {canManage && (
+                <>
               <DropdownMenuItem onClick={() => onEdit(employee)} className="cursor-pointer">
                 <Pencil className="w-4 h-4 mr-2 text-slate-400" />
                 Edit
@@ -104,6 +107,8 @@ export function EmployeeCard({ employee, index, onSelect, onEdit, onDelete }: Em
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete
               </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

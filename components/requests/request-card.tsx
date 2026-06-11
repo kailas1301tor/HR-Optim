@@ -18,6 +18,7 @@ interface RequestCardProps {
   onToggleExpand: () => void
   onApprove: () => void
   onReject: () => void
+  canManage?: boolean
 }
 
 export function RequestCard({
@@ -27,6 +28,7 @@ export function RequestCard({
   onToggleExpand,
   onApprove,
   onReject,
+  canManage = false,
 }: RequestCardProps) {
   const type = typeConfig[request.type]
   const status = statusConfig[request.status]
@@ -123,7 +125,7 @@ export function RequestCard({
             </button>
           </div>
 
-          {isPending ? (
+          {isPending && canManage ? (
             <RequestActionButtons onReject={onReject} onApprove={onApprove} />
           ) : null}
         </div>

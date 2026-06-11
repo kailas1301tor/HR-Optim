@@ -26,9 +26,10 @@ interface AssetCardProps {
   onEdit: (asset: BackendAsset) => void
   onDelete: (id: number) => void
   onAssign: (asset: BackendAsset) => void
+  canManage?: boolean
 }
 
-export function AssetCard({ asset, index, onEdit, onDelete, onAssign }: AssetCardProps) {
+export function AssetCard({ asset, index, onEdit, onDelete, onAssign, canManage = false }: AssetCardProps) {
   const router = useRouter()
   const category = getAssetTypeConfig(asset.asset_type)
   const CategoryIcon = category.icon
@@ -95,7 +96,7 @@ export function AssetCard({ asset, index, onEdit, onDelete, onAssign }: AssetCar
                 <Eye className="w-4 h-4 mr-2 text-slate-400" />
                 View Details
               </DropdownMenuItem>
-              {!isDisposed && (
+              {!isDisposed && canManage && (
                 <>
                   <DropdownMenuSeparator className="border-border/40" />
                   {canShowAssignInMenu && (
@@ -112,16 +113,20 @@ export function AssetCard({ asset, index, onEdit, onDelete, onAssign }: AssetCar
                   )}
                 </>
               )}
-              <DropdownMenuSeparator className="border-border/40" />
-              <DropdownMenuItem onClick={() => onEdit(asset)} className="cursor-pointer">
-                <Pencil className="w-4 h-4 mr-2 text-slate-400" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="border-border/40" />
-              <DropdownMenuItem onClick={() => onDelete(asset.id)} className="text-destructive focus:text-destructive cursor-pointer">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Dispose
-              </DropdownMenuItem>
+              {canManage && (
+                <>
+                  <DropdownMenuSeparator className="border-border/40" />
+                  <DropdownMenuItem onClick={() => onEdit(asset)} className="cursor-pointer">
+                    <Pencil className="w-4 h-4 mr-2 text-slate-400" />
+                    Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="border-border/40" />
+                  <DropdownMenuItem onClick={() => onDelete(asset.id)} className="text-destructive focus:text-destructive cursor-pointer">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Dispose
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

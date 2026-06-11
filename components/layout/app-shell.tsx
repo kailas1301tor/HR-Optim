@@ -6,6 +6,8 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { ShellTopBar } from '@/components/layout/shell-top-bar'
 import { CommandPalette } from '@/components/layout/command-palette'
 import { cn } from '@/lib/utils'
+import { PermissionsProvider } from '@/components/auth/permissions-provider'
+import { AppShellRouteGuard } from './app-shell-route-guard'
 import { useAppShell } from './useAppShell'
 
 export interface UserProfile {
@@ -40,6 +42,7 @@ export function AppShell({ children }: AppShellProps) {
   }, [])
 
   return (
+    <PermissionsProvider>
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <ShellTopBar
         collapsed={collapsed}
@@ -74,11 +77,12 @@ export function AppShell({ children }: AppShellProps) {
         )}
       >
         <main className="flex-1 max-w-[1280px] w-full mx-auto px-4 sm:px-6 py-6 md:py-8">
-          {children}
+          <AppShellRouteGuard>{children}</AppShellRouteGuard>
         </main>
       </div>
 
       <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
+    </PermissionsProvider>
   )
 }

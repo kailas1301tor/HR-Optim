@@ -22,19 +22,27 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { uiSquircleLg, uiSquircleNav, uiSquircleXs } from '@/lib/ui/design-system'
+import { usePermissions } from '@/components/auth/permissions-provider'
+import type { ModuleKey } from '@/lib/permissions/module-permissions'
 import { useCommandPalette } from './useCommandPalette'
 
-const pages = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/', keywords: ['home', 'overview', 'kpi'] },
-  { name: 'Employees', icon: Users, href: '/employees', keywords: ['staff', 'team', 'people'] },
-  { name: 'Attendance', icon: Clock, href: '/attendance', keywords: ['time', 'present', 'absent'] },
-  { name: 'Documents', icon: FileText, href: '/documents', keywords: ['files', 'upload', 'expiry'] },
-  { name: 'Assets', icon: Package, href: '/assets', keywords: ['inventory', 'equipment', 'items'] },
-  { name: 'Requests', icon: MessageSquare, href: '/requests', keywords: ['leave', 'approval', 'pending'] },
-  { name: 'Tickets', icon: LifeBuoy, href: '/tickets', keywords: ['support', 'help', 'issue'] },
-  { name: 'Payroll', icon: DollarSign, href: '/payroll', keywords: ['salary', 'wages', 'payment'] },
-  { name: 'Reports', icon: BarChart3, href: '/reports', keywords: ['analytics', 'export', 'data'] },
-  { name: 'Settings', icon: Settings, href: '/settings', keywords: ['config', 'preferences'] },
+const pages: Array<{
+  name: string
+  icon: typeof LayoutDashboard
+  href: string
+  keywords: string[]
+  moduleKey: ModuleKey
+}> = [
+  { name: 'Dashboard', icon: LayoutDashboard, href: '/', keywords: ['home', 'overview', 'kpi'], moduleKey: 'dashboard' },
+  { name: 'Employees', icon: Users, href: '/employees', keywords: ['staff', 'team', 'people'], moduleKey: 'employees' },
+  { name: 'Attendance', icon: Clock, href: '/attendance', keywords: ['time', 'present', 'absent'], moduleKey: 'attendance' },
+  { name: 'Documents', icon: FileText, href: '/documents', keywords: ['files', 'upload', 'expiry'], moduleKey: 'documents' },
+  { name: 'Assets', icon: Package, href: '/assets', keywords: ['inventory', 'equipment', 'items'], moduleKey: 'assets' },
+  { name: 'Requests', icon: MessageSquare, href: '/requests', keywords: ['leave', 'approval', 'pending'], moduleKey: 'requests' },
+  { name: 'Tickets', icon: LifeBuoy, href: '/tickets', keywords: ['support', 'help', 'issue'], moduleKey: 'tickets' },
+  { name: 'Payroll', icon: DollarSign, href: '/payroll', keywords: ['salary', 'wages', 'payment'], moduleKey: 'payroll' },
+  { name: 'Reports', icon: BarChart3, href: '/reports', keywords: ['analytics', 'export', 'data'], moduleKey: 'reports' },
+  { name: 'Settings', icon: Settings, href: '/settings', keywords: ['config', 'preferences'], moduleKey: 'settings' },
 ]
 
 const employees = [
@@ -45,11 +53,16 @@ const employees = [
   { name: 'James Wilson', id: 'EMP-005', department: 'Operations' },
 ]
 
-const quickActions = [
-  { name: 'Add New Employee', icon: Plus, action: 'add-employee' },
-  { name: 'Submit Leave Request', icon: FileCheck, action: 'leave-request' },
-  { name: 'Upload Document', icon: FileText, action: 'upload-doc' },
-  { name: 'Generate Report', icon: BarChart3, action: 'generate-report' },
+const quickActions: Array<{
+  name: string
+  icon: typeof Plus
+  action: string
+  moduleKey: ModuleKey
+}> = [
+  { name: 'Add New Employee', icon: Plus, action: 'add-employee', moduleKey: 'employees' },
+  { name: 'Submit Leave Request', icon: FileCheck, action: 'leave-request', moduleKey: 'requests' },
+  { name: 'Upload Document', icon: FileText, action: 'upload-doc', moduleKey: 'documents' },
+  { name: 'Generate Report', icon: BarChart3, action: 'generate-report', moduleKey: 'reports' },
 ]
 
 interface CommandPaletteProps {
@@ -59,6 +72,10 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const { search, setSearch, handleSelect } = useCommandPalette({ open, onOpenChange })
+  const { canView, canManage } = usePermissions()
+
+  const visiblePages = pages.filter((page) => canView(page.moduleKey))
+  const visibleQuickActions = quickActions.filter((action) => canManage(action.moduleKey))
 
   return (
     <AnimatePresence>
@@ -105,11 +122,12 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 </Command.Empty>
 
                 {/* Quick Actions */}
+                {visibleQuickActions.length > 0 ? (
                 <Command.Group heading="Quick Actions" className="mb-2">
                   <div className="px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-slate-500">
                     Quick Actions
                   </div>
-                  {quickActions.map((action) => (
+                  {visibleQuickActions.map((action) => (
                     <Command.Item
                       key={action.action}
                       value={action.name}
@@ -127,13 +145,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     </Command.Item>
                   ))}
                 </Command.Group>
+                ) : null}
 
                 {/* Pages */}
                 <Command.Group heading="Pages" className="mb-2">
                   <div className="px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-slate-500">
                     Pages
                   </div>
-                  {pages.map((page) => (
+                  {visiblePages.map((page) => (
                     <Command.Item
                       key={page.href}
                       value={`${page.name} ${page.keywords.join(' ')}`}

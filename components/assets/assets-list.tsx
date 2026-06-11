@@ -23,8 +23,11 @@ import { AddAssetModal } from './add-asset-modal'
 import { DisposeAssetDialog } from './dispose-asset-dialog'
 import { AssignAssetDialog } from './assign-asset-dialog'
 import { useAssetsTable } from './useAssetsTable'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 export function AssetsList() {
+  const { canManage } = usePermissions()
+  const canManageAssets = canManage('assets')
   const {
     assetsList,
     pagination,
@@ -93,6 +96,7 @@ export function AssetsList() {
         onAddAsset={handleAddAsset}
         onExport={handleExport}
         isExporting={isExporting}
+        canManage={canManageAssets}
       />
 
       {hasError ? (
@@ -124,6 +128,7 @@ export function AssetsList() {
           title="No assets found"
           description="Try updating your search query or filters, or add a new asset to get started."
           actions={
+            canManageAssets ? (
             <>
               <PrimaryButton onClick={handleAddAsset} className="text-xs min-h-11">
                 Add Asset
@@ -137,6 +142,16 @@ export function AssetsList() {
                 Clear Filters
               </Button>
             </>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClearFilters}
+                className={cn(uiOutlineBtn, 'text-xs min-h-11')}
+              >
+                Clear Filters
+              </Button>
+            )
           }
         />
       ) : (
@@ -153,6 +168,7 @@ export function AssetsList() {
                 }}
                 onDelete={(id) => setDisposeTargetId(id)}
                 onAssign={(a) => setAssignTargetId(a.id)}
+                canManage={canManageAssets}
               />
             ))}
           </CommonMobileCardGrid>
@@ -180,6 +196,7 @@ export function AssetsList() {
             onDispose={(id) => setDisposeTargetId(id)}
             onAssign={(a) => setAssignTargetId(a.id)}
             onPageChange={(page) => updateQueryParams({ page: String(page) })}
+            canManage={canManageAssets}
           />
         </>
       )}

@@ -57,3 +57,23 @@ export interface RefreshTokenResponse {
     }
   }
 }
+
+export interface UserPermission {
+  id: number
+  name: string
+  codename: string
+}
+
+export interface CurrentUserProfile {
+  id: number
+  username: string
+  email: string
+  permissions: UserPermission[]
+}
+
+export interface CurrentUserProfileResponse {
+  message: string
+  results: {
+    data: CurrentUserProfile
+  }
+}

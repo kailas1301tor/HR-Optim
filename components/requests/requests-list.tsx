@@ -23,8 +23,12 @@ import { statusConfig, typeConfig } from './requests-constants'
 import { useRequestsList } from './useRequestsList'
 import { useRequestActions } from './useRequestActions'
 import { RequestActionDialogs } from './request-action-dialogs'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 export function RequestsList() {
+  const { canManage } = usePermissions()
+  const canManageRequests = canManage('requests')
+
   const {
     paginatedRequests,
     statusCounts,
@@ -91,7 +95,7 @@ export function RequestsList() {
 
   return (
     <div className="space-y-6">
-      <RequestsPageHeader typeFilter={typeFilter} />
+      <RequestsPageHeader typeFilter={typeFilter} canManage={canManageRequests} />
 
       <RequestsStatsCards
         statusCounts={statusCounts}
@@ -146,6 +150,7 @@ export function RequestsList() {
                 onToggleExpand={() => handleToggleExpand(request.id)}
                 onApprove={() => handleApprove(request)}
                 onReject={() => handleOpenReject(request)}
+                canManage={canManageRequests}
               />
             ))}
           </CommonMobileCardGrid>
@@ -163,6 +168,7 @@ export function RequestsList() {
           title="No requests found"
           description={emptyDescription}
           actions={
+            canManageRequests ? (
             <>
               <PrimaryButton asChild className="min-h-11 text-xs">
                 <Link href={newRequestHref}>
@@ -179,6 +185,16 @@ export function RequestsList() {
                 Clear Filters
               </Button>
             </>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClearFilters}
+                className={cn(uiOutlineBtn, 'min-h-11 text-xs')}
+              >
+                Clear Filters
+              </Button>
+            )
           }
         />
       )}

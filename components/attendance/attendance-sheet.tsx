@@ -19,8 +19,12 @@ import { AttendanceTableSkeleton } from './attendance-table-skeleton'
 import { AttendanceCard } from './attendance-card'
 import { AttendanceCardSkeleton } from './attendance-card-skeleton'
 import { useAttendanceSheet } from './useAttendanceSheet'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 export function AttendanceSheet() {
+  const { canManage } = usePermissions()
+  const canManageAttendance = canManage('attendance')
+
   const {
     searchQuery,
     setSearchQuery,
@@ -72,6 +76,7 @@ export function AttendanceSheet() {
         canExport={!isLoading && records.length > 0}
         onExport={handleExport}
         onDeptExport={handleDeptExport}
+        canManage={canManageAttendance}
       />
 
       <AttendanceStatsCards statusCounts={statusCounts} isLoading={isLoading} />

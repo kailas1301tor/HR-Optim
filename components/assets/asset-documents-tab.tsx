@@ -20,6 +20,7 @@ import { formatAssetDocumentDate, openAssetDocument } from '@/lib/helpers/asset-
 import { downloadFileFromUrl } from '@/lib/helpers/download-file-url'
 import { toast } from 'sonner'
 import { useAssetDocumentsTab } from './useAssetDocumentsTab'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 interface AssetDocumentsTabProps {
   assetId: number
@@ -27,6 +28,8 @@ interface AssetDocumentsTabProps {
 }
 
 export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps) {
+  const { canManage } = usePermissions()
+  const canManageAssets = canManage('assets')
   const {
     documents,
     isLoading,
@@ -50,8 +53,8 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
   } = form
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-200">
-      {/* Upload Form Panel */}
+    <div className={cn('grid grid-cols-1 gap-6 animate-in fade-in-50 duration-200', canManageAssets ? 'lg:grid-cols-3' : '')}>
+      {canManageAssets ? (
       <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 h-fit space-y-4">
         <h3 className="text-sm font-semibold text-cloud flex items-center gap-2">
           <Upload className="w-4 h-4 text-violet-glow" /> Upload Asset Document
@@ -136,9 +139,9 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
           </Button>
         </form>
       </div>
+      ) : null}
 
-      {/* Uploaded Documents List */}
-      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 lg:col-span-2 space-y-4">
+      <div className={cn('bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 space-y-4', canManageAssets ? 'lg:col-span-2' : '')}>
         <h3 className="text-sm font-semibold text-cloud flex items-center gap-2">
           <FileText className="w-4 h-4 text-violet-glow" /> Uploaded Document Records
         </h3>
@@ -169,7 +172,7 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
           <CommonEmptyState
             icon={FileText}
             title="No documents uploaded"
-            description="Add warranties, invoices, or compliance certificates using the form on the left."
+            description={canManageAssets ? 'Add warranties, invoices, or compliance certificates using the form on the left.' : 'No documents have been uploaded for this asset yet.'}
             className="py-12 shadow-none border-0 bg-transparent"
           />
         ) : (
@@ -247,6 +250,7 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
                   </div>
                 </div>
 
+                {canManageAssets ? (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -264,6 +268,7 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
                     <Trash2 className="w-3.5 h-3.5" />
                   )}
                 </Button>
+                ) : null}
               </div>
             )})}
           </div>

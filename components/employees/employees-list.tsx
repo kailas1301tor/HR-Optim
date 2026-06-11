@@ -26,6 +26,7 @@ import { EmployeeProfileDrawer } from './employee-profile-drawer'
 import { AddEmployeeModal } from './add-employee-modal'
 import { DeleteEmployeeDialog } from './delete-employee-dialog'
 import { useEmployeeTable } from './useEmployeeTable'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 const DIRECTORY_TABS = [
   { value: 'all', label: 'All' },
@@ -34,6 +35,9 @@ const DIRECTORY_TABS = [
 ]
 
 export function EmployeesList() {
+  const { canManage } = usePermissions()
+  const canManageEmployees = canManage('employees')
+
   const {
     employeeList,
     pagination,
@@ -87,7 +91,7 @@ export function EmployeesList() {
 
   return (
     <div className="space-y-6">
-      <EmployeesPageHeader onAddEmployee={handleAddEmployee} />
+      <EmployeesPageHeader onAddEmployee={handleAddEmployee} canManage={canManageEmployees} />
 
       <EmployeesStatsCards
         totalCount={workforceStats.total}
@@ -120,6 +124,7 @@ export function EmployeesList() {
         onDepartmentChange={(val) => updateQueryParams({ department: val, page: '1' })}
         onStatusChange={(val) => updateQueryParams({ status: val, page: '1' })}
         onAddEmployee={handleAddEmployee}
+        canManage={canManageEmployees}
       />
 
       {hasError ? (
@@ -152,6 +157,7 @@ export function EmployeesList() {
           title="No employees found"
           description="We couldn't find any employees matching your search or filters."
           actions={
+            canManageEmployees ? (
             <>
               <PrimaryButton onClick={handleAddEmployee} className="gap-2 h-9 text-xs">
                 Add Employee
@@ -165,6 +171,16 @@ export function EmployeesList() {
                 Clear Filters
               </Button>
             </>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClearFilters}
+                className={cn(uiOutlineBtn, 'h-9 text-xs')}
+              >
+                Clear Filters
+              </Button>
+            )
           }
         />
       ) : (
@@ -181,6 +197,7 @@ export function EmployeesList() {
                 }}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                canManage={canManageEmployees}
               />
             ))}
           </CommonMobileCardGrid>
@@ -209,6 +226,7 @@ export function EmployeesList() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onPageChange={(page) => updateQueryParams({ page: String(page) })}
+            canManage={canManageEmployees}
           />
         </>
       )}
@@ -229,6 +247,7 @@ export function EmployeesList() {
         detailVersion={detailVersion}
         onClose={() => setDrawerOpen(false)}
         onEdit={handleEdit}
+        canManage={canManageEmployees}
       />
 
       <DeleteEmployeeDialog

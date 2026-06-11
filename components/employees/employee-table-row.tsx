@@ -26,6 +26,7 @@ interface EmployeeTableRowProps {
   onToggleStatus: (employee: Employee, active: boolean) => void
   onEdit: (employee: Employee) => void
   onDelete: (id: number) => void
+  canManage?: boolean
 }
 
 export function EmployeeTableRow({
@@ -35,6 +36,7 @@ export function EmployeeTableRow({
   onToggleStatus,
   onEdit,
   onDelete,
+  canManage = false,
 }: EmployeeTableRowProps) {
   const initials = employee.full_name
     ? employee.full_name
@@ -86,10 +88,16 @@ export function EmployeeTableRow({
         <CommonStatusBadge variant={statusVariant} label={employee.status} />
       </td>
       <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+        {canManage ? (
         <Switch
           checked={employee.status?.toLowerCase() === 'active'}
           onCheckedChange={(checked) => onToggleStatus(employee, checked)}
         />
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            {employee.status?.toLowerCase() === 'active' ? 'Yes' : 'No'}
+          </span>
+        )}
       </td>
       <td className="px-4 py-3">
         <span className="flex items-center gap-1.5 text-sm text-slate-300 font-mono">
@@ -115,6 +123,8 @@ export function EmployeeTableRow({
               <Eye className="w-4 h-4 mr-2" />
               View Profile
             </DropdownMenuItem>
+            {canManage && (
+              <>
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
@@ -136,6 +146,8 @@ export function EmployeeTableRow({
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </td>

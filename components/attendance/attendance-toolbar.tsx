@@ -27,6 +27,7 @@ interface AttendanceToolbarProps {
   canExport: boolean
   onExport: () => void
   onDeptExport?: () => void
+  canManage?: boolean
 }
 
 export function AttendanceToolbar({
@@ -41,6 +42,7 @@ export function AttendanceToolbar({
   canExport,
   onExport,
   onDeptExport,
+  canManage = false,
 }: AttendanceToolbarProps) {
   return (
     <CommonListToolbar
@@ -64,6 +66,7 @@ export function AttendanceToolbar({
         </Select>
       }
       actions={
+        canManage ? (
         <>
           {onDeptExport ? (
             <Button
@@ -88,6 +91,7 @@ export function AttendanceToolbar({
             {isExporting ? 'Exporting…' : 'Export'}
           </Button>
         </>
+        ) : null
       }
     />
   )

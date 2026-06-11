@@ -41,6 +41,7 @@ interface PayrollToolbarProps {
   onExportExcel: () => void
   onExportDepartmentSummary: () => void
   onGeneratePayroll: () => void
+  canManage?: boolean
 }
 
 export function PayrollToolbar({
@@ -60,6 +61,7 @@ export function PayrollToolbar({
   onExportExcel,
   onExportDepartmentSummary,
   onGeneratePayroll,
+  canManage = false,
 }: PayrollToolbarProps) {
   return (
     <CommonListToolbar
@@ -107,6 +109,7 @@ export function PayrollToolbar({
         </>
       }
       actions={
+        canManage ? (
         <>
           {selectedCount > 0 ? (
             <PrimaryButton
@@ -153,6 +156,7 @@ export function PayrollToolbar({
             <span className="sm:hidden">Generate</span>
           </PrimaryButton>
         </>
+        ) : null
       }
     />
   )

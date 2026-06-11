@@ -17,6 +17,7 @@ interface PayrollTableRowProps {
   isSelected: boolean
   onToggleSelect: (id: number) => void
   onAddAdjustment: (record: PayrollRecord) => void
+  canManage?: boolean
 }
 
 export function PayrollTableRow({
@@ -25,6 +26,7 @@ export function PayrollTableRow({
   isSelected,
   onToggleSelect,
   onAddAdjustment,
+  canManage = false,
 }: PayrollTableRowProps) {
   const wpsStatus = wpsStatusConfig[record.wpsStatus]
   const statusLabel = getPayrollStatusLabel(record.status)
@@ -37,7 +39,7 @@ export function PayrollTableRow({
       className="border-b border-border/50 hover:bg-violet-core/5 transition-colors"
     >
       <td className="px-4 py-3 w-12">
-        {record.canFinalize ? (
+        {canManage && record.canFinalize ? (
           <Checkbox
             checked={isSelected}
             onCheckedChange={() => onToggleSelect(record.id)}
@@ -89,6 +91,7 @@ export function PayrollTableRow({
         </span>
       </td>
       <td className="px-4 py-3">
+        {canManage ? (
         <Button
           variant="ghost"
           size="sm"
@@ -98,6 +101,7 @@ export function PayrollTableRow({
         >
           <Eye className="w-4 h-4" />
         </Button>
+        ) : null}
       </td>
     </motion.tr>
   )

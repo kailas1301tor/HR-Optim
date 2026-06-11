@@ -20,6 +20,7 @@ import { UploadDocumentModal } from './upload-document-modal'
 import { DocumentsToolbar } from './documents-toolbar'
 import { DocumentsStatsCards } from './documents-stats-cards'
 import { useDocumentsList } from './useDocumentsList'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 const TAB_OPTIONS = [
   { value: 'employee', label: 'Employee' },
@@ -28,6 +29,8 @@ const TAB_OPTIONS = [
 
 export function DocumentsGrid() {
   const [isExporting, setIsExporting] = useState(false)
+  const { canManage } = usePermissions()
+  const canManageDocuments = canManage('documents')
 
   const {
     tab,
@@ -81,6 +84,7 @@ export function DocumentsGrid() {
         onUploadClick={() => setIsUploadOpen(true)}
         onExportExpiry={handleExportExpiry}
         isExporting={isExporting}
+        canManage={canManageDocuments}
       />
 
       <DocumentsStatsCards
@@ -111,6 +115,7 @@ export function DocumentsGrid() {
               type={tab}
               index={idx}
               onDeleteSuccess={refreshList}
+              canManage={canManageDocuments}
             />
           ))}
         </div>

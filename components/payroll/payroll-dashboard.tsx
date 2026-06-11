@@ -30,6 +30,7 @@ import { usePayrollEmployeeSearch } from './usePayrollEmployeeSearch'
 import { GeneratePayrollDialog } from './generate-payroll-dialog'
 import { PayrollAdjustmentDialog } from './payroll-adjustment-dialog'
 import type { PayrollRecord } from '@/types/payroll'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 function PayrollTableSkeleton() {
   return (
@@ -64,6 +65,8 @@ function computeKpisFromRecords(records: PayrollRecord[]) {
 
 export function PayrollDashboard() {
   const [dashboardReloadToken, setDashboardReloadToken] = useState(0)
+  const { canManage } = usePermissions()
+  const canManagePayroll = canManage('payroll')
 
   const {
     month,
@@ -282,6 +285,7 @@ export function PayrollDashboard() {
           onExportExcel={handleExportWps}
           onExportDepartmentSummary={handleExportDepartmentSummary}
           onGeneratePayroll={() => setIsGenerateOpen(true)}
+          canManage={canManagePayroll}
         />
       </div>
 
@@ -301,9 +305,11 @@ export function PayrollDashboard() {
           title="No payroll records"
           description={emptyDescription}
           actions={
+            canManagePayroll ? (
             <PrimaryButton onClick={() => setIsGenerateOpen(true)}>
               Generate Payroll
             </PrimaryButton>
+            ) : undefined
           }
         />
       ) : (
@@ -313,7 +319,7 @@ export function PayrollDashboard() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="px-4 py-3 w-12">
-                    {hasSelectableRows ? (
+                    {hasSelectableRows && canManagePayroll ? (
                       <Checkbox
                         checked={isAllSelected}
                         onCheckedChange={toggleSelectAll}
@@ -354,6 +360,7 @@ export function PayrollDashboard() {
                     isSelected={selectedIds.has(record.id)}
                     onToggleSelect={toggleSelected}
                     onAddAdjustment={setAdjustmentTarget}
+                    canManage={canManagePayroll}
                   />
                 ))}
               </tbody>

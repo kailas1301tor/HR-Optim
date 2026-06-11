@@ -27,6 +27,7 @@ interface AssetsToolbarProps {
   onAddAsset: () => void
   onExport?: () => void
   isExporting?: boolean
+  canManage?: boolean
 }
 
 export function AssetsToolbar({
@@ -40,6 +41,7 @@ export function AssetsToolbar({
   onAddAsset,
   onExport,
   isExporting = false,
+  canManage = false,
 }: AssetsToolbarProps) {
   return (
     <CommonListToolbar
@@ -78,6 +80,7 @@ export function AssetsToolbar({
         </>
       }
       actions={
+        canManage ? (
         <>
           {onExport ? (
             <Button
@@ -97,6 +100,7 @@ export function AssetsToolbar({
             <span className="hidden sm:inline">Add Asset</span>
           </PrimaryButton>
         </>
+        ) : null
       }
     />
   )

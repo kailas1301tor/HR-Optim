@@ -17,6 +17,7 @@ interface EmployeesTableProps {
   onEdit: (employee: Employee) => void
   onDelete: (id: number) => void
   onPageChange: (page: number) => void
+  canManage?: boolean
 }
 
 const TABLE_COLUMNS = [
@@ -37,6 +38,7 @@ export function EmployeesTable({
   onEdit,
   onDelete,
   onPageChange,
+  canManage = false,
 }: EmployeesTableProps) {
   return (
     <div className={cn(uiTableShell, 'hidden lg:block')}>
@@ -85,6 +87,7 @@ export function EmployeesTable({
                   onToggleStatus={onToggleStatus}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  canManage={canManage}
                 />
               ))
             )}

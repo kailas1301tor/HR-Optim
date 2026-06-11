@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { authService } from '@/services/auth-service'
+import { invalidatePermissions } from '@/components/auth/permissions-provider'
 
 export interface BreadcrumbItem {
   label: string
@@ -22,6 +23,7 @@ export function useSidebar(): UseSidebarReturn {
   const router = useRouter()
 
   const handleLogout = useCallback((): void => {
+    invalidatePermissions()
     authService.logout()
   }, [])
 

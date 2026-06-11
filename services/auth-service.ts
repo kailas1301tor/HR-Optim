@@ -4,6 +4,8 @@ import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
 import { clearRefreshToken, getRefreshToken, setRefreshToken } from '@/lib/auth/refresh-token-storage'
 import { clearPendingAuth } from '@/lib/helpers/pending-auth-storage'
 import type {
+  CurrentUserProfile,
+  CurrentUserProfileResponse,
   LoginResponse,
   PersistSessionInput,
   RefreshTokenApiContract,
@@ -89,6 +91,20 @@ export const authService = {
       new_password: newPassword,
       confirm_password: confirmPassword,
     })
+  },
+
+  async getCurrentUserProfile(): Promise<CurrentUserProfile> {
+    const response = await api.get<CurrentUserProfileResponse>('/api/auth/profile/')
+    const data = response.results?.data
+    if (!data) {
+      throw new ApiError('Failed to load user profile', 500, response)
+    }
+    return {
+      id: data.id,
+      username: data.username,
+      email: data.email,
+      permissions: data.permissions ?? [],
+    }
   },
 
   async refreshAccessToken(): Promise<RefreshTokenResult | null> {

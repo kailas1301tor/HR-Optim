@@ -39,9 +39,10 @@ interface DocumentCardProps {
   type: DocumentTab
   index: number
   onDeleteSuccess: () => void
+  canManage?: boolean
 }
 
-export function DocumentCard({ doc, type, index, onDeleteSuccess }: DocumentCardProps) {
+export function DocumentCard({ doc, type, index, onDeleteSuccess, canManage = false }: DocumentCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
@@ -143,6 +144,8 @@ export function DocumentCard({ doc, type, index, onDeleteSuccess }: DocumentCard
                   <Download className="w-4 h-4 mr-2 text-slate-400" />
                   Download
                 </DropdownMenuItem>
+                {canManage && (
+                  <>
                 <DropdownMenuSeparator className="border-border/40" />
                 <DropdownMenuItem
                   onClick={() => setShowDeleteDialog(true)}
@@ -152,6 +155,8 @@ export function DocumentCard({ doc, type, index, onDeleteSuccess }: DocumentCard
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete
                 </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

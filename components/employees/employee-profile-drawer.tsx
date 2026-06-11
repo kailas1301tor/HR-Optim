@@ -28,6 +28,7 @@ interface EmployeeProfileDrawerProps {
   detailVersion?: number
   onClose: () => void
   onEdit: (employee: Employee) => void
+  canManage?: boolean
 }
 
 const tabs = [
@@ -36,7 +37,7 @@ const tabs = [
   { id: 'offboarding', label: 'Offboarding', icon: FileX },
 ] as const
 
-export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClose, onEdit }: EmployeeProfileDrawerProps) {
+export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClose, onEdit, canManage = false }: EmployeeProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState('personal')
   const [detailedEmployee, setDetailedEmployee] = useState<Employee | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
@@ -139,10 +140,12 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
                   </div>
                 </div>
                 <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                  {canManage ? (
                   <Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(displayEmployee)}>
                     <Pencil className="w-4 h-4" />
                     Edit
                   </Button>
+                  ) : null}
                   <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close profile">
                     <X className="w-5 h-5" />
                   </Button>

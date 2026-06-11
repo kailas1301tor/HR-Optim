@@ -25,6 +25,7 @@ interface DocumentsToolbarProps {
   onUploadClick: () => void
   onExportExpiry?: () => void
   isExporting?: boolean
+  canManage?: boolean
 }
 
 export function DocumentsToolbar({
@@ -37,6 +38,7 @@ export function DocumentsToolbar({
   onUploadClick,
   onExportExpiry,
   isExporting = false,
+  canManage = false,
 }: DocumentsToolbarProps) {
   return (
     <CommonListToolbar
@@ -60,6 +62,7 @@ export function DocumentsToolbar({
         </Select>
       }
       actions={
+        canManage ? (
         <>
           {onExportExpiry ? (
             <Button
@@ -79,6 +82,7 @@ export function DocumentsToolbar({
             <span className="hidden sm:inline">Upload Document</span>
           </PrimaryButton>
         </>
+        ) : null
       }
     />
   )
