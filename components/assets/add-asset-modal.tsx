@@ -89,6 +89,12 @@ export function AddAssetModal({
           </div>
         ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          {!editAsset && metadataError && (
+            <CommonErrorBanner
+              message="Form options could not be loaded. Some dropdowns may be empty."
+              onRetry={onReloadMetadata ? () => void onReloadMetadata() : undefined}
+            />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label className="text-xs text-slate-300">Asset Name *</Label>

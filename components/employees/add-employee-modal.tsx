@@ -4,6 +4,7 @@
 import { FormProvider } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CommonErrorBanner } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { cn } from '@/lib/utils'
 import { type DropdownData } from '@/types/employee'
@@ -28,12 +29,15 @@ export function AddEmployeeModal({ open, onOpenChange, onSuccess, editEmployee }
   const {
     addStep,
     isLoading,
+    isFormLoading,
+    hasEditLoadError,
     dropdowns,
     isEditMode,
     methods,
     setAddStep,
     onSubmit,
     handleNextStep,
+    retryEditLoad,
   } = useAddEmployeeModal(open, onOpenChange, onSuccess, editEmployee)
 
   const { handleSubmit } = methods
@@ -53,7 +57,13 @@ export function AddEmployeeModal({ open, onOpenChange, onSuccess, editEmployee }
           <p className="text-xs text-muted-foreground">Step {addStep} of 4</p>
         </DialogHeader>
 
-        {isLoading && !dropdowns ? (
+        {hasEditLoadError ? (
+          <CommonErrorBanner
+            message="Employee details could not be loaded for editing."
+            onRetry={retryEditLoad}
+            className="my-4"
+          />
+        ) : isFormLoading ? (
           <div className="space-y-5 py-6">
             <div className="space-y-2">
               <Skeleton className={cn('h-3 w-1/4 rounded', uiSkeletonBlock)} />

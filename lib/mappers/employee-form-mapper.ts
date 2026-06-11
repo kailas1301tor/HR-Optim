@@ -9,6 +9,21 @@ export function findIdByName(list: DropdownItem[] | undefined, name: string): st
   return match ? String(match.id) : String(list[0].id)
 }
 
+export function resolveDropdownId(
+  list: DropdownItem[] | undefined,
+  value: string | number | null | undefined
+): string {
+  if (!list?.length || value === null || value === undefined || value === '') {
+    return list?.[0] ? String(list[0].id) : ''
+  }
+
+  const normalized = String(value).trim()
+  const byId = list.find((item) => String(item.id) === normalized)
+  if (byId) return String(byId.id)
+
+  return findIdByName(list, normalized)
+}
+
 export function findNameByPreference(list: DropdownItem[] | undefined, preferred: string): string {
   if (!list?.length) return preferred
   const match = list.find((item) => item.name.toLowerCase() === preferred.toLowerCase())
@@ -23,19 +38,19 @@ export function employeeToFormValues(employee: Employee, dropdowns: DropdownData
     full_name: employee.full_name,
     phone_number: employee.phone_number,
     role: employee.role_name
-      ? findIdByName(dropdowns.roles, employee.role_name)
-      : String(employee.role),
-    department: findIdByName(dropdowns.departments, employee.department),
-    designation: findIdByName(dropdowns.designations, employee.designation),
+      ? resolveDropdownId(dropdowns.roles, employee.role_name)
+      : resolveDropdownId(dropdowns.roles, employee.role),
+    department: resolveDropdownId(dropdowns.departments, employee.department),
+    designation: resolveDropdownId(dropdowns.designations, employee.designation),
     employee_id: employee.employee_id,
     status: employee.status,
-    shift: findIdByName(dropdowns.shifts, employee.shift),
+    shift: resolveDropdownId(dropdowns.shifts, employee.shift),
     joined_date: employee.joined_date ? employee.joined_date.split('T')[0] : '',
-    employee_type: findIdByName(dropdowns.employee_types, employee.employee_type),
+    employee_type: resolveDropdownId(dropdowns.employee_types, employee.employee_type),
     basic_salary: employee.basic_salary,
     accommodation: employee.accommodation,
     date_of_birth: employee.date_of_birth ? employee.date_of_birth.split('T')[0] : '',
-    nationality: findIdByName(dropdowns.nationalities, employee.nationality),
+    nationality: resolveDropdownId(dropdowns.nationalities, employee.nationality),
     address: employee.address,
     bank_name: employee.bank_details?.bank_name || '',
     account_number: employee.bank_details?.account_number || '',

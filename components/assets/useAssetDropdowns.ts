@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createModuleCache } from '@/lib/hooks/create-module-cache'
 import { assetService } from '@/services/asset-service'
 import { departmentService } from '@/services/department-service'
 import type { Department } from '@/types/settings'
@@ -12,31 +13,57 @@ interface CachedMetadata {
   departments: Department[]
 }
 
-let cachedMetadata: CachedMetadata | null = null
-let inflightRequest: Promise<CachedMetadata> | null = null
+const EMPTY_DROPDOWNS: AssetDropdowns = {
+  asset_types: [],
+  asset_categories: [],
+  maintenance_shops: [],
+  vendors: [],
+  service_types: [],
+  asset_status: [],
+  disposal_choices: [],
+  asset_document_types: [],
+}
 
-async function fetchMetadataCached(signal?: AbortSignal): Promise<CachedMetadata> {
-  if (cachedMetadata) return cachedMetadata
+interface MetadataResult extends CachedMetadata {
+  hasError: boolean
+}
 
-  if (!inflightRequest) {
-    inflightRequest = Promise.all([
-      assetService.getAssetDropdowns(signal),
-      departmentService.getDepartments(signal),
+const assetMetadataCache = createModuleCache<CachedMetadata>()
+let metadataInflight: Promise<MetadataResult> | null = null
+
+async function fetchMetadata(): Promise<MetadataResult> {
+  const cached = assetMetadataCache.read()
+  if (cached) return { ...cached, hasError: false }
+
+  if (!metadataInflight) {
+    metadataInflight = Promise.allSettled([
+      assetService.getAssetDropdowns(),
+      departmentService.getDepartments(),
     ])
-      .then(([dropdowns, departments]) => {
-        cachedMetadata = { dropdowns, departments }
-        return cachedMetadata
+      .then(([dropdownsResult, departmentsResult]) => {
+        const dropdowns =
+          dropdownsResult.status === 'fulfilled' ? dropdownsResult.value : EMPTY_DROPDOWNS
+        const departments =
+          departmentsResult.status === 'fulfilled' ? departmentsResult.value : []
+        const hasError =
+          dropdownsResult.status === 'rejected' || departmentsResult.status === 'rejected'
+
+        if (!hasError) {
+          assetMetadataCache.write({ dropdowns, departments })
+        }
+
+        return { dropdowns, departments, hasError }
       })
       .finally(() => {
-        inflightRequest = null
+        metadataInflight = null
       })
   }
 
-  return inflightRequest
+  return metadataInflight
 }
 
 export function invalidateAssetDropdowns(): void {
-  cachedMetadata = null
+  assetMetadataCache.invalidate()
 }
 
 export interface UseAssetDropdownsReturn {
@@ -48,35 +75,67 @@ export interface UseAssetDropdownsReturn {
 }
 
 export function useAssetDropdowns(): UseAssetDropdownsReturn {
-  const [dropdowns, setDropdowns] = useState<AssetDropdowns | null>(cachedMetadata?.dropdowns ?? null)
-  const [departments, setDepartments] = useState<Department[]>(cachedMetadata?.departments ?? [])
-  const [isLoading, setIsLoading] = useState(!cachedMetadata)
+  const cached = assetMetadataCache.read()
+  const [dropdowns, setDropdowns] = useState<AssetDropdowns | null>(cached?.dropdowns ?? null)
+  const [departments, setDepartments] = useState<Department[]>(cached?.departments ?? [])
+  const [isLoading, setIsLoading] = useState(!cached)
   const [hasError, setHasError] = useState(false)
 
-  const reload = useCallback(async (signal?: AbortSignal) => {
+  const reload = useCallback(async () => {
     invalidateAssetDropdowns()
     setIsLoading(true)
     setHasError(false)
     try {
-      const data = await fetchMetadataCached(signal)
-      if (signal?.aborted) return
+      const data = await fetchMetadata()
       setDropdowns(data.dropdowns)
       setDepartments(data.departments)
+      setHasError(data.hasError)
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return
       setHasError(true)
       setDropdowns(null)
       setDepartments([])
     } finally {
-      if (!signal?.aborted) setIsLoading(false)
+      setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    const controller = new AbortController()
-    reload(controller.signal)
-    return () => controller.abort()
-  }, [reload])
+    let active = true
+    const hit = assetMetadataCache.read()
 
-  return { dropdowns, departments, isLoading, hasError, reload: () => reload() }
+    if (hit) {
+      setDropdowns(hit.dropdowns)
+      setDepartments(hit.departments)
+      setIsLoading(false)
+      return () => {
+        active = false
+      }
+    }
+
+    setIsLoading(true)
+    setHasError(false)
+    fetchMetadata()
+      .then((data) => {
+        if (!active) return
+        setDropdowns(data.dropdowns)
+        setDepartments(data.departments)
+        setHasError(data.hasError)
+      })
+      .catch(() => {
+        if (!active) return
+        setHasError(true)
+        setDropdowns(null)
+        setDepartments([])
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  return { dropdowns, departments, isLoading, hasError, reload }
 }

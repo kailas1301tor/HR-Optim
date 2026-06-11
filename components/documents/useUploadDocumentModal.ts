@@ -23,32 +23,23 @@ import {
   invalidateDocumentCategories,
   useDocumentCategories,
 } from './useDocumentCategories'
+import { createModuleCache } from '@/lib/hooks/create-module-cache'
 
 const EMPLOYEE_SEARCH_DEBOUNCE_MS = 300
 
-let cachedBranches: { id: number; name: string }[] | null = null
-let branchesInflight: Promise<{ id: number; name: string }[]> | null = null
+type BranchOption = { id: number; name: string }
+
+const uploadBranchesCache = createModuleCache<BranchOption[]>()
 
 export function invalidateUploadBranchesCache(): void {
-  cachedBranches = null
+  uploadBranchesCache.invalidate()
 }
 
-async function fetchBranchesCached(signal?: AbortSignal): Promise<{ id: number; name: string }[]> {
-  if (cachedBranches) return cachedBranches
-
-  if (!branchesInflight) {
-    branchesInflight = branchService
-      .getBranches(signal)
-      .then((data) => {
-        cachedBranches = data.map((b) => ({ id: b.id, name: b.name }))
-        return cachedBranches
-      })
-      .finally(() => {
-        branchesInflight = null
-      })
-  }
-
-  return branchesInflight
+async function fetchBranchesCached(): Promise<BranchOption[]> {
+  return uploadBranchesCache.fetch(async () => {
+    const data = await branchService.getBranches()
+    return data.map((b) => ({ id: b.id, name: b.name }))
+  })
 }
 
 export interface UseUploadDocumentModalReturn {
@@ -78,7 +69,7 @@ export function useUploadDocumentModal(
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [metadataError, setMetadataError] = useState(false)
-  const [branches, setBranches] = useState<{ id: number; name: string }[]>(cachedBranches ?? [])
+  const [branches, setBranches] = useState<BranchOption[]>(uploadBranchesCache.read() ?? [])
   const [branchesLoading, setBranchesLoading] = useState(false)
   const [employees, setEmployees] = useState<Employee[]>([])
   const [employeeSearch, setEmployeeSearch] = useState('')
@@ -101,38 +92,50 @@ export function useUploadDocumentModal(
   }, [reloadCategories, tab])
 
   useEffect(() => {
-    if (open) {
-      setMetadataError(false)
+    if (!open) {
+      setEmployeeSearch('')
+      setEmployees([])
       return
     }
 
-    setEmployeeSearch('')
-    setEmployees([])
+    setMetadataError(false)
   }, [open])
 
   useEffect(() => {
-    if (!open) return
+    if (!open || tab !== 'company') return
 
-    const controller = new AbortController()
+    // Do not abort the shared branches cache fetch on unmount.
+    let active = true
 
-    async function loadCompanyMetadata(): Promise<void> {
-      if (tab !== 'company') return
-      setBranchesLoading(true)
-      setMetadataError(false)
-      try {
-        const data = await fetchBranchesCached(controller.signal)
-        if (!controller.signal.aborted) setBranches(data)
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') return
-        setMetadataError(true)
-        toast.error('Failed to load form lookup data')
-      } finally {
-        if (!controller.signal.aborted) setBranchesLoading(false)
+    const cached = uploadBranchesCache.read()
+
+    if (cached) {
+      setBranches(cached)
+      setBranchesLoading(false)
+      return () => {
+        active = false
       }
     }
 
-    loadCompanyMetadata()
-    return () => controller.abort()
+    setBranchesLoading(true)
+    setMetadataError(false)
+    fetchBranchesCached()
+      .then((data) => {
+        if (active) setBranches(data)
+      })
+      .catch((err: unknown) => {
+        if (!active) return
+        if (err instanceof Error && err.name === 'AbortError') return
+        setMetadataError(true)
+        toast.error('Failed to load form lookup data')
+      })
+      .finally(() => {
+        if (active) setBranchesLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
   }, [open, tab, reloadToken])
 
   useEffect(() => {

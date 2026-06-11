@@ -2,32 +2,18 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { createModuleCache } from '@/lib/hooks/create-module-cache'
 import { employeeService } from '@/services/employee-service'
 import type { DropdownData } from '@/types/employee'
 
-let cachedDropdowns: DropdownData | null = null
-let inflightRequest: Promise<DropdownData> | null = null
+const employeeDropdownsCache = createModuleCache<DropdownData>()
 
-async function fetchDropdownsCached(signal?: AbortSignal): Promise<DropdownData> {
-  if (cachedDropdowns) return cachedDropdowns
-
-  if (!inflightRequest) {
-    inflightRequest = employeeService
-      .getDropdowns(signal)
-      .then((data) => {
-        cachedDropdowns = data
-        return data
-      })
-      .finally(() => {
-        inflightRequest = null
-      })
-  }
-
-  return inflightRequest
+async function fetchDropdownsCached(): Promise<DropdownData> {
+  return employeeDropdownsCache.fetch(() => employeeService.getDropdowns())
 }
 
 export function invalidateEmployeeDropdowns(): void {
-  cachedDropdowns = null
+  employeeDropdownsCache.invalidate()
 }
 
 export interface UseEmployeeDropdownsReturn {
@@ -38,32 +24,58 @@ export interface UseEmployeeDropdownsReturn {
 }
 
 export function useEmployeeDropdowns(): UseEmployeeDropdownsReturn {
-  const [dropdowns, setDropdowns] = useState<DropdownData | null>(cachedDropdowns)
-  const [isLoading, setIsLoading] = useState(!cachedDropdowns)
+  const [dropdowns, setDropdowns] = useState<DropdownData | null>(employeeDropdownsCache.read())
+  const [isLoading, setIsLoading] = useState(!employeeDropdownsCache.read())
   const [hasError, setHasError] = useState(false)
 
-  const reload = useCallback(async (signal?: AbortSignal) => {
+  const reload = useCallback(async () => {
     invalidateEmployeeDropdowns()
     setIsLoading(true)
     setHasError(false)
     try {
-      const data = await fetchDropdownsCached(signal)
-      if (signal?.aborted) return
+      const data = await fetchDropdownsCached()
       setDropdowns(data)
     } catch (error: unknown) {
       if (error instanceof Error && error.name === 'AbortError') return
       setHasError(true)
       setDropdowns(null)
     } finally {
-      if (!signal?.aborted) setIsLoading(false)
+      setIsLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    const controller = new AbortController()
-    reload(controller.signal)
-    return () => controller.abort()
-  }, [reload])
+    let active = true
+    const cached = employeeDropdownsCache.read()
 
-  return { dropdowns, isLoading, hasError, reload: () => reload() }
+    if (cached) {
+      setDropdowns(cached)
+      setIsLoading(false)
+      return () => {
+        active = false
+      }
+    }
+
+    setIsLoading(true)
+    setHasError(false)
+    fetchDropdownsCached()
+      .then((data) => {
+        if (active) setDropdowns(data)
+      })
+      .catch(() => {
+        if (active) {
+          setHasError(true)
+          setDropdowns(null)
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  return { dropdowns, isLoading, hasError, reload }
 }

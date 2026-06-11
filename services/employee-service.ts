@@ -1,9 +1,13 @@
 // services/employee-service.ts
 import { api } from '@/lib/api'
 import { cleanParams } from '@/lib/types'
+import { departmentService } from '@/services/department-service'
+import { designationService } from '@/services/designation-service'
+import { shiftService } from '@/services/shift-service'
 import type {
   CreateEmployeePayload,
   DropdownData,
+  DropdownItem,
   DropdownResponse,
   Employee,
   EmployeeListParams,
@@ -18,13 +22,83 @@ export type {
   EmployeeListParams,
 } from '@/types/employee'
 
+function normalizeDropdownData(data: Partial<DropdownData> | null | undefined): DropdownData {
+  return {
+    roles: data?.roles ?? [],
+    departments: data?.departments ?? [],
+    designations: data?.designations ?? [],
+    shifts: data?.shifts ?? [],
+    employee_types: data?.employee_types ?? [],
+    nationalities: data?.nationalities ?? [],
+    status_choices: data?.status_choices ?? [],
+    accommodation_choices: data?.accommodation_choices ?? [],
+  };
+}
+
+/**
+ * Some backends return the combined dropdown payload with `departments`,
+ * `designations`, or `shifts` empty. Backfill those from their dedicated
+ * master endpoints so the employee form selects always have options.
+ */
+async function backfillEmptyMasters(
+  data: DropdownData,
+  signal?: AbortSignal,
+): Promise<DropdownData> {
+  const needsDepartments = data.departments.length === 0;
+  const needsShifts = data.shifts.length === 0;
+  const needsDesignations = data.designations.length === 0;
+
+  if (!needsDepartments && !needsShifts && !needsDesignations) {
+    return data;
+  }
+
+  const [departments, shifts] = await Promise.all([
+    needsDepartments
+      ? departmentService.getDepartments(signal).catch(() => [])
+      : Promise.resolve(data.departments),
+    needsShifts
+      ? shiftService
+          .getShifts(signal)
+          .then((items) => items.map<DropdownItem>(({ id, name }) => ({ id, name })))
+          .catch(() => [])
+      : Promise.resolve(data.shifts),
+  ]);
+
+  const resolvedDepartments = (departments as DropdownItem[]).map<DropdownItem>(
+    ({ id, name }) => ({ id, name }),
+  );
+
+  let designations = data.designations;
+  if (needsDesignations && resolvedDepartments.length > 0) {
+    const perDepartment = await Promise.all(
+      resolvedDepartments.map((dept) =>
+        designationService
+          .getDesignations(dept.id)
+          .then((items) =>
+            items.map((item) => ({ id: item.id, name: item.name, department_id: item.department })),
+          )
+          .catch(() => []),
+      ),
+    );
+    designations = perDepartment.flat();
+  }
+
+  return {
+    ...data,
+    departments: resolvedDepartments,
+    shifts: shifts as DropdownItem[],
+    designations,
+  };
+}
+
 export const employeeService = {
   /**
    * Fetches dropdown metadata from the backend.
    */
   async getDropdowns(signal?: AbortSignal): Promise<DropdownData> {
     const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal });
-    return response.results.data;
+    const normalized = normalizeDropdownData(response.results?.data);
+    return backfillEmptyMasters(normalized, signal);
   },
 
   /**

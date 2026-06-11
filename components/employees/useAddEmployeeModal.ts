@@ -1,7 +1,7 @@
 // components/employees/useAddEmployeeModal.ts
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, type UseFormReturn, type Path } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { bankDetailsService } from '@/services/bank-details-service'
@@ -44,12 +44,15 @@ const EMPTY_DEFAULTS: EmployeeInput = {
 export interface UseAddEmployeeModalReturn {
   addStep: number
   isLoading: boolean
+  isFormLoading: boolean
+  hasEditLoadError: boolean
   dropdowns: ReturnType<typeof useEmployeeDropdowns>['dropdowns']
   isEditMode: boolean
   methods: UseFormReturn<EmployeeInput>
   setAddStep: (step: number) => void
   onSubmit: (data: EmployeeInput) => Promise<void>
   handleNextStep: (e: React.MouseEvent) => Promise<void>
+  retryEditLoad: () => void
 }
 
 export function useAddEmployeeModal(
@@ -60,6 +63,11 @@ export function useAddEmployeeModal(
 ): UseAddEmployeeModalReturn {
   const [addStep, setAddStep] = useState(1)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loadedEditEmployee, setLoadedEditEmployee] = useState<Employee | null>(null)
+  const [isLoadingEditEmployee, setIsLoadingEditEmployee] = useState(false)
+  const [hasEditLoadError, setHasEditLoadError] = useState(false)
+  const [editReloadToken, setEditReloadToken] = useState(0)
+  const editFetchIdRef = useRef(0)
   const { dropdowns, isLoading: dropdownsLoading } = useEmployeeDropdowns()
   const isEditMode = !!editEmployee
 
@@ -71,23 +79,86 @@ export function useAddEmployeeModal(
   const { reset } = methods
 
   useEffect(() => {
-    if (!open || !dropdowns) return
-    setAddStep(1)
-    if (editEmployee) {
-      reset(employeeToFormValues(editEmployee, dropdowns))
-    } else {
-      reset(defaultFormValues(dropdowns))
+    if (!open || !editEmployee?.id) {
+      setLoadedEditEmployee(null)
+      setHasEditLoadError(false)
+      setIsLoadingEditEmployee(false)
+      return
     }
-  }, [open, dropdowns, editEmployee, reset])
+
+    const fetchId = ++editFetchIdRef.current
+    const controller = new AbortController()
+
+    const loadEmployeeForEdit = async (): Promise<void> => {
+      setIsLoadingEditEmployee(true)
+      setHasEditLoadError(false)
+      setLoadedEditEmployee(null)
+
+      try {
+        const employee = await employeeService.getEmployee(editEmployee.id, controller.signal)
+        if (controller.signal.aborted || fetchId !== editFetchIdRef.current) return
+
+        let employeeWithBank = employee
+        if (!employee.bank_details?.bank_name && !employee.bank_details?.account_number) {
+          const bankRecords = await bankDetailsService.list(controller.signal)
+          if (controller.signal.aborted || fetchId !== editFetchIdRef.current) return
+          const bankRecord = bankRecords.find((record) => record.employee === employee.id)
+          if (bankRecord) {
+            employeeWithBank = {
+              ...employee,
+              bank_details: {
+                bank_name: bankRecord.bank_name,
+                account_number: bankRecord.account_number,
+                ifsc: bankRecord.ifsc,
+                branch: bankRecord.branch,
+              },
+            }
+          }
+        }
+
+        setLoadedEditEmployee(employeeWithBank)
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        if (fetchId !== editFetchIdRef.current) return
+        setHasEditLoadError(true)
+        setLoadedEditEmployee(null)
+      } finally {
+        if (fetchId === editFetchIdRef.current) {
+          setIsLoadingEditEmployee(false)
+        }
+      }
+    }
+
+    void loadEmployeeForEdit()
+
+    return () => {
+      controller.abort()
+    }
+  }, [open, editEmployee?.id, editReloadToken])
+
+  useEffect(() => {
+    if (!open || !dropdowns) return
+
+    setAddStep(1)
+
+    if (editEmployee) {
+      if (!loadedEditEmployee || loadedEditEmployee.id !== editEmployee.id) return
+      reset(employeeToFormValues(loadedEditEmployee, dropdowns))
+      return
+    }
+
+    reset(defaultFormValues(dropdowns))
+  }, [open, dropdowns, editEmployee, loadedEditEmployee, reset])
 
   const onSubmit = async (data: EmployeeInput) => {
     setIsSubmitting(true)
     try {
       const payload = formValuesToPayload(data)
+      const editSource = loadedEditEmployee ?? editEmployee
 
       let savedEmployee: Employee
-      if (isEditMode && editEmployee) {
-        savedEmployee = await employeeService.updateEmployee({ ...payload, id: Number(editEmployee.id) })
+      if (isEditMode && editSource) {
+        savedEmployee = await employeeService.updateEmployee({ ...payload, id: Number(editSource.id) })
         toast.success('Employee updated successfully')
       } else {
         savedEmployee = await employeeService.createEmployee(payload)
@@ -136,14 +207,24 @@ export function useAddEmployeeModal(
     setAddStep(addStep + 1)
   }
 
+  const retryEditLoad = (): void => {
+    setEditReloadToken((token) => token + 1)
+  }
+
+  const isFormLoading =
+    dropdownsLoading || (isEditMode && (isLoadingEditEmployee || !loadedEditEmployee))
+
   return {
     addStep,
-    isLoading: dropdownsLoading || isSubmitting,
+    isLoading: isFormLoading || isSubmitting,
+    isFormLoading,
+    hasEditLoadError,
     dropdowns,
     isEditMode,
     methods,
     setAddStep,
     onSubmit,
     handleNextStep,
+    retryEditLoad,
   }
 }

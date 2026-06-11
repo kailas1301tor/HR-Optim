@@ -215,7 +215,10 @@ export function EmployeesList() {
 
       <AddEmployeeModal
         open={isAddModalOpen}
-        onOpenChange={setIsAddModalOpen}
+        onOpenChange={(open) => {
+          setIsAddModalOpen(open)
+          if (!open) setEditTarget(null)
+        }}
         onSuccess={handleEmployeeSaved}
         editEmployee={editTarget}
       />

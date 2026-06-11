@@ -10,6 +10,8 @@ import {
   type EmployeeDocument,
 } from '@/types/document'
 import type { ApiSimpleListResponse, ApiSingleResponse } from '@/lib/types'
+import { employeeDocumentTypeService } from '@/services/employee-document-type-service'
+import { companyDocumentTypeService } from '@/services/company-document-type-service'
 
 export type { CompanyDocument, DocumentStatusCounts, EmployeeDocument } from '@/types/document'
 
@@ -40,6 +42,16 @@ interface DocumentCountsResponse {
 export interface DocumentExportResult {
   blob: Blob
   filename: string
+}
+
+function filterActiveMasterTypes<T extends { deleted?: boolean; is_active?: boolean }>(
+  items: T[]
+): T[] {
+  return items.filter((item) => item.deleted !== true && item.is_active !== false)
+}
+
+function toDropdownItems(items: Array<{ id: number; name: string }>): DropdownItem[] {
+  return items.map(({ id, name }) => ({ id, name }))
 }
 
 export const employeeDocumentService = {
@@ -81,11 +93,10 @@ export const employeeDocumentService = {
   },
 
   async getDropdowns(signal?: AbortSignal): Promise<EmployeeDocumentDropdowns> {
-    const response = await api.get<{ results: { data: EmployeeDocumentDropdowns } }>(
-      '/api/employee/dropdowns/',
-      { signal }
-    )
-    return response.results?.data ?? { employee_document_types: [] }
+    const types = await employeeDocumentTypeService.getEmployeeDocTypes(signal)
+    return {
+      employee_document_types: toDropdownItems(filterActiveMasterTypes(types)),
+    }
   },
 
   async exportExpiry(days = 30, signal?: AbortSignal): Promise<DocumentExportResult> {
@@ -146,7 +157,17 @@ export const companyDocumentService = {
       '/api/company/document-dropdowns/',
       { signal }
     )
-    return response.results?.data ?? { company_document_types: [], branches: [] }
+    const data = response.results?.data ?? { company_document_types: [], branches: [] }
+
+    if (data.company_document_types.length > 0) {
+      return data
+    }
+
+    const types = await companyDocumentTypeService.getCompanyDocTypes(signal)
+    return {
+      ...data,
+      company_document_types: toDropdownItems(filterActiveMasterTypes(types)),
+    }
   },
 
   async exportExpiry(days = 30, signal?: AbortSignal): Promise<DocumentExportResult> {

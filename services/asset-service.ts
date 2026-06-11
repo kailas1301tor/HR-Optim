@@ -90,7 +90,22 @@ function mapMaintenanceHistory(items: MaintenanceHistoryRaw[]): AssetHistoryEntr
 export const assetService = {
   async getAssetDropdowns(signal?: AbortSignal): Promise<AssetDropdowns> {
     const response = await api.get<AssetDropdownsResponse>('/api/asset/asset-dropdowns/', { signal })
-    return response.results?.data ?? EMPTY_DROPDOWNS
+    const data = (response.results?.data ??
+      (response as unknown as { data?: AssetDropdowns }).data ??
+      null) as Partial<AssetDropdowns> | null
+
+    if (!data) return EMPTY_DROPDOWNS
+
+    return {
+      asset_types: data.asset_types ?? [],
+      asset_categories: data.asset_categories ?? [],
+      maintenance_shops: data.maintenance_shops ?? [],
+      vendors: data.vendors ?? [],
+      service_types: data.service_types ?? [],
+      asset_status: data.asset_status ?? [],
+      disposal_choices: data.disposal_choices ?? [],
+      asset_document_types: data.asset_document_types ?? [],
+    }
   },
 
   async getAssets(params: AssetListParams, signal?: AbortSignal): Promise<{
