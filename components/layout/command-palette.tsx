@@ -45,6 +45,10 @@ const pages: Array<{
   { name: 'Settings', icon: Settings, href: '/settings', keywords: ['config', 'preferences'], moduleKey: 'settings' },
 ]
 
+const accountPages = [
+  { name: 'My Profile', icon: User, href: '/profile', keywords: ['account', 'me', 'user', 'profile'] },
+]
+
 const employees = [
   { name: 'Ahmed Al Maktoum', id: 'EMP-001', department: 'Engineering' },
   { name: 'Sarah Johnson', id: 'EMP-002', department: 'HR' },
@@ -146,6 +150,30 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   ))}
                 </Command.Group>
                 ) : null}
+
+                {/* Account */}
+                <Command.Group heading="Account" className="mb-2">
+                  <div className="px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-slate-500">
+                    Account
+                  </div>
+                  {accountPages.map((page) => (
+                    <Command.Item
+                      key={page.href}
+                      value={`${page.name} ${page.keywords.join(' ')}`}
+                      onSelect={() => handleSelect(page.href)}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 cursor-pointer text-slate-300 data-[selected=true]:bg-violet-core/20 data-[selected=true]:text-cloud',
+                        uiSquircleNav
+                      )}
+                    >
+                      <div className={cn('w-8 h-8 bg-midnight flex items-center justify-center', uiSquircleNav)}>
+                        <page.icon className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <span className="flex-1 text-sm">{page.name}</span>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                    </Command.Item>
+                  ))}
+                </Command.Group>
 
                 {/* Pages */}
                 <Command.Group heading="Pages" className="mb-2">

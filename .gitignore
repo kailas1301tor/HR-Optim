@@ -38,7 +38,6 @@ pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # v0 sandbox internal files
 __v0_runtime_loader.js

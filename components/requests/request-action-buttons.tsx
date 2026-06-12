@@ -24,7 +24,7 @@ export function RequestActionButtons({
     <div
       className={cn(
         'grid grid-cols-2 gap-1.5',
-        compact ? 'w-[140px] shrink-0' : 'w-full',
+        compact ? 'w-full sm:w-[140px] sm:shrink-0' : 'w-full',
         className,
       )}
     >

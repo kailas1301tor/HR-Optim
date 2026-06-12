@@ -49,11 +49,11 @@ export function PendingApprovals() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6"
+        className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-4 sm:p-6 min-w-0 overflow-hidden"
       >
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
           <h3 className="text-lg font-semibold text-cloud">Pending Approvals</h3>
-          <span className="px-2 py-1 rounded-full bg-violet-core/20 text-violet-glow text-xs font-medium">
+          <span className="px-2 py-1 rounded-full bg-violet-core/20 text-violet-glow text-xs font-medium shrink-0">
             {pendingCount} pending
           </span>
         </div>
@@ -88,28 +88,34 @@ export function PendingApprovals() {
                 <div
                   key={request.id}
                   className={cn(
-                    'flex items-center gap-3 rounded-[20px] [corner-shape:squircle] border border-border/50',
-                    'bg-midnight/20 p-3',
+                    'flex flex-col gap-3 rounded-[20px] [corner-shape:squircle] border border-border/50',
+                    'bg-midnight/20 p-3 sm:flex-row sm:items-center',
                   )}
                 >
-                  <span
-                    className={cn(
-                      'flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] [corner-shape:squircle] ring-1 ring-inset',
-                      type.iconSurface,
-                    )}
-                  >
-                    <TypeIcon className="h-4 w-4" aria-hidden />
-                  </span>
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <span
+                      className={cn(
+                        'flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] [corner-shape:squircle] ring-1 ring-inset',
+                        type.iconSurface,
+                      )}
+                    >
+                      <TypeIcon className="h-4 w-4" aria-hidden />
+                    </span>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-cloud">{request.title}</p>
-                    <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                      <Avatar className="h-4 w-4">
-                        <AvatarFallback className="text-[8px]">{request.requester.initials}</AvatarFallback>
-                      </Avatar>
-                      <span className="truncate">{request.requester.name}</span>
-                      <span aria-hidden>·</span>
-                      <span className="shrink-0">{request.submittedAt}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-cloud line-clamp-2 sm:truncate">
+                        {request.title}
+                      </p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                        <Avatar className="h-4 w-4 shrink-0">
+                          <AvatarFallback className="text-[8px]">{request.requester.initials}</AvatarFallback>
+                        </Avatar>
+                        <span className="min-w-0 break-words">{request.requester.name}</span>
+                        <span className="hidden sm:inline" aria-hidden>
+                          ·
+                        </span>
+                        <span className="w-full sm:w-auto sm:shrink-0">{request.submittedAt}</span>
+                      </div>
                     </div>
                   </div>
 

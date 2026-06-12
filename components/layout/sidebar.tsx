@@ -38,7 +38,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen, userProfile }: SidebarProps) {
-  const { handleLogout, pathname } = useSidebar()
+  const {
+    handleLogout,
+    handleGoToProfile,
+    handleGoToSettings,
+    handleGoToNotifications,
+    pathname,
+  } = useSidebar()
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -127,15 +133,15 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen, us
           <DropdownMenuContent align="start" className="w-56 bg-popover border border-border">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator className="border-border/40" />
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToProfile}>
               <User className="w-4 h-4 mr-2 text-slate-400" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToNotifications}>
               <Bell className="w-4 h-4 mr-2 text-slate-400" />
               Notifications
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToSettings}>
               <Settings className="w-4 h-4 mr-2 text-slate-400" />
               Settings
             </DropdownMenuItem>

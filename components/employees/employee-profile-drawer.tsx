@@ -117,12 +117,12 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 h-screen w-full max-w-[600px] bg-carbon border-l border-border z-50 flex flex-col"
+            className="fixed right-0 top-0 h-screen w-full max-w-[600px] bg-carbon border-l border-border z-50 flex flex-col min-w-0 overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-border">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4 min-w-0">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
                   <Avatar className="w-14 h-14 sm:w-16 sm:h-16 shrink-0">
                     <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-lg">
                       {initials}
@@ -139,20 +139,31 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   {canManage ? (
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(displayEmployee)}>
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 gap-2 px-3"
+                      onClick={() => onEdit(displayEmployee)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                      Edit
+                    </Button>
                   ) : null}
-                  <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close profile">
-                    <X className="w-5 h-5" />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={onClose}
+                    aria-label="Close profile"
+                  >
+                    <X className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
 
-              <div className="flex gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex flex-wrap gap-1.5 min-w-0">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -160,11 +171,11 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
                       uiTabChipBase,
-                      'flex items-center gap-2 whitespace-nowrap',
+                      'flex items-center gap-1.5 sm:gap-2 whitespace-nowrap',
                       activeTab === tab.id ? uiTabChipActive : uiTabChipInactive
                     )}
                   >
-                    <tab.icon className="w-4 h-4" />
+                    <tab.icon className="w-4 h-4 shrink-0" />
                     {tab.label}
                   </button>
                 ))}
@@ -172,7 +183,7 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 min-w-0">
               {activeTab === 'personal' && (
                 isLoadingDetail ? (
                   <PersonalTabSkeleton />
@@ -186,12 +197,12 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
                   <PersonalTab employee={displayEmployee} />
                 )
               )}
-              {activeTab === 'onboarding' && (
-                <OnboardingChecklistTab employeeId={displayEmployee.id} />
-              )}
-              {activeTab === 'offboarding' && (
-                <OffboardingChecklistTab employeeId={displayEmployee.id} />
-              )}
+              {activeTab === 'onboarding' ? (
+                <OnboardingChecklistTab key={`onboarding-${displayEmployee.id}`} employeeId={displayEmployee.id} />
+              ) : null}
+              {activeTab === 'offboarding' ? (
+                <OffboardingChecklistTab key={`offboarding-${displayEmployee.id}`} employeeId={displayEmployee.id} />
+              ) : null}
             </div>
           </motion.div>
         </>

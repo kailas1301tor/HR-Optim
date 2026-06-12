@@ -3,14 +3,13 @@
 
 import { useCallback, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   CommonEmptyState,
   CommonErrorState,
+  CommonMobileCardGrid,
   CommonPagination,
 } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import { uiTableShell } from '@/lib/ui/design-system'
 import {
   DollarSign,
   TrendingUp,
@@ -20,7 +19,9 @@ import {
   FileSpreadsheet,
 } from 'lucide-react'
 import { PayrollTrendsChart } from './payroll-trends-chart'
-import { PayrollTableRow } from './payroll-table-row'
+import { PayrollCard } from './payroll-card'
+import { PayrollCardSkeleton } from './payroll-card-skeleton'
+import { PayrollTable } from './payroll-table'
 import { PayrollToolbar } from './payroll-toolbar'
 import { usePayrollFilters } from './usePayrollFilters'
 import { usePayrollList } from './usePayrollList'
@@ -31,16 +32,6 @@ import { GeneratePayrollDialog } from './generate-payroll-dialog'
 import { PayrollAdjustmentDialog } from './payroll-adjustment-dialog'
 import type { PayrollRecord } from '@/types/payroll'
 import { usePermissions } from '@/components/auth/permissions-provider'
-
-function PayrollTableSkeleton() {
-  return (
-    <div className="space-y-3 p-4">
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index} className="h-12 rounded-[16px] [corner-shape:squircle] bg-midnight/60 animate-pulse" />
-      ))}
-    </div>
-  )
-}
 
 function formatPeriodRange(startDate: string, endDate: string): string {
   const format = (value: string) => {
@@ -296,9 +287,28 @@ export function PayrollDashboard() {
           onRetry={reload}
         />
       ) : isLoading ? (
-        <div className={uiTableShell}>
-          <PayrollTableSkeleton />
-        </div>
+        <>
+          <CommonMobileCardGrid>
+            {Array.from({ length: 4 }).map((_, index) => (
+              <PayrollCardSkeleton key={index} />
+            ))}
+          </CommonMobileCardGrid>
+          <PayrollTable
+            records={[]}
+            isLoading
+            selectedIds={selectedIds}
+            isAllSelected={isAllSelected}
+            hasSelectableRows={hasSelectableRows}
+            onToggleSelect={toggleSelected}
+            onToggleSelectAll={toggleSelectAll}
+            onAddAdjustment={setAdjustmentTarget}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            onPageChange={setPage}
+            canManage={canManagePayroll}
+          />
+        </>
       ) : filteredRecords.length === 0 ? (
         <CommonEmptyState
           icon={FileSpreadsheet}
@@ -313,67 +323,49 @@ export function PayrollDashboard() {
           }
         />
       ) : (
-        <div className={`${uiTableShell} overflow-hidden`}>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[960px]">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 w-12">
-                    {hasSelectableRows && canManagePayroll ? (
-                      <Checkbox
-                        checked={isAllSelected}
-                        onCheckedChange={toggleSelectAll}
-                        aria-label="Select all processing payroll rows"
-                      />
-                    ) : null}
-                  </th>
-                  <th className="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                    Employee
-                  </th>
-                  <th className="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                    Base Salary
-                  </th>
-                  <th className="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                    Allowances
-                  </th>
-                  <th className="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                    Overtime
-                  </th>
-                  <th className="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                    Deductions
-                  </th>
-                  <th className="text-right px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                    Net Salary
-                  </th>
-                  <th className="text-center px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                    Status
-                  </th>
-                  <th className="w-12" />
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedRecords.map((record, index) => (
-                  <PayrollTableRow
-                    key={record.id}
-                    record={record}
-                    index={index}
-                    isSelected={selectedIds.has(record.id)}
-                    onToggleSelect={toggleSelected}
-                    onAddAdjustment={setAdjustmentTarget}
-                    canManage={canManagePayroll}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <CommonPagination
+        <>
+          <CommonMobileCardGrid>
+            {paginatedRecords.map((record, index) => (
+              <PayrollCard
+                key={record.id}
+                record={record}
+                index={index}
+                isSelected={selectedIds.has(record.id)}
+                onToggleSelect={toggleSelected}
+                onAddAdjustment={setAdjustmentTarget}
+                canManage={canManagePayroll}
+              />
+            ))}
+          </CommonMobileCardGrid>
+
+          {totalPages > 1 && (
+            <CommonPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              onPageChange={setPage}
+              isLoading={isLoading}
+              compact
+              className="lg:hidden"
+            />
+          )}
+
+          <PayrollTable
+            records={paginatedRecords}
+            isLoading={isLoading}
+            selectedIds={selectedIds}
+            isAllSelected={isAllSelected}
+            hasSelectableRows={hasSelectableRows}
+            onToggleSelect={toggleSelected}
+            onToggleSelectAll={toggleSelectAll}
+            onAddAdjustment={setAdjustmentTarget}
             currentPage={currentPage}
             totalPages={totalPages}
             totalCount={totalCount}
             onPageChange={setPage}
-            isLoading={isLoading}
+            canManage={canManagePayroll}
           />
-        </div>
+        </>
       )}
 
       <GeneratePayrollDialog

@@ -20,7 +20,6 @@ import type {
   EmployeeDocumentUploadInput,
 } from '@/validations/document.schema'
 import {
-  fetchDocumentDropdownsCached,
   invalidateDocumentCategories,
   useDocumentCategories,
 } from './useDocumentCategories'
@@ -29,16 +28,6 @@ import { createModuleCache } from '@/lib/hooks/create-module-cache'
 const EMPLOYEE_SEARCH_DEBOUNCE_MS = 300
 
 type BranchOption = { id: number; name: string }
-
-function dropdownEmployeesToEmployees(
-  items: { id: number; name: string }[]
-): Employee[] {
-  return items.map(({ id, name }) => ({
-    id,
-    full_name: name,
-    employee_id: String(id),
-  })) as Employee[]
-}
 
 const uploadBranchesCache = createModuleCache<BranchOption[]>()
 
@@ -152,56 +141,34 @@ export function useUploadDocumentModal(
   useEffect(() => {
     if (!open || tab !== 'employee') return
 
-    let active = true
+    const controller = new AbortController()
 
-    async function loadEmployeeDropdowns(): Promise<void> {
+    async function loadEmployees(): Promise<void> {
       setEmployeesLoading(true)
       setMetadataError(false)
       try {
-        const dropdowns = await fetchDocumentDropdownsCached()
-        if (!active) return
-        setEmployees(dropdownEmployeesToEmployees(dropdowns.employees))
-      } catch (err: unknown) {
-        if (!active) return
-        if (err instanceof Error && err.name === 'AbortError') return
-        setMetadataError(true)
-        setEmployees([])
-      } finally {
-        if (active) setEmployeesLoading(false)
-      }
-    }
-
-    void loadEmployeeDropdowns()
-
-    return () => {
-      active = false
-    }
-  }, [open, tab, reloadToken])
-
-  useEffect(() => {
-    if (!open || tab !== 'employee' || !employeeSearch.trim()) return
-
-    const controller = new AbortController()
-
-    async function searchEmployees(): Promise<void> {
-      setEmployeesLoading(true)
-      try {
         const response = await employeeService.getEmployees(
-          { search: employeeSearch, page_size: 50 },
-          controller.signal
+          { search: employeeSearch.trim() || undefined, page_size: 50 },
+          controller.signal,
         )
         if (!controller.signal.aborted) setEmployees(response.data)
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return
-        setMetadataError(true)
+        if (!controller.signal.aborted) {
+          setMetadataError(true)
+          setEmployees([])
+        }
       } finally {
         if (!controller.signal.aborted) setEmployeesLoading(false)
       }
     }
 
-    const handler = setTimeout(() => {
-      void searchEmployees()
-    }, EMPLOYEE_SEARCH_DEBOUNCE_MS)
+    const handler = setTimeout(
+      () => {
+        void loadEmployees()
+      },
+      employeeSearch.trim() ? EMPLOYEE_SEARCH_DEBOUNCE_MS : 0,
+    )
 
     return () => {
       clearTimeout(handler)

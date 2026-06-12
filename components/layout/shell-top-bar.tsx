@@ -51,7 +51,7 @@ export function ShellTopBar({
   userProfile,
   isMobile,
 }: ShellTopBarProps) {
-  const { handleLogout, breadcrumbs, pathname } = useSidebar()
+  const { handleLogout, handleGoToProfile, handleGoToSettings, breadcrumbs, pathname } = useSidebar()
 
   const brandWidth = isMobile
     ? undefined
@@ -206,11 +206,11 @@ export function ShellTopBar({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="border-border/40" />
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToProfile}>
                 <User className="w-4 h-4 mr-2 text-slate-400" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToSettings}>
                 <Settings className="w-4 h-4 mr-2 text-slate-400" />
                 Settings
               </DropdownMenuItem>

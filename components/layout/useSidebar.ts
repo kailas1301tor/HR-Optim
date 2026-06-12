@@ -13,6 +13,9 @@ export interface UseSidebarReturn {
   collapsed: boolean
   setCollapsed: (val: boolean) => void
   handleLogout: () => void
+  handleGoToProfile: () => void
+  handleGoToSettings: () => void
+  handleGoToNotifications: () => void
   breadcrumbs: BreadcrumbItem[]
   pathname: string
 }
@@ -26,6 +29,18 @@ export function useSidebar(): UseSidebarReturn {
     invalidatePermissions()
     authService.logout()
   }, [])
+
+  const handleGoToProfile = useCallback((): void => {
+    router.push('/profile')
+  }, [router])
+
+  const handleGoToSettings = useCallback((): void => {
+    router.push('/settings')
+  }, [router])
+
+  const handleGoToNotifications = useCallback((): void => {
+    router.push('/settings?tab=system')
+  }, [router])
 
   const getBreadcrumbs = useCallback((): BreadcrumbItem[] => {
     const paths = pathname.split('/').filter(Boolean)
@@ -43,6 +58,9 @@ export function useSidebar(): UseSidebarReturn {
     collapsed,
     setCollapsed,
     handleLogout,
+    handleGoToProfile,
+    handleGoToSettings,
+    handleGoToNotifications,
     breadcrumbs,
     pathname,
   }
