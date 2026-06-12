@@ -64,11 +64,11 @@ export function DocumentExpiryTimeline({ items, isLoading = false }: DocumentExp
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6"
+      className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-4 sm:p-6 min-w-0 overflow-hidden"
     >
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
         <h3 className="text-lg font-semibold text-cloud">Document Expiry Timeline</h3>
-        <span className="text-xs text-muted-foreground">Upcoming renewals</span>
+        <span className="text-xs text-muted-foreground shrink-0">Upcoming renewals</span>
       </div>
       <p className="text-sm text-muted-foreground mb-6">
         Track document renewals and avoid compliance issues
@@ -89,28 +89,30 @@ export function DocumentExpiryTimeline({ items, isLoading = false }: DocumentExp
               transition={{ delay: index * 0.05 }}
               className="group"
             >
-              <div className="flex items-center gap-4 mb-2">
-                <div className="w-8 h-8 rounded-[16px] [corner-shape:squircle] bg-midnight flex items-center justify-center flex-shrink-0">
-                  <FileText className="w-4 h-4 text-slate-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium text-cloud truncate">{doc.name}</p>
-                    <span
-                      className={cn(
-                        'px-2 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0',
-                        config.color,
-                      )}
-                    >
-                      {doc.status}
-                    </span>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4 mb-2">
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <div className="w-8 h-8 rounded-[16px] [corner-shape:squircle] bg-midnight flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4 text-slate-400" />
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {doc.owner} · <span className="font-mono text-violet-glow">{doc.idNumber}</span>
-                    {doc.type ? ` · ${doc.type}` : ''}
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium text-cloud break-words">{doc.name}</p>
+                      <span
+                        className={cn(
+                          'px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0',
+                          config.color,
+                        )}
+                      >
+                        {doc.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground break-words">
+                      {doc.owner} · <span className="font-mono text-violet-glow">{doc.idNumber}</span>
+                      {doc.type ? ` · ${doc.type}` : ''}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right flex-shrink-0">
+                <div className="text-left sm:text-right shrink-0 pl-11 sm:pl-0">
                   <p className="text-sm font-mono text-cloud">
                     {doc.daysLeft < 0 ? `${Math.abs(doc.daysLeft)}d ago` : `${doc.daysLeft}d`}
                   </p>
@@ -118,7 +120,7 @@ export function DocumentExpiryTimeline({ items, isLoading = false }: DocumentExp
                 </div>
               </div>
 
-              <div className="ml-12 h-1.5 bg-midnight rounded-full overflow-hidden">
+              <div className="h-1.5 bg-midnight rounded-full overflow-hidden sm:ml-12">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${barWidth}%` }}

@@ -24,6 +24,11 @@ const STATUS_FILTER_OPTIONS: { value: PayrollStatusFilter; label: string }[] = [
   { value: 'finalized', label: payrollStatusFilterConfig.finalized.label },
 ]
 
+const payrollFilterSelectClass = 'w-full sm:w-44 text-xs min-h-11 h-11'
+const payrollStatusSelectClass = 'w-full sm:w-40 text-xs min-h-11 h-11'
+const payrollActionBtnClass =
+  'gap-2 text-xs min-h-11 h-11 flex-1 min-w-[calc(50%-0.25rem)] sm:flex-none sm:min-w-0 justify-center'
+
 interface PayrollToolbarProps {
   searchQuery: string
   onSearchChange: (query: string) => void
@@ -77,7 +82,7 @@ export function PayrollToolbar({
             disabled={isEmployeesLoading}
           >
             <SelectTrigger
-              className={cn('w-full sm:w-44 text-xs', uiSelect)}
+              className={cn(payrollFilterSelectClass, uiSelect)}
               aria-label="Filter by employee"
             >
               <SelectValue placeholder={isEmployeesLoading ? 'Loading...' : 'All employees'} />
@@ -93,7 +98,7 @@ export function PayrollToolbar({
           </Select>
           <Select value={statusFilter} onValueChange={(val) => onStatusChange(val as PayrollStatusFilter)}>
             <SelectTrigger
-              className={cn('w-full sm:w-40 text-xs', uiSelect)}
+              className={cn(payrollStatusSelectClass, uiSelect)}
               aria-label="Filter by status"
             >
               <SelectValue placeholder="Status" />
@@ -117,7 +122,7 @@ export function PayrollToolbar({
               onClick={onFinalizeSelected}
               disabled={isFinalizing}
               isLoading={isFinalizing}
-              className="gap-2 text-xs flex-1 sm:flex-none"
+              className={cn(payrollActionBtnClass, 'w-full sm:w-auto')}
             >
               Finalize ({selectedCount})
             </PrimaryButton>
@@ -125,7 +130,7 @@ export function PayrollToolbar({
           <Button
             type="button"
             variant="outline"
-            className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
+            className={cn(uiOutlineBtn, payrollActionBtnClass)}
             onClick={onExportExcel}
             disabled={isExporting || !canExport}
             aria-label="Export payroll to Excel"
@@ -137,7 +142,7 @@ export function PayrollToolbar({
           <Button
             type="button"
             variant="outline"
-            className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
+            className={cn(uiOutlineBtn, payrollActionBtnClass)}
             onClick={onExportDepartmentSummary}
             disabled={isExporting || !canExport}
             aria-label="Export department payroll summary"
@@ -149,7 +154,7 @@ export function PayrollToolbar({
           <PrimaryButton
             type="button"
             onClick={onGeneratePayroll}
-            className="gap-2 text-xs flex-1 sm:flex-none"
+            className={cn(payrollActionBtnClass, 'w-full sm:w-auto')}
           >
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">Generate Payroll</span>
