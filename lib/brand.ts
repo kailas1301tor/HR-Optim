@@ -6,7 +6,7 @@ const nameFromEnv = process.env.NEXT_PUBLIC_PRODUCT_NAME?.trim()
 export const PRODUCT_NAME =
   nameFromEnv && nameFromEnv.length > 0 ? nameFromEnv : 'Roka'
 
-export const COMPANY_NAME = 'HROptim'
+export const COMPANY_NAME = 'HROPTIM'
 
 /** Shown under the product name in the shell and on the login page. */
 export const PRODUCT_TAGLINE = `${PRODUCT_NAME} by ${COMPANY_NAME}`

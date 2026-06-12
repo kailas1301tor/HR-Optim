@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { AUTH_COOKIE_NAMES, SESSION_MAX_AGE_SECONDS } from '@/lib/cookies'
-import { isJwtShaped } from '@/lib/helpers/jwt-decode-exp'
 import { isSameOriginRequest } from '@/lib/helpers/is-same-origin-request'
 import type { PersistSessionInput } from '@/types/auth'
 
@@ -41,7 +40,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const { token, username = '', email = '', userId } = body
-  if (!token || typeof token !== 'string' || !isJwtShaped(token)) {
+  if (typeof token !== 'string' || token.trim() === '') {
     return NextResponse.json({ error: 'Valid token is required' }, { status: 400 })
   }
 
