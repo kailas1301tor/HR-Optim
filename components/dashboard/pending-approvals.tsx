@@ -13,10 +13,13 @@ import { typeConfig } from '@/components/requests/requests-constants'
 import { useRequestActions } from '@/components/requests/useRequestActions'
 import { RequestActionDialogs } from '@/components/requests/request-action-dialogs'
 import { RequestActionButtons } from '@/components/requests/request-action-buttons'
+import { usePermissions } from '@/components/auth/permissions-provider'
 import { usePendingApprovals } from './usePendingApprovals'
 
 export function PendingApprovals() {
   const { items, pendingCount, isLoading, hasError, reload } = usePendingApprovals()
+  const { canManage } = usePermissions()
+  const canManageRequests = canManage('requests')
 
   const {
     approveTarget,
@@ -110,11 +113,13 @@ export function PendingApprovals() {
                     </div>
                   </div>
 
-                  <RequestActionButtons
-                    compact
-                    onReject={() => handleOpenReject(request)}
-                    onApprove={() => handleApprove(request)}
-                  />
+                  {canManageRequests ? (
+                    <RequestActionButtons
+                      compact
+                      onReject={() => handleOpenReject(request)}
+                      onApprove={() => handleApprove(request)}
+                    />
+                  ) : null}
                 </div>
               )
             })}

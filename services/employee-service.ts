@@ -13,6 +13,7 @@ import type {
   EmployeeListParams,
   EmployeeListResponse,
 } from '@/types/employee'
+import type { Department } from '@/types/settings'
 
 export type {
   CreateEmployeePayload,
@@ -91,6 +92,10 @@ async function backfillEmptyMasters(
   };
 }
 
+function dropdownDepartmentsToDepartments(items: DropdownItem[]): Department[] {
+  return items.map(({ id, name }) => ({ id, name, description: '' }))
+}
+
 export const employeeService = {
   /**
    * Fetches dropdown metadata from the backend.
@@ -99,6 +104,22 @@ export const employeeService = {
     const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal });
     const normalized = normalizeDropdownData(response.results?.data);
     return backfillEmptyMasters(normalized, signal);
+  },
+
+  /**
+   * Departments from employee dropdowns — avoids master department permissions.
+   */
+  async getDepartmentsFromDropdowns(signal?: AbortSignal): Promise<Department[]> {
+    const dropdowns = await this.getDropdowns(signal)
+    return dropdownDepartmentsToDepartments(dropdowns.departments)
+  },
+
+  /**
+   * Shifts from employee dropdowns — avoids master shift permissions.
+   */
+  async getShiftsFromDropdowns(signal?: AbortSignal): Promise<DropdownItem[]> {
+    const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
+    return normalizeDropdownData(response.results?.data).shifts
   },
 
   /**

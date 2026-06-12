@@ -2,10 +2,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createModuleCacheMap } from '@/lib/hooks/create-module-cache'
+import { createModuleCache, createModuleCacheMap } from '@/lib/hooks/create-module-cache'
 import {
   companyDocumentService,
-  employeeDocumentService,
+  type DocumentDropdowns,
 } from '@/services/document-service'
 import type { DocumentTab } from '@/types/document'
 
@@ -18,16 +18,24 @@ const documentCategoriesCache = createModuleCacheMap<DocumentTab, DocumentCatego
   shouldPersist: (categories) => categories.length > 0,
 })
 
+const documentDropdownsCache = createModuleCache<DocumentDropdowns>()
+
+export async function fetchDocumentDropdownsCached(): Promise<DocumentDropdowns> {
+  return documentDropdownsCache.fetch(() => companyDocumentService.getDropdowns())
+}
+
 async function fetchCategoriesCached(tab: DocumentTab): Promise<DocumentCategory[]> {
-  return documentCategoriesCache.fetch(tab, () =>
-    tab === 'employee'
-      ? employeeDocumentService.getDropdowns().then((data) => data.employee_document_types)
-      : companyDocumentService.getDropdowns().then((data) => data.company_document_types)
-  )
+  return documentCategoriesCache.fetch(tab, async () => {
+    const dropdowns = await fetchDocumentDropdownsCached()
+    return tab === 'employee'
+      ? dropdowns.employee_document_types
+      : dropdowns.company_document_types
+  })
 }
 
 export function invalidateDocumentCategories(tab?: DocumentTab): void {
   documentCategoriesCache.invalidate(tab)
+  documentDropdownsCache.invalidate()
 }
 
 export interface UseDocumentCategoriesReturn {

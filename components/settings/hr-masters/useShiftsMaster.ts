@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { invalidateAttendanceShifts } from '@/components/attendance/useAttendanceShifts'
+import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeDropdowns'
 import { shiftService } from '@/services/shift-service'
 import type { FrontendShift, LateDeductionPolicy } from '@/types/settings'
 import { FIXED_CALCULATE_TYPE } from '@/types/settings'
@@ -232,6 +233,7 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
       setIsShiftModalOpen(false)
       resetForm()
       invalidateAttendanceShifts()
+      invalidateEmployeeDropdowns()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save shift'
@@ -250,6 +252,7 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
       toast.success('Shift deleted successfully')
       setDeleteTarget(null)
       invalidateAttendanceShifts()
+      invalidateEmployeeDropdowns()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete shift'

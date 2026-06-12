@@ -6,7 +6,7 @@ import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { returnAssetSchema, type ReturnAssetInput } from '@/validations/asset-actions.schema'
 import { assetService } from '@/services/asset-service'
-import { departmentService } from '@/services/department-service'
+import { employeeService } from '@/services/employee-service'
 import type { Department } from '@/types/settings'
 import type { Employee } from '@/types/employee'
 import type { ReturnAssetTarget } from '@/types/asset'
@@ -79,7 +79,7 @@ export function useReturnAssetDialog(
     async function loadDepts(): Promise<void> {
       setIsLoadingDepts(true)
       try {
-        const data = await departmentService.getDepartments(controller.signal)
+        const data = await employeeService.getDepartmentsFromDropdowns(controller.signal)
         if (!controller.signal.aborted) setDepartments(data)
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return

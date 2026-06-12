@@ -23,6 +23,7 @@ import {
 } from './ticket-constants'
 import { useTicketsList } from './useTicketsList'
 import { useTicketActions } from './useTicketActions'
+import { usePermissions } from '@/components/auth/permissions-provider'
 import type { TicketPriorityFilter } from './useTicketsList'
 
 const PRIORITY_FILTERS = [
@@ -33,6 +34,9 @@ const PRIORITY_FILTERS = [
 ] as const
 
 export function TicketsList() {
+  const { canManage } = usePermissions()
+  const canManageTickets = canManage('tickets')
+
   const {
     filteredTickets,
     isLoading,
@@ -74,10 +78,12 @@ export function TicketsList() {
         title="Tickets"
         subtitle="Raise and track support tickets"
         action={
+          canManageTickets ? (
           <PrimaryButton className="gap-2" onClick={() => setIsCreateOpen(true)}>
             <Plus className="w-4 h-4" />
             Raise Ticket
           </PrimaryButton>
+          ) : undefined
         }
       />
 
@@ -105,7 +111,9 @@ export function TicketsList() {
           title="No tickets"
           description="Raise a ticket to get help from support."
           actions={
+            canManageTickets ? (
             <PrimaryButton onClick={() => setIsCreateOpen(true)}>Raise Ticket</PrimaryButton>
+            ) : undefined
           }
         />
       ) : (
@@ -204,6 +212,7 @@ export function TicketsList() {
         ticket={detailTarget}
         onOpenChange={(open) => !open && setDetailTarget(null)}
         isSubmitting={isSubmitting}
+        canManage={canManageTickets}
         onUpdate={handleUpdate}
         onRequestDelete={() => detailTarget && setDeleteTarget(detailTarget)}
       />

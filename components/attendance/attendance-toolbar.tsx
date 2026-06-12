@@ -13,14 +13,14 @@ import {
 import { CommonListToolbar } from '@/components/common'
 import { uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { FrontendShift } from '@/types/settings'
+import type { DropdownItem } from '@/lib/types'
 
 interface AttendanceToolbarProps {
   searchQuery: string
   onSearchChange: (query: string) => void
   shiftFilter: string
   onShiftChange: (value: string) => void
-  shifts: FrontendShift[]
+  shifts: DropdownItem[]
   shiftsError: boolean
   isExporting: boolean
   isLoading: boolean

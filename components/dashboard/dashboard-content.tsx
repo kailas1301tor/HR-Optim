@@ -2,6 +2,8 @@
 'use client'
 
 import { CommonErrorBanner } from '@/components/common'
+import { cn } from '@/lib/utils'
+import { usePermissions } from '@/components/auth/permissions-provider'
 import { KPIGrid } from './kpi-cards'
 import { AttendanceHeatmap } from './attendance-heatmap'
 import { DepartmentDistribution } from './department-distribution'
@@ -11,6 +13,8 @@ import { useDashboard } from './useDashboard'
 
 export function DashboardContent() {
   const { data, isLoading, hasError, errorMessage, reload } = useDashboard()
+  const { canView } = usePermissions()
+  const showPendingApprovals = canView('requests')
 
   return (
     <div className="space-y-8">
@@ -25,9 +29,9 @@ export function DashboardContent() {
         <DepartmentDistribution items={data.departmentDistribution} isLoading={isLoading} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={cn('grid grid-cols-1 gap-6', showPendingApprovals && 'lg:grid-cols-2')}>
         <DocumentExpiryTimeline items={data.documentExpiry} isLoading={isLoading} />
-        <PendingApprovals />
+        {showPendingApprovals ? <PendingApprovals /> : null}
       </div>
     </div>
   )

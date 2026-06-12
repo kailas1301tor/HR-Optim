@@ -22,6 +22,7 @@ interface SettingsFormDialogProps {
   description?: string
   isSubmitting?: boolean
   submitLabel?: string
+  readOnly?: boolean
   onSubmit: (e: FormEvent) => void
   children: ReactNode
   size?: 'md' | 'lg' | 'xl'
@@ -34,6 +35,7 @@ export function SettingsFormDialog({
   description,
   isSubmitting = false,
   submitLabel = 'Save',
+  readOnly = false,
   onSubmit,
   children,
   size = 'md',
@@ -66,11 +68,13 @@ export function SettingsFormDialog({
               disabled={isSubmitting}
               className={cn(uiOutlineBtn, 'text-xs w-full sm:w-auto')}
             >
-              Cancel
+              {readOnly ? 'Close' : 'Cancel'}
             </Button>
-            <PrimaryButton type="submit" isLoading={isSubmitting} className="text-xs w-full sm:w-auto">
-              {submitLabel}
-            </PrimaryButton>
+            {!readOnly ? (
+              <PrimaryButton type="submit" isLoading={isSubmitting} className="text-xs w-full sm:w-auto">
+                {submitLabel}
+              </PrimaryButton>
+            ) : null}
           </DialogFooter>
         </form>
       </DialogContent>

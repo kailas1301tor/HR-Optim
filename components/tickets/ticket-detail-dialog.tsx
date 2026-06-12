@@ -31,6 +31,7 @@ interface TicketDetailDialogProps {
   ticket: TicketRecord | null
   onOpenChange: (open: boolean) => void
   isSubmitting: boolean
+  canManage?: boolean
   onUpdate: (id: number, input: UpdateTicketInput) => Promise<void>
   onRequestDelete: () => void
 }
@@ -39,6 +40,7 @@ export function TicketDetailDialog({
   ticket,
   onOpenChange,
   isSubmitting,
+  canManage = false,
   onUpdate,
   onRequestDelete,
 }: TicketDetailDialogProps) {
@@ -58,6 +60,10 @@ export function TicketDetailDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!canManage) {
+      onOpenChange(false)
+      return
+    }
     await onUpdate(ticket.id, {
       priority,
       description: description.trim(),
@@ -76,6 +82,7 @@ export function TicketDetailDialog({
       title={ticket.title}
       description={`Created ${createdLabel}`}
       submitLabel="Save Changes"
+      readOnly={!canManage}
       isSubmitting={isSubmitting}
       size="lg"
       onSubmit={handleSubmit}
@@ -99,7 +106,7 @@ export function TicketDetailDialog({
           <Select
             value={priority}
             onValueChange={(value) => setPriority(value as TicketPriority)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !canManage}
           >
             <SelectTrigger id="detail-priority" className={uiSelect}>
               <SelectValue placeholder="Select priority" />
@@ -124,12 +131,13 @@ export function TicketDetailDialog({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !canManage}
           />
         </div>
 
         <TicketExistingAttachments attachments={ticket.attachments} />
 
+        {canManage ? (
         <TicketAttachmentsField
           id="detail-attachments"
           label={ticket.attachments.length > 0 ? 'Add attachments' : 'Attachments'}
@@ -137,7 +145,9 @@ export function TicketDetailDialog({
           onFilesChange={setFiles}
           disabled={isSubmitting}
         />
+        ) : null}
 
+        {canManage ? (
         <button
           type="button"
           className="text-sm text-red-400 transition-colors hover:text-red-300"
@@ -146,6 +156,7 @@ export function TicketDetailDialog({
         >
           Delete ticket
         </button>
+        ) : null}
       </div>
     </SettingsFormDialog>
   )

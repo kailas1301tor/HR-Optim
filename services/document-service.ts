@@ -10,19 +10,18 @@ import {
   type EmployeeDocument,
 } from '@/types/document'
 import type { ApiSimpleListResponse, ApiSingleResponse } from '@/lib/types'
-import { employeeDocumentTypeService } from '@/services/employee-document-type-service'
 import { companyDocumentTypeService } from '@/services/company-document-type-service'
 
 export type { CompanyDocument, DocumentStatusCounts, EmployeeDocument } from '@/types/document'
 
-export interface EmployeeDocumentDropdowns {
+export interface DocumentDropdowns {
+  company_document_types: DropdownItem[]
   employee_document_types: DropdownItem[]
+  branches: DropdownItem[]
+  employees: DropdownItem[]
 }
 
-export interface CompanyDocumentDropdowns {
-  company_document_types: DropdownItem[]
-  branches: DropdownItem[]
-}
+export type CompanyDocumentDropdowns = DocumentDropdowns
 
 interface DocumentListResponse<T> {
   message: string
@@ -52,6 +51,38 @@ function filterActiveMasterTypes<T extends { deleted?: boolean; is_active?: bool
 
 function toDropdownItems(items: Array<{ id: number; name: string }>): DropdownItem[] {
   return items.map(({ id, name }) => ({ id, name }))
+}
+
+const EMPTY_DOCUMENT_DROPDOWNS: DocumentDropdowns = {
+  company_document_types: [],
+  employee_document_types: [],
+  branches: [],
+  employees: [],
+}
+
+async function fetchDocumentDropdowns(signal?: AbortSignal): Promise<DocumentDropdowns> {
+  const response = await api.get<{ results: { data: DocumentDropdowns } }>(
+    '/api/company/document-dropdowns/',
+    { signal }
+  )
+  const data = {
+    ...EMPTY_DOCUMENT_DROPDOWNS,
+    ...response.results?.data,
+    company_document_types: response.results?.data?.company_document_types ?? [],
+    employee_document_types: response.results?.data?.employee_document_types ?? [],
+    branches: response.results?.data?.branches ?? [],
+    employees: response.results?.data?.employees ?? [],
+  }
+
+  if (data.company_document_types.length > 0) {
+    return data
+  }
+
+  const types = await companyDocumentTypeService.getCompanyDocTypes(signal)
+  return {
+    ...data,
+    company_document_types: toDropdownItems(filterActiveMasterTypes(types)),
+  }
 }
 
 export const employeeDocumentService = {
@@ -90,13 +121,6 @@ export const employeeDocumentService = {
 
   async delete(id: number): Promise<void> {
     await api.delete('/api/employee/employee-documents/', { params: { id } })
-  },
-
-  async getDropdowns(signal?: AbortSignal): Promise<EmployeeDocumentDropdowns> {
-    const types = await employeeDocumentTypeService.getEmployeeDocTypes(signal)
-    return {
-      employee_document_types: toDropdownItems(filterActiveMasterTypes(types)),
-    }
   },
 
   async exportExpiry(days = 30, signal?: AbortSignal): Promise<DocumentExportResult> {
@@ -152,22 +176,8 @@ export const companyDocumentService = {
     await api.delete('/api/company/company-documents/', { params: { id } })
   },
 
-  async getDropdowns(signal?: AbortSignal): Promise<CompanyDocumentDropdowns> {
-    const response = await api.get<{ results: { data: CompanyDocumentDropdowns } }>(
-      '/api/company/document-dropdowns/',
-      { signal }
-    )
-    const data = response.results?.data ?? { company_document_types: [], branches: [] }
-
-    if (data.company_document_types.length > 0) {
-      return data
-    }
-
-    const types = await companyDocumentTypeService.getCompanyDocTypes(signal)
-    return {
-      ...data,
-      company_document_types: toDropdownItems(filterActiveMasterTypes(types)),
-    }
+  async getDropdowns(signal?: AbortSignal): Promise<DocumentDropdowns> {
+    return fetchDocumentDropdowns(signal)
   },
 
   async exportExpiry(days = 30, signal?: AbortSignal): Promise<DocumentExportResult> {

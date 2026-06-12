@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createModuleCache } from '@/lib/hooks/create-module-cache'
 import { assetService } from '@/services/asset-service'
-import { departmentService } from '@/services/department-service'
+import { employeeService } from '@/services/employee-service'
 import type { Department } from '@/types/settings'
 import type { AssetDropdowns } from '@/types/asset'
 
@@ -28,31 +28,34 @@ interface MetadataResult extends CachedMetadata {
   hasError: boolean
 }
 
-const assetMetadataCache = createModuleCache<CachedMetadata>()
+// Cache the full result (success AND failure) so that repeated mounts —
+// React Strict Mode, route-guard transitions, parent re-renders/remounts —
+// read the memoized outcome instead of firing a fresh dropdowns+departments
+// request every time. A failed/partial fetch is surfaced once via the
+// `hasError` banner and only refetched on an explicit `reload()` (manual
+// Retry) or `invalidateAssetDropdowns()` after a masters mutation.
+const assetMetadataCache = createModuleCache<MetadataResult>()
 let metadataInflight: Promise<MetadataResult> | null = null
 
 async function fetchMetadata(): Promise<MetadataResult> {
   const cached = assetMetadataCache.read()
-  if (cached) return { ...cached, hasError: false }
+  if (cached) return cached
 
   if (!metadataInflight) {
     metadataInflight = Promise.allSettled([
       assetService.getAssetDropdowns(),
-      departmentService.getDepartments(),
+      employeeService.getDepartmentsFromDropdowns(),
     ])
       .then(([dropdownsResult, departmentsResult]) => {
         const dropdowns =
           dropdownsResult.status === 'fulfilled' ? dropdownsResult.value : EMPTY_DROPDOWNS
         const departments =
           departmentsResult.status === 'fulfilled' ? departmentsResult.value : []
-        const hasError =
-          dropdownsResult.status === 'rejected' || departmentsResult.status === 'rejected'
+        const hasError = dropdownsResult.status === 'rejected'
 
-        if (!hasError) {
-          assetMetadataCache.write({ dropdowns, departments })
-        }
-
-        return { dropdowns, departments, hasError }
+        const result: MetadataResult = { dropdowns, departments, hasError }
+        assetMetadataCache.write(result)
+        return result
       })
       .finally(() => {
         metadataInflight = null
@@ -79,7 +82,7 @@ export function useAssetDropdowns(): UseAssetDropdownsReturn {
   const [dropdowns, setDropdowns] = useState<AssetDropdowns | null>(cached?.dropdowns ?? null)
   const [departments, setDepartments] = useState<Department[]>(cached?.departments ?? [])
   const [isLoading, setIsLoading] = useState(!cached)
-  const [hasError, setHasError] = useState(false)
+  const [hasError, setHasError] = useState(cached?.hasError ?? false)
 
   const reload = useCallback(async () => {
     invalidateAssetDropdowns()
@@ -107,6 +110,7 @@ export function useAssetDropdowns(): UseAssetDropdownsReturn {
     if (hit) {
       setDropdowns(hit.dropdowns)
       setDepartments(hit.departments)
+      setHasError(hit.hasError)
       setIsLoading(false)
       return () => {
         active = false

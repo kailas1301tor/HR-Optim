@@ -20,6 +20,7 @@ import type {
   EmployeeDocumentUploadInput,
 } from '@/validations/document.schema'
 import {
+  fetchDocumentDropdownsCached,
   invalidateDocumentCategories,
   useDocumentCategories,
 } from './useDocumentCategories'
@@ -28,6 +29,16 @@ import { createModuleCache } from '@/lib/hooks/create-module-cache'
 const EMPLOYEE_SEARCH_DEBOUNCE_MS = 300
 
 type BranchOption = { id: number; name: string }
+
+function dropdownEmployeesToEmployees(
+  items: { id: number; name: string }[]
+): Employee[] {
+  return items.map(({ id, name }) => ({
+    id,
+    full_name: name,
+    employee_id: String(id),
+  })) as Employee[]
+}
 
 const uploadBranchesCache = createModuleCache<BranchOption[]>()
 
@@ -141,13 +152,42 @@ export function useUploadDocumentModal(
   useEffect(() => {
     if (!open || tab !== 'employee') return
 
+    let active = true
+
+    async function loadEmployeeDropdowns(): Promise<void> {
+      setEmployeesLoading(true)
+      setMetadataError(false)
+      try {
+        const dropdowns = await fetchDocumentDropdownsCached()
+        if (!active) return
+        setEmployees(dropdownEmployeesToEmployees(dropdowns.employees))
+      } catch (err: unknown) {
+        if (!active) return
+        if (err instanceof Error && err.name === 'AbortError') return
+        setMetadataError(true)
+        setEmployees([])
+      } finally {
+        if (active) setEmployeesLoading(false)
+      }
+    }
+
+    void loadEmployeeDropdowns()
+
+    return () => {
+      active = false
+    }
+  }, [open, tab, reloadToken])
+
+  useEffect(() => {
+    if (!open || tab !== 'employee' || !employeeSearch.trim()) return
+
     const controller = new AbortController()
 
     async function searchEmployees(): Promise<void> {
       setEmployeesLoading(true)
       try {
         const response = await employeeService.getEmployees(
-          { search: employeeSearch || undefined, page_size: 50 },
+          { search: employeeSearch, page_size: 50 },
           controller.signal
         )
         if (!controller.signal.aborted) setEmployees(response.data)
@@ -160,8 +200,8 @@ export function useUploadDocumentModal(
     }
 
     const handler = setTimeout(() => {
-      searchEmployees()
-    }, employeeSearch ? EMPLOYEE_SEARCH_DEBOUNCE_MS : 0)
+      void searchEmployees()
+    }, EMPLOYEE_SEARCH_DEBOUNCE_MS)
 
     return () => {
       clearTimeout(handler)

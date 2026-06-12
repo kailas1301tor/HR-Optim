@@ -27,6 +27,10 @@ export function invalidatePermissions(): void {
   profileCache.invalidate()
 }
 
+export async function loadCachedUserProfile(): Promise<CurrentUserProfile> {
+  return profileCache.fetch(() => authService.getCurrentUserProfile())
+}
+
 interface PermissionsContextValue {
   isLoading: boolean
   hasError: boolean

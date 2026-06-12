@@ -3,13 +3,13 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createModuleCache } from '@/lib/hooks/create-module-cache'
-import { shiftService } from '@/services/shift-service'
-import type { FrontendShift } from '@/types/settings'
+import type { DropdownItem } from '@/lib/types'
+import { employeeService } from '@/services/employee-service'
 
-const attendanceShiftsCache = createModuleCache<FrontendShift[]>()
+const attendanceShiftsCache = createModuleCache<DropdownItem[]>()
 
-async function fetchShiftsCached(): Promise<FrontendShift[]> {
-  return attendanceShiftsCache.fetch(() => shiftService.getShifts())
+async function fetchShiftsCached(): Promise<DropdownItem[]> {
+  return attendanceShiftsCache.fetch(() => employeeService.getShiftsFromDropdowns())
 }
 
 export function invalidateAttendanceShifts(): void {
@@ -17,14 +17,14 @@ export function invalidateAttendanceShifts(): void {
 }
 
 export interface UseAttendanceShiftsReturn {
-  shifts: FrontendShift[]
+  shifts: DropdownItem[]
   isLoading: boolean
   hasError: boolean
   reload: () => Promise<void>
 }
 
 export function useAttendanceShifts(): UseAttendanceShiftsReturn {
-  const [shifts, setShifts] = useState<FrontendShift[]>(attendanceShiftsCache.read() ?? [])
+  const [shifts, setShifts] = useState<DropdownItem[]>(attendanceShiftsCache.read() ?? [])
   const [isLoading, setIsLoading] = useState(!attendanceShiftsCache.read())
   const [hasError, setHasError] = useState(false)
 
