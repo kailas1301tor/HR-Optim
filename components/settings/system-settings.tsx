@@ -20,7 +20,6 @@ interface SystemSettingsProps {
 export function SystemSettings({ notifications, setNotifications }: SystemSettingsProps) {
   const {
     lang,
-    setLang,
     theme,
     setTheme,
     mounted,
@@ -110,12 +109,10 @@ export function SystemSettings({ notifications, setNotifications }: SystemSettin
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Default Language</Label>
-                <Select value={lang} onValueChange={setLang}>
+                <Select value={lang} disabled>
                   <SelectTrigger className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-xs text-slate-300"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="English (US)">English (US)</SelectItem>
-                    <SelectItem value="English (UK)">English (UK)</SelectItem>
-                    <SelectItem value="Arabic">Arabic (العربية)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

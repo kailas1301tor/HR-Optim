@@ -15,7 +15,6 @@ export interface UseSystemSettingsProps {
 
 export interface UseSystemSettingsReturn {
   lang: string
-  setLang: (lang: string) => void
   theme: string | undefined
   setTheme: (theme: string) => void
   mounted: boolean
@@ -26,7 +25,7 @@ export function useSystemSettings({
   notifications,
   setNotifications,
 }: UseSystemSettingsProps): UseSystemSettingsReturn {
-  const [lang, setLang] = useState('English (US)')
+  const lang = 'English (US)'
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -46,7 +45,6 @@ export function useSystemSettings({
 
   return {
     lang,
-    setLang,
     theme,
     setTheme,
     mounted,
