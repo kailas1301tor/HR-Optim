@@ -20,6 +20,21 @@ export interface EmployeeDocument {
   is_active?: boolean
 }
 
+export interface BackendDashboardEmployeeDocument {
+  id: number
+  employee?: string
+  document_type?: string | number
+  document_number?: string
+  expiry_date?: string
+  status?: string
+  file_url?: string
+  file?: string
+  created_at?: string
+  updated_at?: string
+  is_active?: boolean
+  deleted?: boolean
+}
+
 export interface CompanyDocument {
   id: number
   company_document_type: string | number

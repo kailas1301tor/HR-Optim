@@ -1,11 +1,14 @@
 // lib/ui/design-system.ts
 
 /** iOS-style continuous corners (`corner-shape: squircle` where supported). */
-export const uiSquircleLg = 'rounded-[32px] [corner-shape:squircle]'
-export const uiSquircleMd = 'rounded-[24px] [corner-shape:squircle]'
-export const uiSquircleSm = 'rounded-[20px] [corner-shape:squircle]'
-export const uiSquircleXs = 'rounded-[18px] [corner-shape:squircle]'
-export const uiSquircleNav = 'rounded-[16px] [corner-shape:squircle]'
+export const uiSquircleLg = 'rounded-[36px] [corner-shape:squircle]'
+export const uiSquircleMd = 'rounded-[28px] [corner-shape:squircle]'
+export const uiSquircleSm = 'rounded-[24px] [corner-shape:squircle]'
+export const uiSquircleXs = 'rounded-[20px] [corner-shape:squircle]'
+export const uiSquircleNav = 'rounded-[20px] [corner-shape:squircle]'
+
+/** Dropdowns, popovers, and select menus */
+export const uiPopoverShell = uiSquircleMd
 
 export const uiCard =
   `bg-card border border-border/80 shadow-lg transition-all duration-200 ${uiSquircleLg}`
@@ -75,7 +78,7 @@ export const uiErrorStateShell =
   `flex flex-col items-center justify-center text-center p-10 bg-card border border-red-500/20 shadow-lg ${uiSquircleLg}`
 
 export const uiFilterChipBase =
-  `shrink-0 py-2 px-3.5 text-xs font-medium border transition-all duration-200 cursor-pointer ${uiSquircleSm}`
+  `shrink-0 py-2 px-3.5 text-xs font-medium border transition-all duration-200 cursor-pointer rounded-full`
 
 export const uiFilterChipActive =
   'bg-violet-core/15 text-violet-glow border-violet-core/30 shadow-[0_0_12px_rgba(139,92,246,0.12)]'
@@ -98,37 +101,37 @@ export const uiTabChipActiveTrigger =
 
 export const statusBadgeClasses = {
   pending:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
   approved:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   rejected:
-    'bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
+    'rounded-full bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
   active:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   inactive:
-    'bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
+    'rounded-full bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
   draft:
-    'bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
+    'rounded-full bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
   valid:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   expiring:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
   expired:
-    'bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
+    'rounded-full bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
   in_use:
-    'bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
+    'rounded-full bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
   available:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   disposed:
-    'bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
+    'rounded-full bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
   maintenance:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
   on_leave:
-    'bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
+    'rounded-full bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
   onboarding:
-    'bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
+    'rounded-full bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
   offboarding:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
 } as const
 
 export type StatusBadgeVariant = keyof typeof statusBadgeClasses

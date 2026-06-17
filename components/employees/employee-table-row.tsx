@@ -6,6 +6,7 @@ import { Calendar, Eye, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CommonStatusBadge } from '@/components/common'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,13 +16,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { getEmployeeStatusBadgeVariant } from '@/lib/ui/design-system'
+import { getEmployeeStatusBadgeVariant, uiSkeletonBlock } from '@/lib/ui/design-system'
 import { departmentConfig } from './employee-constants'
 import type { Employee } from './employee-table-types'
 
 interface EmployeeTableRowProps {
   employee: Employee
   index: number
+  isTogglingStatus?: boolean
   onSelect: () => void
   onToggleStatus: (employee: Employee, active: boolean) => void
   onEdit: (employee: Employee) => void
@@ -32,6 +34,7 @@ interface EmployeeTableRowProps {
 export function EmployeeTableRow({
   employee,
   index,
+  isTogglingStatus = false,
   onSelect,
   onToggleStatus,
   onEdit,
@@ -75,7 +78,7 @@ export function EmployeeTableRow({
         <span
           className={cn(
             departmentConfig[employee.department]?.className ||
-              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium'
+              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-[20px] [corner-shape:squircle] text-xs font-medium'
           )}
         >
           {employee.department}
@@ -87,12 +90,20 @@ export function EmployeeTableRow({
       <td className="px-4 py-3">
         <CommonStatusBadge variant={statusVariant} label={employee.status} />
       </td>
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+      <td
+        className="px-4 py-3"
+        onClick={(e) => e.stopPropagation()}
+        aria-busy={isTogglingStatus}
+      >
         {canManage ? (
-        <Switch
-          checked={employee.status?.toLowerCase() === 'active'}
-          onCheckedChange={(checked) => onToggleStatus(employee, checked)}
-        />
+          isTogglingStatus ? (
+            <Skeleton className={cn('h-5 w-9 rounded-full', uiSkeletonBlock)} />
+          ) : (
+            <Switch
+              checked={employee.status?.toLowerCase() === 'active'}
+              onCheckedChange={(checked) => onToggleStatus(employee, checked)}
+            />
+          )
         ) : (
           <span className="text-xs text-muted-foreground">
             {employee.status?.toLowerCase() === 'active' ? 'Yes' : 'No'}

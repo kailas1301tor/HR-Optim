@@ -1,24 +1,24 @@
+// components/settings/settings-panel.tsx
 'use client'
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Building2, Users, Package, Settings, ShieldCheck, Calculator, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { CommonPageHeader } from '@/components/common'
 import { uiTabChipActiveTrigger, uiTabChipBase, uiTabChipInactive } from '@/lib/ui/design-system'
 import { CompanySettings } from './company-settings'
 import { HRTabContent } from './hr-tab-content'
 import { PayRulesMaster } from './payroll/pay-rules-master'
 import { RolesPermissions } from './roles-permissions'
 import { AssetMasters } from './asset-masters'
-import { SystemSettings } from './system-settings'
 import { SecuritySettings } from './security-settings'
+import { SystemSettings } from './system-settings'
+import { SettingsSkeleton } from './settings-skeleton'
 import {
   INITIAL_WORKFLOW_TEMPLATES,
-  INITIAL_NOTIFICATIONS,
 } from './settings-constants'
-import type { NotificationPreferences, WorkflowTemplate } from '@/types/settings'
+import type { WorkflowTemplate } from '@/types/settings'
 import { usePermissions } from '@/components/auth/permissions-provider'
 
 export function SettingsPanel() {
@@ -30,21 +30,22 @@ export function SettingsPanel() {
 
   const activeTab = searchParams.get('tab') || 'company'
 
-  const setActiveTab = (tab: string) => {
+  const setActiveTab = useCallback((tab: string) => {
+    if (tab === activeTab) return
     const params = new URLSearchParams(searchParams.toString())
     params.set('tab', tab)
     router.replace(`${pathname}?${params.toString()}`)
-  }
+  }, [activeTab, pathname, router, searchParams])
 
   const [workflowTemplates, setWorkflowTemplates] = useState<WorkflowTemplate[]>(INITIAL_WORKFLOW_TEMPLATES)
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS)
 
   useEffect(() => {
     if (isPermissionsLoading) return
-    if (!canManageSettings && activeTab === 'roles') {
-      setActiveTab('company')
-    }
-  }, [activeTab, canManageSettings, isPermissionsLoading])
+    if (canManageSettings || activeTab !== 'roles') return
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('tab', 'company')
+    router.replace(`${pathname}?${params.toString()}`)
+  }, [isPermissionsLoading, canManageSettings, activeTab, pathname, router, searchParams])
 
   const tabTriggerClass = cn(
     uiTabChipBase,
@@ -53,12 +54,12 @@ export function SettingsPanel() {
     uiTabChipActiveTrigger,
   )
 
+  if (isPermissionsLoading) {
+    return <SettingsSkeleton showHeader={false} />
+  }
+
   return (
     <div className="space-y-6">
-      <CommonPageHeader
-        title="Masters & Configuration"
-        subtitle="Manage system masters and configuration settings"
-      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-midnight/60 border border-border/40 p-1.5 rounded-[20px] [corner-shape:squircle] h-auto gap-1.5 flex flex-wrap w-full justify-start items-start content-start select-none">
@@ -99,7 +100,7 @@ export function SettingsPanel() {
         </TabsContent>
 
         <TabsContent value="roles" className="space-y-6 outline-none">
-          <RolesPermissions />
+          {activeTab === 'roles' && canManageSettings ? <RolesPermissions /> : null}
         </TabsContent>
 
         <TabsContent value="hr" className="space-y-6 outline-none">
@@ -122,7 +123,7 @@ export function SettingsPanel() {
         </TabsContent>
 
         <TabsContent value="system" className="space-y-6 outline-none">
-          <SystemSettings notifications={notifications} setNotifications={setNotifications} />
+          <SystemSettings />
         </TabsContent>
       </Tabs>
     </div>

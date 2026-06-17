@@ -15,6 +15,7 @@ import { PrimaryButton } from '@/components/ui/primary-button'
 import { uiCard, uiTableShell } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { CreateTicketDialog } from './create-ticket-dialog'
+import { HelpSupportSection } from './help-support-section'
 import { TicketDeleteDialog, TicketDetailDialog } from './ticket-detail-dialog'
 import {
   TICKET_PRIORITY_VARIANT,
@@ -24,7 +25,10 @@ import {
 import { useTicketsList } from './useTicketsList'
 import { useTicketActions } from './useTicketActions'
 import { usePermissions } from '@/components/auth/permissions-provider'
+import { isInitialDataLoading } from '@/lib/helpers/is-initial-data-loading'
+import { TicketsContentSkeleton, TicketsSkeleton } from './tickets-skeleton'
 import type { TicketPriorityFilter } from './useTicketsList'
+import { HELP_SUPPORT_LABEL } from '@/lib/support'
 
 const PRIORITY_FILTERS = [
   { value: 'all', label: 'All' },
@@ -34,7 +38,7 @@ const PRIORITY_FILTERS = [
 ] as const
 
 export function TicketsList() {
-  const { canManage } = usePermissions()
+  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
   const canManageTickets = canManage('tickets')
 
   const {
@@ -62,6 +66,10 @@ export function TicketsList() {
     handleDelete,
   } = useTicketActions({ onSuccess: reload })
 
+  if (isPermissionsLoading || isInitialDataLoading(isLoading, filteredTickets.length, hasError)) {
+    return <TicketsSkeleton />
+  }
+
   if (hasError) {
     return (
       <CommonErrorState
@@ -75,8 +83,8 @@ export function TicketsList() {
   return (
     <div className="space-y-6">
       <CommonPageHeader
-        title="Tickets"
-        subtitle="Raise and track support tickets"
+        title={HELP_SUPPORT_LABEL}
+        subtitle="Contact support or raise and track tickets"
         action={
           canManageTickets ? (
           <PrimaryButton className="gap-2" onClick={() => setIsCreateOpen(true)}>
@@ -86,6 +94,10 @@ export function TicketsList() {
           ) : undefined
         }
       />
+
+      <HelpSupportSection />
+
+      <h2 className="text-sm font-semibold text-cloud">Your tickets</h2>
 
       <CommonListToolbar
         searchQuery={searchQuery}
@@ -100,11 +112,7 @@ export function TicketsList() {
       />
 
       {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className={cn(uiCard, 'h-20 animate-pulse bg-midnight/60')} />
-          ))}
-        </div>
+        <TicketsContentSkeleton />
       ) : filteredTickets.length === 0 ? (
         <CommonEmptyState
           icon={LifeBuoy}

@@ -6,7 +6,8 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePermissions } from '@/components/auth/permissions-provider'
-import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { canViewEmployeesSection } from '@/lib/permissions/module-permissions'
+import { uiSkeletonBlock, uiSquircleNav } from '@/lib/ui/design-system'
 import { SIDEBAR_NAV_ITEMS, SIDEBAR_SECTIONS } from './sidebar-nav-config'
 import { MagnificationNavItem } from './magnification-nav-item'
 
@@ -36,7 +37,8 @@ function SidebarStaticNavItem({
       href={href}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 h-10 px-3 rounded-[16px] [corner-shape:squircle] transition-all duration-150',
+        'flex items-center gap-3 h-10 px-3 transition-all duration-150',
+        uiSquircleNav,
         isActive
           ? 'bg-gradient-to-r from-violet-core to-violet-deep text-white font-medium shadow-md shadow-violet-core/10'
           : 'text-slate-300 hover:bg-carbon hover:text-cloud'
@@ -67,9 +69,17 @@ export function SidebarMagnificationNav({
   const mouseY = useMotionValue(Infinity)
   const showSectionHeaders = !collapsed || isMobile
   const showLabels = !collapsed || isMobile
-  const { isLoading, canView } = usePermissions()
+  const { isLoading, canView, permissions } = usePermissions()
 
-  const visibleItems = SIDEBAR_NAV_ITEMS.filter((item) => canView(item.moduleKey))
+  const visibleItems = SIDEBAR_NAV_ITEMS.filter((item) => {
+    if (item.alwaysVisible) return true
+    if (item.hasEmployeeFallback) return true
+    if (item.moduleKey === 'employees') {
+      return canViewEmployeesSection(permissions)
+    }
+    if (item.moduleKey) return canView(item.moduleKey)
+    return false
+  })
 
   if (isLoading) {
     return (
@@ -82,7 +92,7 @@ export function SidebarMagnificationNav({
             {Array.from({ length: 2 }).map((_, index) => (
               <Skeleton
                 key={`${section}-${index}`}
-                className={cn('h-10 w-full rounded-[16px] [corner-shape:squircle]', uiSkeletonBlock)}
+                className={cn('h-10 w-full', uiSquircleNav, uiSkeletonBlock)}
               />
             ))}
           </div>

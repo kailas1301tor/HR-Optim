@@ -3,11 +3,11 @@
 
 import { motion } from 'framer-motion'
 import { FormProvider } from 'react-hook-form'
-import { Mail, Lock, Eye, EyeOff, Building2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import { CommonFormFieldError, CommonErrorBanner } from '@/components/common'
-import { uiCard, uiInput, uiSquircleSm } from '@/lib/ui/design-system'
+import { BrandIcon, CommonFormFieldError, CommonErrorBanner } from '@/components/common'
+import { uiCard, uiInput } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { SetPasswordDialog } from '@/components/login/set-password-dialog'
@@ -50,15 +50,8 @@ export function LoginPageContent() {
         animate="visible"
         className="w-full max-w-md md:max-w-lg z-10 space-y-6"
       >
-        <motion.div variants={itemVariants} className="flex flex-col items-center">
-          <div
-            className={cn(
-              'w-12 h-12 bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center shadow-lg shadow-violet-core/20 mb-3',
-              uiSquircleSm
-            )}
-          >
-            <Building2 className="w-6 h-6 text-white" />
-          </div>
+        <motion.div variants={itemVariants} className="flex flex-col items-center overflow-visible">
+          <BrandIcon size="md" priority className="mb-3" />
           <h1 className="text-2xl font-bold tracking-tight text-cloud font-sans">{PRODUCT_NAME}</h1>
           <p className="text-sm text-muted-foreground mt-1 font-sans">{PRODUCT_TAGLINE}</p>
         </motion.div>

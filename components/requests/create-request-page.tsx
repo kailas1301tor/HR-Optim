@@ -10,6 +10,7 @@ import {
   CommonErrorState,
   CommonFilterChips,
   CommonPageHeader,
+  ModuleRestrictedState,
 } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -22,6 +23,7 @@ import { SalaryAdvanceRequestForm } from './forms/salary-advance-request-form'
 import { LoanRequestForm } from './forms/loan-request-form'
 import { DocumentRequestForm } from './forms/document-request-form'
 import { usePermissions } from '@/components/auth/permissions-provider'
+import { CreateRequestPageSkeleton } from './create-request-page-skeleton'
 
 const REQUEST_TYPE_OPTIONS: CreateRequestType[] = [
   'leave',
@@ -38,10 +40,22 @@ function parseTypeParam(value: string | null): CreateRequestType {
 }
 
 export function CreateRequestPage() {
+  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
+
+  if (isPermissionsLoading) {
+    return <CreateRequestPageSkeleton />
+  }
+
+  if (!canManage('requests')) {
+    return <ModuleRestrictedState moduleKey="requests" />
+  }
+
+  return <CreateRequestPageContent />
+}
+
+function CreateRequestPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
-  const canManageRequests = canManage('requests')
   const typeParam = parseTypeParam(searchParams.get('type'))
 
   const {
@@ -107,15 +121,6 @@ export function CreateRequestPage() {
   }, [employee, employeeError, isEmployeeLoading])
 
   const isFormLoading = isLoadingMetadata || isEmployeeLoading
-
-  if (!isPermissionsLoading && !canManageRequests) {
-    return (
-      <CommonErrorState
-        title="Access denied"
-        message="You do not have permission to create requests."
-      />
-    )
-  }
 
   return (
     <div className="space-y-6">

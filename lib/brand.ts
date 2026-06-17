@@ -14,6 +14,10 @@ export const PRODUCT_TAGLINE = `${PRODUCT_NAME} by ${COMPANY_NAME}`
 export const PRODUCT_DESCRIPTION =
   `${PRODUCT_NAME} by ${COMPANY_NAME} — enterprise human resource and asset management.`
 
+export const APP_ICON_PATH = '/brand/roka-app-icon.png'
+
+export const APP_ICON_ALT = `${PRODUCT_NAME} app icon`
+
 export function pageTitle(page: string): string {
   return `${page} | ${PRODUCT_NAME}`
 }

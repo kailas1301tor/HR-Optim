@@ -17,9 +17,11 @@ import { usePermissions } from '@/components/auth/permissions-provider'
 import { usePendingApprovals } from './usePendingApprovals'
 
 export function PendingApprovals() {
-  const { items, pendingCount, isLoading, hasError, reload } = usePendingApprovals()
   const { canManage } = usePermissions()
   const canManageRequests = canManage('requests')
+  const { items, pendingCount, isLoading, hasError, reload } = usePendingApprovals({
+    enabled: canManageRequests,
+  })
 
   const {
     approveTarget,

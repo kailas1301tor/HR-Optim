@@ -2,7 +2,6 @@
 'use client'
 
 import type { LucideIcon } from 'lucide-react'
-import { uiSquircleMd } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 
 interface ProfileDetailFieldProps {
@@ -14,28 +13,17 @@ interface ProfileDetailFieldProps {
 
 export function ProfileDetailField({ icon: Icon, label, value, className }: ProfileDetailFieldProps) {
   return (
-    <div
-      className={cn(
-        'flex items-start gap-3.5 p-4 bg-muted/30 border border-border/50',
-        uiSquircleMd,
-        className,
-      )}
-    >
-      <div
-        className={cn(
-          'w-10 h-10 flex items-center justify-center shrink-0 text-violet-glow',
-          uiSquircleMd,
-          'bg-violet-core/10 border border-violet-core/20',
-        )}
-      >
-        <Icon className="w-4.5 h-4.5" aria-hidden />
+    <div className={cn('flex items-start gap-3 py-2 px-1', className)}>
+      <div className="w-5 h-5 flex items-center justify-center shrink-0 text-violet-glow mt-0.5">
+        <Icon className="w-4 h-4" aria-hidden />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
           {label}
         </p>
-        <p className="text-sm font-semibold text-foreground mt-1 break-all">{value}</p>
+        <p className="text-sm font-semibold text-cloud mt-0.5 break-all leading-normal">{value}</p>
       </div>
     </div>
   )
 }
+

@@ -85,6 +85,7 @@ export interface SalaryAdvanceRequestRecord {
   request_amount: string
   status: string
   tenure: number
+  deducted_months?: number
   reason: string
   rejected_reason: string | null
   approved_date: string | null
@@ -123,6 +124,20 @@ export interface DocumentRequestRecord {
   approved_date: string | null
   rejected_date: string | null
   file: string | null
+}
+
+export interface DashboardAllRequestItem {
+  id: number
+  created_at: string
+  status: string
+  request_type: string
+}
+
+export interface DashboardAllRequestsData {
+  count: number
+  results: DashboardAllRequestItem[]
+  page: number
+  limit: number
 }
 
 export interface RequestChoices {

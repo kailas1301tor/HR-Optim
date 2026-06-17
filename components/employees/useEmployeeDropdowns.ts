@@ -23,7 +23,8 @@ export interface UseEmployeeDropdownsReturn {
   reload: () => Promise<void>
 }
 
-export function useEmployeeDropdowns(): UseEmployeeDropdownsReturn {
+export function useEmployeeDropdowns(options?: { enabled?: boolean }): UseEmployeeDropdownsReturn {
+  const enabled = options?.enabled ?? true
   const [dropdowns, setDropdowns] = useState<DropdownData | null>(employeeDropdownsCache.read())
   const [isLoading, setIsLoading] = useState(!employeeDropdownsCache.read())
   const [hasError, setHasError] = useState(false)
@@ -45,6 +46,11 @@ export function useEmployeeDropdowns(): UseEmployeeDropdownsReturn {
   }, [])
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false)
+      return
+    }
+
     let active = true
     const cached = employeeDropdownsCache.read()
 
@@ -75,7 +81,7 @@ export function useEmployeeDropdowns(): UseEmployeeDropdownsReturn {
     return () => {
       active = false
     }
-  }, [])
+  }, [enabled])
 
   return { dropdowns, isLoading, hasError, reload }
 }

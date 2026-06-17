@@ -95,7 +95,12 @@ export const employeeDocumentService = {
   },
 
   async getAll(
-    params?: { search?: string; document_type?: string | number; status?: string },
+    params?: {
+      search?: string
+      document_type?: string | number
+      status?: string
+      employee_id?: string | number
+    },
     signal?: AbortSignal
   ): Promise<EmployeeDocument[]> {
     const response = await api.get<DocumentListResponse<EmployeeDocument>>(

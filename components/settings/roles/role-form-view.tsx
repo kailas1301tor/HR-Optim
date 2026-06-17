@@ -150,7 +150,6 @@ export function RoleFormView({
                 return (
                   <div
                     key={perm.id}
-                    onClick={() => onTogglePermissionId(perm.id, !isChecked)}
                     className={cn(
                       'flex items-center gap-3.5 p-4 border rounded-[20px] [corner-shape:squircle] transition-all duration-200 cursor-pointer select-none',
                       isChecked
@@ -161,21 +160,24 @@ export function RoleFormView({
                     <Checkbox
                       id={`perm-${perm.id}`}
                       checked={isChecked}
-                      onCheckedChange={(checked) => onTogglePermissionId(perm.id, !!checked)}
-                      onClick={(e) => e.stopPropagation()}
+                      onCheckedChange={(checked) => {
+                        if (isSaving) return
+                        const nextChecked = checked === true
+                        if (nextChecked !== isChecked) {
+                          onTogglePermissionId(perm.id, nextChecked)
+                        }
+                      }}
                       disabled={isSaving}
                       className="border-slate-400 dark:border-slate-600 data-[state=checked]:border-violet-core data-[state=checked]:bg-violet-core size-4.5"
                     />
-                    <Label
-                      htmlFor={`perm-${perm.id}`}
+                    <span
                       className={cn(
                         'text-xs font-semibold leading-relaxed cursor-pointer transition-colors',
                         isChecked ? 'text-violet-glow' : 'text-slate-600 dark:text-slate-400'
                       )}
-                      onClick={(e) => e.stopPropagation()}
                     >
                       {perm.name}
-                    </Label>
+                    </span>
                   </div>
                 )
               })}

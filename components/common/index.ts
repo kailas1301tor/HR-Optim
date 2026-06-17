@@ -1,6 +1,8 @@
 // components/common/index.ts
+export { BrandIcon } from './brand-icon'
 export { CommonCard } from './card'
 export { CommonPageHeader } from './page-header'
+export { SelfServicePageHeader } from './self-service-page-header'
 export { CommonStatCards, type StatCardItem } from './stat-cards'
 export { CommonStatCardDisplay, type StatDisplayItem } from './stat-card-display'
 export { CommonFilterChips, type FilterChipOption } from './filter-chips'
@@ -12,5 +14,9 @@ export { CommonStatusBadge } from './status-badge'
 export { CommonFormFieldError } from './form-field-error'
 export { PasswordField as CommonPasswordField } from './password-field'
 export { CommonPageSkeleton } from './page-skeleton'
+export { TableSkeleton } from './table-skeleton'
 export { CommonPagination } from './pagination'
 export { CommonMobileCardGrid } from './mobile-card-grid'
+export { ModuleRestrictedState } from './module-restricted-state'
+export { MonthYearPicker, type MonthYearPickerProps } from './month-year-picker'
+

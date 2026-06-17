@@ -37,6 +37,8 @@ function normalizeDropdownData(data: Partial<DropdownData> | null | undefined): 
     status_choices: data?.status_choices ?? [],
     accommodation_choices: data?.accommodation_choices ?? [],
     leave_types: data?.leave_types ?? [],
+    onboarding_document_types: data?.onboarding_document_types ?? [],
+    offboarding_document_types: data?.offboarding_document_types ?? [],
   };
 }
 

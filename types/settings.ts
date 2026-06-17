@@ -18,14 +18,6 @@ export interface WorkflowTemplate {
   steps: string[]
 }
 
-export interface NotificationPreferences {
-  emailAlerts: boolean
-  documentExpiry: boolean
-  leaveRequests: boolean
-  payrollUpdates: boolean
-  systemUpdates: boolean
-}
-
 export interface PayRule {
   id: number
   name: string

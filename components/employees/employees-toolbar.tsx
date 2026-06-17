@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
+import { uiOutlineBtn, uiPopoverShell, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import type { DropdownData } from '@/types/employee'
 interface EmployeesToolbarProps {
@@ -53,7 +53,7 @@ export function EmployeesToolbar({
             <SelectTrigger className={cn('w-full sm:w-44 text-xs', uiSelect)} aria-label="Filter by department">
               <SelectValue placeholder="Department" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border border-border text-xs">
+            <SelectContent className={cn('bg-popover border border-border text-xs', uiPopoverShell)}>
               <SelectItem value="all">All Departments</SelectItem>
               {dropdowns?.departments.map((item) => (
                 <SelectItem key={item.id} value={String(item.id)}>
@@ -69,7 +69,7 @@ export function EmployeesToolbar({
             <SelectTrigger className={cn('w-full sm:w-40 text-xs', uiSelect)} aria-label="Filter by status">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="bg-popover border border-border text-xs">
+            <SelectContent className={cn('bg-popover border border-border text-xs', uiPopoverShell)}>
               <SelectItem value="all">All Statuses</SelectItem>
               {dropdowns?.status_choices.map((item) => (
                 <SelectItem key={item.id} value={item.name}>

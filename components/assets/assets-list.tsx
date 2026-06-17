@@ -9,6 +9,7 @@ import {
   CommonErrorState,
   CommonMobileCardGrid,
   CommonPagination,
+  TableSkeleton,
 } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { uiOutlineBtn } from '@/lib/ui/design-system'
@@ -24,10 +25,12 @@ import { DisposeAssetDialog } from './dispose-asset-dialog'
 import { AssignAssetDialog } from './assign-asset-dialog'
 import { useAssetsTable } from './useAssetsTable'
 import { usePermissions } from '@/components/auth/permissions-provider'
+import { isInitialDataLoading } from '@/lib/helpers/is-initial-data-loading'
 
 export function AssetsList() {
-  const { canManage } = usePermissions()
+  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
   const canManageAssets = canManage('assets')
+
   const {
     assetsList,
     pagination,
@@ -64,6 +67,10 @@ export function AssetsList() {
   }
 
   const showEmpty = !isTableLoading && !hasError && assetsList.length === 0
+
+  if (isPermissionsLoading || isInitialDataLoading(isTableLoading, assetsList.length, hasError)) {
+    return <TableSkeleton />
+  }
 
   return (
     <div className="space-y-6">

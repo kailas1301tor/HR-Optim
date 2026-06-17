@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { useEmployeePagination } from './useEmployeePagination'
 import { useEmployeeDropdowns } from './useEmployeeDropdowns'
 import { useEmployeeUiState } from './useEmployeeUiState'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 export interface WorkforceStats {
   total: number
@@ -29,6 +30,7 @@ export interface UseEmployeeTableReturn {
   isTableLoading: boolean
   dropdowns: ReturnType<typeof useEmployeeDropdowns>['dropdowns']
   dropdownsError: boolean
+  dropdownsLoading: boolean
   reloadDropdowns: () => Promise<void>
   deleteTargetId: number | null
   isDeleting: boolean
@@ -48,13 +50,16 @@ export interface UseEmployeeTableReturn {
   fetchEmployees: (signal?: AbortSignal) => Promise<void>
   updateQueryParams: (updates: Record<string, string | null>) => void
   handleClearFilters: () => void
+  togglingStatusEmployeeId: number | null
   handleToggleStatus: (employee: Employee, active: boolean) => Promise<void>
   handleDelete: (id: number) => void
   executeDelete: () => Promise<void>
   handleEdit: (employee: Employee) => void
 }
 
-export function useEmployeeTable(): UseEmployeeTableReturn {
+export function useEmployeeTable(options?: { enabled?: boolean }): UseEmployeeTableReturn {
+  const enabled = options?.enabled ?? true
+  const { canView } = usePermissions()
   const {
     searchQuery,
     localSearch,
@@ -69,13 +74,25 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
     handleClearFilters,
   } = useEmployeePagination()
 
-  const { dropdowns, hasError: dropdownsError, reload: reloadDropdowns } = useEmployeeDropdowns()
+  const { dropdowns, hasError: dropdownsError, reload: reloadDropdowns, isLoading: dropdownsLoading } = useEmployeeDropdowns({
+    enabled:
+      canView('employees') || canView('onboarding') || canView('offboarding'),
+  })
   const ui = useEmployeeUiState()
 
   const [employeeList, setEmployeeList] = useState<Employee[]>([])
   const [isTableLoading, setIsTableLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+  const [togglingStatusEmployeeId, setTogglingStatusEmployeeId] = useState<number | null>(null)
   const fetchIdRef = useRef(0)
+  const togglingStatusRef = useRef<number | null>(null)
+
+  const isFetchEnabled = useMemo(() => {
+    if (!enabled) return false
+    if (activeTab === 'onboarding') return canView('onboarding')
+    if (activeTab === 'offboarding') return canView('offboarding')
+    return canView('employees')
+  }, [enabled, activeTab, canView])
 
   const fetchEmployees = async (signal?: AbortSignal) => {
     const fetchId = ++fetchIdRef.current
@@ -118,10 +135,16 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
   }
 
   useEffect(() => {
+    if (!isFetchEnabled) {
+      setIsTableLoading(false)
+      setEmployeeList([])
+      return
+    }
+
     const controller = new AbortController()
     fetchEmployees(controller.signal)
     return () => controller.abort()
-  }, [searchQuery, departmentFilter, statusFilter, pageParam, activeTab])
+  }, [isFetchEnabled, searchQuery, departmentFilter, statusFilter, pageParam, activeTab])
 
   const workforceStats = useMemo<WorkforceStats>(() => {
     const isPageScoped =
@@ -146,13 +169,33 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
   ])
 
   const handleToggleStatus = async (employee: Employee, active: boolean) => {
+    if (togglingStatusRef.current !== null) return
+
     const nextStatus = resolveActiveInactiveStatus(dropdowns, active)
+    const previousStatus = employee.status
+
+    togglingStatusRef.current = employee.id
+    setTogglingStatusEmployeeId(employee.id)
+    setEmployeeList((current) =>
+      current.map((row) =>
+        row.id === employee.id ? { ...row, status: nextStatus } : row,
+      ),
+    )
+
     try {
       await employeeService.updateEmployee({ id: employee.id, status: nextStatus })
       toast.success(`Status updated to ${nextStatus}`)
-      fetchEmployees()
+      await fetchEmployees()
     } catch {
+      setEmployeeList((current) =>
+        current.map((row) =>
+          row.id === employee.id ? { ...row, status: previousStatus } : row,
+        ),
+      )
       toast.error('Failed to update employee status')
+    } finally {
+      togglingStatusRef.current = null
+      setTogglingStatusEmployeeId(null)
     }
   }
 
@@ -186,6 +229,7 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
     isTableLoading,
     dropdowns,
     dropdownsError,
+    dropdownsLoading,
     reloadDropdowns,
     deleteTargetId: ui.deleteTargetId,
     isDeleting: ui.isDeleting,
@@ -205,6 +249,7 @@ export function useEmployeeTable(): UseEmployeeTableReturn {
     fetchEmployees,
     updateQueryParams,
     handleClearFilters,
+    togglingStatusEmployeeId,
     handleToggleStatus,
     handleDelete: ui.handleDelete,
     executeDelete,

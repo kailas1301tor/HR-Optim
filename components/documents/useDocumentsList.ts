@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import {
   employeeDocumentService,
@@ -38,6 +39,18 @@ export function useDocumentsList() {
   const [counts, setCounts] = useState<DocumentStatusCounts>(EMPTY_DOCUMENT_STATUS_COUNTS)
   const [isUploadOpen, setIsUploadOpen] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'upload-document') {
+      setIsUploadOpen(true)
+      const nextParams = new URLSearchParams(searchParams.toString())
+      nextParams.delete('action')
+      const queryString = nextParams.toString()
+      router.replace(`/documents${queryString ? `?${queryString}` : ''}`)
+    }
+  }, [searchParams, router])
   const fetchIdRef = useRef(0)
 
   const refreshList = useCallback(() => {

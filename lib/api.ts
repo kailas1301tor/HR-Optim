@@ -74,6 +74,15 @@ function wrapNetworkError(error: unknown): Error {
   return error instanceof Error ? error : new ApiError('Request failed')
 }
 
+function checkOfflinePreflight(): void {
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    throw new ApiError(
+      'You are offline. Please check your internet connection and try again.',
+      0,
+    )
+  }
+}
+
 function buildAuthHeaders(
   options: RequestOptions,
   body?: Record<string, unknown> | object | FormData | string | null,
@@ -101,6 +110,7 @@ async function requestBlob(
   endpoint: string,
   options: RequestOptions = {},
 ): Promise<BlobResponse> {
+  checkOfflinePreflight()
   const url = buildRequestUrl(endpoint, options.params)
   const { headers, sessionToken } = buildAuthHeaders(options)
 
@@ -169,6 +179,7 @@ async function request<T>(
   body?: Record<string, unknown> | object | FormData | string | null,
   options: RequestOptions = {}
 ): Promise<T> {
+  checkOfflinePreflight()
   const url = buildRequestUrl(endpoint, options.params)
   const { headers, sessionToken } = buildAuthHeaders(options, body)
 

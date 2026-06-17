@@ -39,7 +39,8 @@ export interface UsePendingApprovalsReturn {
   reload: () => void
 }
 
-export function usePendingApprovals(): UsePendingApprovalsReturn {
+export function usePendingApprovals(options?: { enabled?: boolean }): UsePendingApprovalsReturn {
+  const enabled = options?.enabled ?? true
   const [items, setItems] = useState<Request[]>([])
   const [pendingCount, setPendingCount] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -52,6 +53,14 @@ export function usePendingApprovals(): UsePendingApprovalsReturn {
   }, [])
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(false)
+      setItems([])
+      setPendingCount(0)
+      setHasError(false)
+      return
+    }
+
     const controller = new AbortController()
     const fetchId = ++fetchIdRef.current
 
@@ -108,7 +117,7 @@ export function usePendingApprovals(): UsePendingApprovalsReturn {
 
     void load()
     return () => controller.abort()
-  }, [reloadToken])
+  }, [enabled, reloadToken])
 
   return { items, pendingCount, isLoading, hasError, reload }
 }

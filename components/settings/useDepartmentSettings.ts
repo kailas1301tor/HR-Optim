@@ -40,17 +40,25 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
+  const searchParamsString = searchParams.toString()
   const selectedDeptId = searchParams.get('dept_id') || ''
+  const activeTab = searchParams.get('tab') || 'company'
+  const shouldSyncDeptUrl = activeTab === 'company'
 
-  const setSelectedDeptId = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString())
+  const setSelectedDeptId = useCallback((id: string) => {
+    const params = new URLSearchParams(searchParamsString)
+    const currentDeptId = params.get('dept_id') || ''
+    if (id === currentDeptId) return
+
     if (id) {
       params.set('dept_id', id)
     } else {
       params.delete('dept_id')
     }
     router.replace(`${pathname}?${params.toString()}`)
-  }
+  }, [router, pathname, searchParamsString])
+
+  const lastRequestedDeptIdRef = useRef(selectedDeptId)
 
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -84,11 +92,18 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
   }, [reload])
 
   useEffect(() => {
+    lastRequestedDeptIdRef.current = selectedDeptId
+  }, [selectedDeptId])
+
+  useEffect(() => {
+    if (!shouldSyncDeptUrl) return
     if (isLoading || departments.length === 0) return
     if (selectedDeptId && !departments.some((dept) => String(dept.id) === selectedDeptId)) {
+      if (lastRequestedDeptIdRef.current === '') return
+      lastRequestedDeptIdRef.current = ''
       setSelectedDeptId('')
     }
-  }, [isLoading, departments, selectedDeptId, setSelectedDeptId])
+  }, [shouldSyncDeptUrl, isLoading, departments, selectedDeptId, setSelectedDeptId])
 
   const handleOpenAdd = () => {
     setFormName('')

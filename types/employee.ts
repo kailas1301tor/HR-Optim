@@ -13,6 +13,8 @@ export interface DropdownData {
   status_choices: DropdownItem[]
   accommodation_choices: DropdownItem[]
   leave_types: DropdownItem[]
+  onboarding_document_types: DropdownItem[]
+  offboarding_document_types: DropdownItem[]
 }
 
 export interface DropdownResponse {

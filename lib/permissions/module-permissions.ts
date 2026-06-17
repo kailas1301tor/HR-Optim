@@ -58,6 +58,58 @@ export function canManageModule(permissions: Set<string>, moduleKey: ModuleKey):
   return accessLevel(permissions, moduleKey) === 'manage'
 }
 
+export const MODULE_LABELS: Record<ModuleKey, string> = {
+  dashboard: 'Dashboard',
+  employees: 'Employees',
+  attendance: 'Attendance',
+  documents: 'Documents',
+  assets: 'Assets',
+  requests: 'Requests',
+  tickets: 'Help & Support',
+  payroll: 'Payroll',
+  reports: 'Reports',
+  settings: 'Settings',
+  onboarding: 'Onboarding',
+  offboarding: 'Offboarding',
+}
+
+export const NAV_MODULE_KEYS: ModuleKey[] = [
+  'dashboard',
+  'employees',
+  'attendance',
+  'documents',
+  'assets',
+  'requests',
+  'tickets',
+  'payroll',
+  'reports',
+  'settings',
+]
+
+export function hasAnyModuleAccess(permissions: Set<string>): boolean {
+  return (
+    NAV_MODULE_KEYS.some((moduleKey) => canViewModule(permissions, moduleKey)) ||
+    canViewModule(permissions, 'onboarding') ||
+    canViewModule(permissions, 'offboarding')
+  )
+}
+
+export function canViewEmployeesSection(permissions: Set<string>): boolean {
+  return (
+    canViewModule(permissions, 'employees') ||
+    canViewModule(permissions, 'onboarding') ||
+    canViewModule(permissions, 'offboarding')
+  )
+}
+
+export const ALWAYS_ALLOWED_PATHS = ['/profile', '/notifications'] as const
+
+export function isPathAlwaysAllowed(pathname: string): boolean {
+  return ALWAYS_ALLOWED_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  )
+}
+
 const PATH_MODULE_MAP: Array<{ prefix: string; moduleKey: ModuleKey }> = [
   { prefix: '/employees', moduleKey: 'employees' },
   { prefix: '/attendance', moduleKey: 'attendance' },
@@ -70,11 +122,57 @@ const PATH_MODULE_MAP: Array<{ prefix: string; moduleKey: ModuleKey }> = [
   { prefix: '/settings', moduleKey: 'settings' },
 ]
 
-export function moduleKeyFromPathname(pathname: string): ModuleKey {
+/** Single source of truth for pathname → module. Returns null for always-allowed paths and unknown routes. */
+export function resolveModuleFromPath(pathname: string): ModuleKey | null {
+  if (isPathAlwaysAllowed(pathname)) {
+    return null
+  }
+
   if (pathname === '/') {
     return 'dashboard'
   }
 
   const match = PATH_MODULE_MAP.find(({ prefix }) => pathname.startsWith(prefix))
-  return match?.moduleKey ?? 'dashboard'
+  return match?.moduleKey ?? null
 }
+
+export const SELF_SERVICE_MODULES: ReadonlySet<ModuleKey> = new Set([
+  'dashboard',
+  'attendance',
+  'documents',
+  'requests',
+  'payroll',
+])
+
+export function hasEmployeeFallback(moduleKey: ModuleKey): boolean {
+  return SELF_SERVICE_MODULES.has(moduleKey)
+}
+
+export function canAccessPathname(permissions: Set<string>, pathname: string): boolean {
+  if (isPathAlwaysAllowed(pathname)) {
+    return true
+  }
+
+  const moduleKey = resolveModuleFromPath(pathname)
+  if (moduleKey === 'dashboard') {
+    return true // Always allow access because it has an employee dashboard fallback
+  }
+
+  if (moduleKey === 'employees') {
+    return canViewEmployeesSection(permissions)
+  }
+
+  if (moduleKey) {
+    if (SELF_SERVICE_MODULES.has(moduleKey)) {
+      return true // Always allow access because it has an employee fallback UI
+    }
+    return canViewModule(permissions, moduleKey)
+  }
+
+  return hasAnyModuleAccess(permissions)
+}
+
+export function moduleKeyFromPathname(pathname: string): ModuleKey {
+  return resolveModuleFromPath(pathname) ?? 'dashboard'
+}
+

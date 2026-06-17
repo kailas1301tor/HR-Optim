@@ -2,7 +2,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { onboardingOffboardingService, type MasterDocType, type EmployeeDocument } from '@/services/onboarding-offboarding-service'
+import { onboardingOffboardingService, type EmployeeDocument } from '@/services/onboarding-offboarding-service'
+import type { DropdownItem } from '@/types/employee'
 import { CommonEmptyState } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,6 +20,8 @@ type ChecklistVariant = 'onboarding' | 'offboarding'
 interface ComplianceChecklistTabProps {
   employeeId: number
   variant: ChecklistVariant
+  documentTypes: DropdownItem[]
+  isDropdownLoading?: boolean
 }
 
 const VARIANT_CONFIG = {
@@ -26,7 +29,6 @@ const VARIANT_CONFIG = {
     label: 'onboarding',
     bannerText: 'Once onboarding files are submitted, they are locked as immutable audit logs and cannot be deleted or replaced.',
     emptyText: 'No onboarding document types configured. Set them up under Settings.',
-    fetchTypes: (signal?: AbortSignal) => onboardingOffboardingService.getOnboardingDocTypes(signal),
     fetchDocs: (id: number, signal?: AbortSignal) => onboardingOffboardingService.getOnboardingDocuments(id, signal),
     uploadDoc: (data: FormData) => onboardingOffboardingService.uploadOnboardingDocument(data),
   },
@@ -34,7 +36,6 @@ const VARIANT_CONFIG = {
     label: 'offboarding',
     bannerText: 'Once offboarding files are submitted, they are locked as immutable audit logs and cannot be deleted or replaced.',
     emptyText: 'No offboarding document types configured. Set them up under Settings.',
-    fetchTypes: (signal?: AbortSignal) => onboardingOffboardingService.getOffboardingDocTypes(signal),
     fetchDocs: (id: number, signal?: AbortSignal) => onboardingOffboardingService.getOffboardingDocuments(id, signal),
     uploadDoc: (data: FormData) => onboardingOffboardingService.uploadOffboardingDocument(data),
   },
@@ -76,11 +77,15 @@ export function ComplianceChecklistSkeleton() {
   )
 }
 
-function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabProps) {
+function ComplianceChecklistTab({
+  employeeId,
+  variant,
+  documentTypes,
+  isDropdownLoading = false,
+}: ComplianceChecklistTabProps) {
   const config = VARIANT_CONFIG[variant]
   const { canManage } = usePermissions()
   const canUpload = canManage(variant)
-  const [masterTypes, setMasterTypes] = useState<MasterDocType[]>([])
   const [uploadedDocs, setUploadedDocs] = useState<EmployeeDocument[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -100,7 +105,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
     setIsLoading(false)
   }, [])
 
-  const loadData = useCallback(async (signal?: AbortSignal): Promise<void> => {
+  const loadDocs = useCallback(async (signal?: AbortSignal): Promise<void> => {
     const loadId = ++loadIdRef.current
     const variantConfig = VARIANT_CONFIG[variant]
     clearSkeletonTimer()
@@ -109,12 +114,8 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
     const startedAt = Date.now()
 
     try {
-      const [typesData, docsData] = await Promise.all([
-        variantConfig.fetchTypes(signal),
-        variantConfig.fetchDocs(employeeId, signal),
-      ])
+      const docsData = await variantConfig.fetchDocs(employeeId, signal)
       if (signal?.aborted || loadId !== loadIdRef.current) return
-      setMasterTypes(typesData)
       setUploadedDocs(docsData)
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') return
@@ -130,13 +131,15 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
   }, [employeeId, variant, clearSkeletonTimer, finishLoading])
 
   useEffect(() => {
+    if (isDropdownLoading) return
+
     const controller = new AbortController()
-    void loadData(controller.signal)
+    void loadDocs(controller.signal)
     return () => {
       controller.abort()
       clearSkeletonTimer()
     }
-  }, [loadData, clearSkeletonTimer])
+  }, [loadDocs, clearSkeletonTimer, isDropdownLoading])
 
   const handleFileUpload = async (masterTypeId: number, file: File): Promise<void> => {
     setUploadingId(masterTypeId)
@@ -158,7 +161,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
     }
   }
 
-  if (isLoading) {
+  if (isDropdownLoading || isLoading) {
     return <ComplianceChecklistSkeleton />
   }
 
@@ -170,7 +173,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
         </div>
         <h4 className="text-sm font-semibold text-cloud mb-1">Failed to Load Checklist</h4>
         <p className="text-xs text-slate-400 max-w-xs mb-4">{error}</p>
-        <Button variant="outline" size="sm" onClick={() => loadData()} className="h-9 rounded-[20px] [corner-shape:squircle]">
+        <Button variant="outline" size="sm" onClick={() => loadDocs()} className="h-9 rounded-[20px] [corner-shape:squircle]">
           Try Again
         </Button>
       </div>
@@ -188,7 +191,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
       </div>
 
       <div className="space-y-3">
-        {masterTypes.length === 0 ? (
+        {documentTypes.length === 0 ? (
           <CommonEmptyState
             icon={FileText}
             title="No document types configured"
@@ -196,7 +199,7 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
             className="py-8 shadow-none border-0 bg-transparent"
           />
         ) : (
-          masterTypes.map((type) => {
+          documentTypes.map((type) => {
             const matchingDoc = uploadedDocs.find((doc) => doc.document_type === type.name)
             const isUploading = uploadingId === type.id
 
@@ -289,11 +292,39 @@ function ComplianceChecklistTab({ employeeId, variant }: ComplianceChecklistTabP
   )
 }
 
-/** Backward-compatible named exports for existing import sites. */
-export function OnboardingChecklistTab({ employeeId }: { employeeId: number }) {
-  return <ComplianceChecklistTab employeeId={employeeId} variant="onboarding" />
+interface ChecklistTabProps {
+  employeeId: number
+  documentTypes: DropdownItem[]
+  isDropdownLoading?: boolean
 }
 
-export function OffboardingChecklistTab({ employeeId }: { employeeId: number }) {
-  return <ComplianceChecklistTab employeeId={employeeId} variant="offboarding" />
+/** Backward-compatible named exports for existing import sites. */
+export function OnboardingChecklistTab({
+  employeeId,
+  documentTypes,
+  isDropdownLoading,
+}: ChecklistTabProps) {
+  return (
+    <ComplianceChecklistTab
+      employeeId={employeeId}
+      variant="onboarding"
+      documentTypes={documentTypes}
+      isDropdownLoading={isDropdownLoading}
+    />
+  )
+}
+
+export function OffboardingChecklistTab({
+  employeeId,
+  documentTypes,
+  isDropdownLoading,
+}: ChecklistTabProps) {
+  return (
+    <ComplianceChecklistTab
+      employeeId={employeeId}
+      variant="offboarding"
+      documentTypes={documentTypes}
+      isDropdownLoading={isDropdownLoading}
+    />
+  )
 }

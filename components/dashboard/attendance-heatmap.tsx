@@ -25,9 +25,10 @@ function getColorIntensity(value: number, max: number): string {
 interface AttendanceHeatmapProps {
   days: DashboardAttendanceDay[]
   isLoading?: boolean
+  subtitle?: string
 }
 
-export function AttendanceHeatmap({ days, isLoading = false }: AttendanceHeatmapProps) {
+export function AttendanceHeatmap({ days, isLoading = false, subtitle = 'Recent attendance distribution' }: AttendanceHeatmapProps) {
   const { weeks, maxPresent } = useMemo(() => {
     const max = Math.max(...days.map((d) => d.presentCount), 1)
     const weekChunks: DashboardAttendanceDay[][] = []
@@ -41,7 +42,7 @@ export function AttendanceHeatmap({ days, isLoading = false }: AttendanceHeatmap
     return (
       <div className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6 min-h-[220px]">
         <h3 className="text-lg font-semibold text-cloud mb-1">Attendance Overview</h3>
-        <p className="text-sm text-muted-foreground mb-6">Recent attendance distribution</p>
+        <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>
         <Skeleton className={cn('h-[120px] w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
       </div>
     )
@@ -65,7 +66,7 @@ export function AttendanceHeatmap({ days, isLoading = false }: AttendanceHeatmap
       className="bg-card border border-border rounded-[32px] [corner-shape:squircle] p-6"
     >
       <h3 className="text-lg font-semibold text-cloud mb-1">Attendance Overview</h3>
-      <p className="text-sm text-muted-foreground mb-6">Recent attendance distribution</p>
+      <p className="text-sm text-muted-foreground mb-6">{subtitle}</p>
 
       <div className="flex gap-2">
         <div className="flex flex-col gap-1 text-[10px] text-slate-500 pt-6">

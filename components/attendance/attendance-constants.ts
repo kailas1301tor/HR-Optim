@@ -13,6 +13,7 @@ export const STATUS_CONFIG: Record<
   absent: { label: 'Absent', color: 'bg-red-400', dotColor: 'bg-red-400' },
   leave: { label: 'On Leave', color: 'bg-slate-400', dotColor: 'bg-slate-400' },
   weekend: { label: 'Weekend', color: 'bg-slate-600', dotColor: 'bg-slate-600' },
+  holiday: { label: 'Holiday', color: 'bg-teal-400', dotColor: 'bg-teal-400' },
 }
 
 const SHIFT_BADGE_CLASSES = [

@@ -17,6 +17,7 @@ export interface BackendAttendanceRecord {
   time_in: string | null
   time_out: string | null
   work_hours: string
+  date?: string
 }
 
 export interface BackendAttendanceStatusCount {
@@ -53,6 +54,7 @@ export function normalizeAttendanceStatus(status: string): AttendanceStatus {
   if (normalized === 'absent') return 'absent'
   if (normalized === 'on leave' || normalized === 'leave') return 'leave'
   if (normalized === 'weekend' || normalized === 'week off') return 'weekend'
+  if (normalized === 'holiday') return 'holiday'
   return 'absent'
 }
 
@@ -64,11 +66,14 @@ export function mapBackendAttendanceRecord(record: BackendAttendanceRecord): Att
     initials: initialsFromName(record.employee_name),
     department: record.department,
     shiftName: record.shift,
-    date: '',
+    date: record.date || '',
     timeIn: formatTimeValue(record.time_in),
     timeOut: formatTimeValue(record.time_out),
     status: normalizeAttendanceStatus(record.status),
     workHours: formatWorkHours(record.work_hours),
+    role: record.role,
+    email: record.email,
+    phoneNumber: record.phone_number,
   }
 }
 

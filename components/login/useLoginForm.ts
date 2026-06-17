@@ -7,6 +7,11 @@ import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { authService } from '@/services/auth-service'
+import { invalidatePermissions } from '@/components/auth/permissions-provider'
+import {
+  canAccessPath,
+  getDefaultPostLoginPath,
+} from '@/lib/permissions/get-default-post-login-path'
 import { loginSchema, type LoginValues } from '@/validations/auth.schema'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import { applyAuthFieldErrors } from '@/lib/helpers/parse-auth-form-errors'
@@ -57,10 +62,13 @@ export function useLoginForm(): UseLoginFormReturn {
     }
   }, [])
 
-  const navigateAfterLogin = useCallback(() => {
-    router.refresh()
-    router.push(redirectPath)
-  }, [router, redirectPath])
+  const navigateAfterLogin = useCallback(
+    async (targetPath: string) => {
+      router.refresh()
+      router.push(targetPath)
+    },
+    [router],
+  )
 
   const completeLogin = useCallback(
     async (session: Pick<PendingAuthSession, 'token' | 'username' | 'email' | 'userId' | 'refresh'>) => {
@@ -69,10 +77,22 @@ export function useLoginForm(): UseLoginFormReturn {
       clearPendingAuth()
       setPendingAuthState(null)
       setShowSetPasswordModal(false)
-      toast.success('Login successful! Redirecting...', { description: `Welcome to your ${PRODUCT_NAME} dashboard.` })
-      navigateAfterLogin()
+      invalidatePermissions()
+
+      const profile = await authService.getCurrentUserProfile()
+      const permissions = new Set(
+        profile.permissions.map((permission) => permission.codename).filter(Boolean),
+      )
+      const targetPath = canAccessPath(permissions, redirectPath)
+        ? redirectPath
+        : getDefaultPostLoginPath(permissions)
+
+      toast.success('Login successful! Redirecting...', {
+        description: `Welcome to your ${PRODUCT_NAME} dashboard.`,
+      })
+      await navigateAfterLogin(targetPath)
     },
-    [navigateAfterLogin]
+    [navigateAfterLogin, redirectPath],
   )
 
   const handleLoginFailure = useCallback(

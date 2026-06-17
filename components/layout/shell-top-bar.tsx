@@ -4,7 +4,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
-  Building2,
   Bell,
   User,
   LogOut,
@@ -13,6 +12,7 @@ import {
   ChevronLeft,
   Settings,
 } from 'lucide-react'
+import { BrandIcon } from '@/components/common'
 import { PRODUCT_NAME, PRODUCT_TAGLINE } from '@/lib/brand'
 import {
   DropdownMenu,
@@ -29,7 +29,7 @@ import {
   SHELL_SIDEBAR_WIDTH_COLLAPSED,
   SHELL_SIDEBAR_WIDTH_EXPANDED,
   uiSquircleNav,
-  uiSquircleXs,
+  uiSquircleSm,
 } from '@/lib/ui/design-system'
 import { useSidebar } from './useSidebar'
 import type { UserProfile } from './app-shell'
@@ -51,7 +51,14 @@ export function ShellTopBar({
   userProfile,
   isMobile,
 }: ShellTopBarProps) {
-  const { handleLogout, handleGoToProfile, handleGoToSettings, breadcrumbs, pathname } = useSidebar()
+  const {
+    handleLogout,
+    handleGoToProfile,
+    handleGoToSettings,
+    handleGoToNotifications,
+    breadcrumbs,
+    pathname,
+  } = useSidebar()
 
   const brandWidth = isMobile
     ? undefined
@@ -98,14 +105,7 @@ export function ShellTopBar({
             collapsed && !isMobile && 'justify-center flex-none'
           )}
         >
-          <div
-            className={cn(
-              'w-8 h-8 bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center shrink-0',
-              uiSquircleXs
-            )}
-          >
-            <Building2 className="w-4 h-4 text-white" />
-          </div>
+          <BrandIcon size="sm" />
           {(!collapsed || isMobile) && (
             <div className="min-w-0 leading-tight">
               <p className="text-sm font-semibold text-cloud truncate leading-none">{PRODUCT_NAME}</p>
@@ -166,7 +166,10 @@ export function ShellTopBar({
           <button
             type="button"
             onClick={onSearchOpen}
-            className="flex items-center gap-2 h-9 px-3 sm:px-4 bg-carbon/80 border border-border rounded-full text-xs sm:text-sm text-muted-foreground hover:text-cloud hover:border-violet-core/40 transition-all cursor-pointer"
+            className={cn(
+              'flex items-center gap-2 h-9 px-3 sm:px-4 bg-carbon/80 border border-border text-xs sm:text-sm text-muted-foreground hover:text-cloud hover:border-violet-core/40 transition-all cursor-pointer',
+              uiSquircleSm
+            )}
           >
             <Search className="w-4 h-4 text-slate-400 shrink-0" />
             <span className="hidden sm:inline">Search...</span>
@@ -177,6 +180,7 @@ export function ShellTopBar({
 
           <button
             type="button"
+            onClick={handleGoToNotifications}
             className={cn('relative p-2 hover:bg-carbon transition-colors cursor-pointer', uiSquircleNav)}
             aria-label="Notifications"
           >

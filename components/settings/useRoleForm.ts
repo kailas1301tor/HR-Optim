@@ -22,6 +22,7 @@ export interface UseRoleFormReturn {
   setFormSearchQuery: (query: string) => void
   isSaving: boolean
   isLoadingDetails: boolean
+  isFormReady: boolean
   sortedPermissions: BackendPermission[]
   filteredFormPermissions: BackendPermission[]
   handleTogglePermissionId: (id: number, checked: boolean) => void
@@ -42,6 +43,7 @@ export function useRoleForm({
   const [formSearchQuery, setFormSearchQuery] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
+  const [isFormReady, setIsFormReady] = useState(false)
   const fetchIdRef = useRef(0)
   const handleCancelFormRef = useRef(handleCancelForm)
   const syncedFormKeyRef = useRef<string | null>(null)
@@ -49,6 +51,18 @@ export function useRoleForm({
   useEffect(() => {
     handleCancelFormRef.current = handleCancelForm
   }, [handleCancelForm])
+
+  const applyRoleToForm = (name: string, permissionIds: number[]): void => {
+    setRoleFormName((prev) => (prev === name ? prev : name))
+    setSelectedPermissionIds((prev) => {
+      if (prev.length === permissionIds.length && prev.every((id, index) => id === permissionIds[index])) {
+        return prev
+      }
+      return permissionIds
+    })
+    setIsLoadingDetails(false)
+    setIsFormReady(true)
+  }
 
   useEffect(() => {
     const formKey = `${action}:${roleEditId ?? 'new'}`
@@ -60,30 +74,35 @@ export function useRoleForm({
       setSelectedPermissionIds([])
       setFormSearchQuery('')
       setIsLoadingDetails(false)
+      setIsFormReady(true)
       return
     }
 
     if (action !== 'edit' || roleEditId === null) {
       syncedFormKeyRef.current = null
-      return
-    }
-
-    const role = roles.find((r) => r.id === roleEditId)
-    if (role) {
-      if (syncedFormKeyRef.current === formKey) return
-      syncedFormKeyRef.current = formKey
-      setRoleFormName(role.name)
-      setSelectedPermissionIds(role.permissions.map((p) => p.id))
-      setIsLoadingDetails(false)
-      return
-    }
-
-    if (roles.length === 0) {
-      setIsLoadingDetails(true)
+      setIsFormReady(false)
       return
     }
 
     if (syncedFormKeyRef.current === formKey) return
+
+    setIsFormReady(false)
+
+    const role = roles.find((r) => Number(r.id) === Number(roleEditId))
+    if (role) {
+      syncedFormKeyRef.current = formKey
+      const permissionIds = (role.permissions ?? []).map((p) => p.id)
+      applyRoleToForm(role.name, permissionIds)
+      return
+    }
+
+    if (roles.length === 0) {
+      if (!isLoadingDetails) {
+        setIsLoadingDetails(true)
+      }
+      return
+    }
+
     syncedFormKeyRef.current = formKey
 
     const fetchId = ++fetchIdRef.current
@@ -94,8 +113,8 @@ export function useRoleForm({
         const roleDetails = await roleService.getRoleById(roleEditId)
         if (fetchId !== fetchIdRef.current) return
         if (roleDetails) {
-          setRoleFormName(roleDetails.name)
-          setSelectedPermissionIds(roleDetails.permissions.map((p) => p.id))
+          const permissionIds = (roleDetails.permissions ?? []).map((p) => p.id)
+          applyRoleToForm(roleDetails.name, permissionIds)
         } else {
           toast.error('Role not found')
           handleCancelFormRef.current()
@@ -116,22 +135,28 @@ export function useRoleForm({
     return () => {
       fetchIdRef.current += 1
     }
-  }, [action, roleEditId, roles])
+  }, [action, roleEditId, roles.length])
 
   const handleTogglePermissionId = (id: number, checked: boolean): void => {
-    if (checked) {
-      setSelectedPermissionIds((prev) => [...prev, id])
-    } else {
-      setSelectedPermissionIds((prev) => prev.filter((pId) => pId !== id))
-    }
+    setSelectedPermissionIds((prev) => {
+      const isSelected = prev.includes(id)
+      if (checked) {
+        return isSelected ? prev : [...prev, id]
+      }
+      return isSelected ? prev.filter((pId) => pId !== id) : prev
+    })
   }
 
   const handleToggleAllPermissions = (ids: number[], check: boolean): void => {
-    if (check) {
-      setSelectedPermissionIds((prev) => Array.from(new Set([...prev, ...ids])))
-    } else {
-      setSelectedPermissionIds((prev) => prev.filter((pId) => !ids.includes(pId)))
-    }
+    setSelectedPermissionIds((prev) => {
+      if (check) {
+        const merged = Array.from(new Set([...prev, ...ids]))
+        if (merged.length === prev.length) return prev
+        return merged
+      }
+      const next = prev.filter((pId) => !ids.includes(pId))
+      return next.length === prev.length ? prev : next
+    })
   }
 
   const sortedPermissions = useMemo(() => {
@@ -178,6 +203,7 @@ export function useRoleForm({
     setFormSearchQuery,
     isSaving,
     isLoadingDetails,
+    isFormReady,
     sortedPermissions,
     filteredFormPermissions,
     handleTogglePermissionId,
