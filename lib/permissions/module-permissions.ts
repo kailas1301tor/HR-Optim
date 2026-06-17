@@ -103,7 +103,7 @@ export function canViewEmployeesSection(permissions: Set<string>): boolean {
   )
 }
 
-export const ALWAYS_ALLOWED_PATHS = ['/profile', '/notifications'] as const
+export const ALWAYS_ALLOWED_PATHS = ['/profile', '/notifications', '/settings'] as const
 
 export function isPathAlwaysAllowed(pathname: string): boolean {
   return ALWAYS_ALLOWED_PATHS.some(

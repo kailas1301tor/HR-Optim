@@ -1,18 +1,16 @@
 // components/documents/employee-documents-view.tsx
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { FileQuestion, Search, ShieldAlert } from 'lucide-react'
 import { usePermissions } from '@/components/auth/permissions-provider'
-import { employeeSelfService } from '@/services/employee-self-service'
 import { DocumentCard } from './document-card'
-import { DocumentCardSkeleton } from './document-card-skeleton'
+import { DocumentsSkeleton } from './documents-skeleton'
 import { CommonEmptyState, CommonErrorState } from '@/components/common'
-import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import { Input } from '@/components/ui/input'
 import { uiCard, uiInput } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { EmployeeDocument } from '@/types/document'
+import { useEmployeeDocuments } from './useEmployeeDocuments'
 
 function EmployeeDocumentsPageHeader({ embedded }: { embedded: boolean }) {
   if (embedded) return null
@@ -28,49 +26,12 @@ function EmployeeDocumentsPageHeader({ embedded }: { embedded: boolean }) {
 
 export function EmployeeDocumentsView({ embedded = false }: { embedded?: boolean }) {
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
-  const [documents, setDocuments] = useState<EmployeeDocument[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [reloadToken, setReloadToken] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
 
-  useEffect(() => {
-    if (isAuthLoading) return
-    if (!employeeProfileId) {
-      setIsLoading(false)
-      return
-    }
-    const profileId = employeeProfileId
-    const controller = new AbortController()
-
-    async function loadDocuments() {
-      setIsLoading(true)
-      setHasError(false)
-      setErrorMessage('')
-      try {
-        const data = await employeeSelfService.getDocuments({
-          employeeId: profileId,
-          signal: controller.signal,
-        })
-        setDocuments(Array.isArray(data) ? data : [])
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return
-        console.error('🔴 Error loading self-service documents:', error)
-        setDocuments([])
-        setHasError(true)
-        setErrorMessage(getApiErrorMessage(error, 'Failed to load your documents. Please try again.'))
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadDocuments()
-
-    return () => controller.abort()
-  }, [employeeProfileId, isAuthLoading, reloadToken])
-
-  const handleRetry = () => setReloadToken((prev) => prev + 1)
+  const { documents, isLoading, hasError, errorMessage, reload } = useEmployeeDocuments({
+    employeeProfileId,
+    enabled: !isAuthLoading && employeeProfileId !== null,
+  })
 
   const filteredDocs = useMemo(() => {
     if (!searchQuery.trim()) return documents
@@ -83,16 +44,7 @@ export function EmployeeDocumentsView({ embedded = false }: { embedded?: boolean
   }, [documents, searchQuery])
 
   if (isAuthLoading || isLoading) {
-    return (
-      <div className="space-y-6">
-        <EmployeeDocumentsPageHeader embedded={embedded} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, idx) => (
-            <DocumentCardSkeleton key={idx} />
-          ))}
-        </div>
-      </div>
-    )
+    return <DocumentsSkeleton variant="employee" />
   }
 
   if (!employeeProfileId) {
@@ -113,8 +65,8 @@ export function EmployeeDocumentsView({ embedded = false }: { embedded?: boolean
         <EmployeeDocumentsPageHeader embedded={embedded} />
         <CommonErrorState
           title="Unable to load documents"
-          message={errorMessage}
-          onRetry={handleRetry}
+          message={errorMessage ?? 'Failed to load your documents'}
+          onRetry={reload}
         />
       </div>
     )
@@ -148,7 +100,7 @@ export function EmployeeDocumentsView({ embedded = false }: { embedded?: boolean
             />
           ))}
         </div>
-      ) : (
+      ) : !hasError ? (
         <CommonEmptyState
           icon={FileQuestion}
           title="No documents found"
@@ -158,7 +110,7 @@ export function EmployeeDocumentsView({ embedded = false }: { embedded?: boolean
               : 'You do not have any uploaded or verified documents registered in the system.'
           }
         />
-      )}
+      ) : null}
     </div>
   )
 }

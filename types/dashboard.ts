@@ -105,7 +105,8 @@ export interface BackendEmployeeDashboard {
 }
 
 export interface EmployeePendingRequestItem {
-  id: number
+  /** Composite key — backend ids are scoped per request table, not globally unique */
+  id: string
   type: string
   submittedDate: string
   status: string

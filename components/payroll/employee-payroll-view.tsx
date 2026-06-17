@@ -1,19 +1,17 @@
 // components/payroll/employee-payroll-view.tsx
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { DollarSign, FileText, Download, TrendingUp, ShieldAlert } from 'lucide-react'
 import { usePermissions } from '@/components/auth/permissions-provider'
-import { employeeSelfService } from '@/services/employee-self-service'
-import { mapBackendPayroll } from '@/lib/mappers/payroll-mapper'
 import { CommonEmptyState, CommonErrorBanner, MonthYearPicker } from '@/components/common'
-import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { uiCard, uiOutlineBtn } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import type { PayrollRecord } from '@/types/payroll'
 import { PayrollSkeleton } from './payroll-skeleton'
+import { useEmployeePayroll } from './useEmployeePayroll'
 
 function getCurrentMonthYear() {
   const now = new Date()
@@ -23,61 +21,17 @@ function getCurrentMonthYear() {
 export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }) {
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
   const [{ month, year }, setMonthYear] = useState(getCurrentMonthYear)
-  const [payrollHistory, setPayrollHistory] = useState<PayrollRecord[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [reloadToken, setReloadToken] = useState(0)
 
-  useEffect(() => {
-    if (isAuthLoading) return
-    if (!employeeProfileId) {
-      setIsLoading(false)
-      return
-    }
+  const { payrollHistory, isLoading, hasError, errorMessage, reload } = useEmployeePayroll({
+    employeeProfileId,
+    month,
+    year,
+    enabled: !isAuthLoading && employeeProfileId !== null,
+  })
 
-    const profileId = employeeProfileId
-    const controller = new AbortController()
-
-    async function loadPayroll() {
-      setIsLoading(true)
-      setHasError(false)
-      setErrorMessage('')
-      try {
-        const raw = await employeeSelfService.getPayroll({
-          employeeId: profileId,
-          month,
-          year,
-          signal: controller.signal,
-        })
-        const list = Array.isArray(raw) ? raw : []
-        const mapped = list.map(mapBackendPayroll)
-        mapped.sort((a, b) => {
-          const dateA = a?.startDate ? new Date(a.startDate).getTime() : 0
-          const dateB = b?.startDate ? new Date(b.startDate).getTime() : 0
-          return dateB - dateA
-        })
-        setPayrollHistory(mapped)
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return
-        setPayrollHistory([])
-        setHasError(true)
-        setErrorMessage(getApiErrorMessage(error, 'Failed to load payroll. Please try again.'))
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadPayroll()
-
-    return () => controller.abort()
-  }, [employeeProfileId, isAuthLoading, month, year, reloadToken])
-
-  const handleRetry = () => setReloadToken((prev) => prev + 1)
   const handleMonthChange = (nextMonth: number) => setMonthYear((prev) => ({ ...prev, month: nextMonth }))
   const handleYearChange = (nextYear: number) => setMonthYear((prev) => ({ ...prev, year: nextYear }))
 
-  // Summaries
   const stats = useMemo(() => {
     const totalEarnings = payrollHistory.reduce((sum, item) => sum + item.netSalary, 0)
     const count = payrollHistory.length
@@ -87,7 +41,6 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
 
   const handleDownloadPayslip = (record: PayrollRecord) => {
     toast.info(`Downloading payslip for ${new Date(record.startDate).toLocaleString('default', { month: 'long', year: 'numeric' })}...`)
-    // Normally would invoke a PDF generator or fetch PDF endpoint. For now, open mock pdf download.
     const fileContent = `HRMS PAYSLIP - ${record.employeeName}\nID: ${record.employeeId}\nPeriod: ${record.startDate} to ${record.endDate}\nBasic Salary: AED ${record.baseSalary}\nAllowances: AED ${record.allowances}\nOvertime: AED ${record.overtime}\nDeductions: AED ${record.deductions}\nNet Pay: AED ${record.netSalary}`
     const blob = new Blob([fileContent], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
@@ -141,10 +94,9 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
       </div>
 
       {hasError ? (
-        <CommonErrorBanner message={errorMessage} onRetry={handleRetry} />
+        <CommonErrorBanner message={errorMessage ?? 'Failed to load payroll'} onRetry={reload} />
       ) : null}
 
-      {/* Mini-KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className={cn(uiCard, 'p-6 flex items-center gap-4 bg-teal-400/5 border-teal-500/10')}>
           <div className="p-3 rounded-[16px] [corner-shape:squircle] bg-teal-400/10 text-teal-400">
@@ -237,13 +189,13 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
             </table>
           </div>
         </div>
-      ) : (
+      ) : !hasError ? (
         <CommonEmptyState
           icon={DollarSign}
           title="No payslips available"
           description="Your monthly payslips will appear here once they are processed by the HR department."
         />
-      )}
+      ) : null}
     </div>
   )
 }

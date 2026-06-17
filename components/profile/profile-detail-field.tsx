@@ -11,17 +11,32 @@ interface ProfileDetailFieldProps {
   className?: string
 }
 
-export function ProfileDetailField({ icon: Icon, label, value, className }: ProfileDetailFieldProps) {
+export function ProfileDetailField({
+  icon: Icon,
+  label,
+  value,
+  className,
+}: ProfileDetailFieldProps): React.JSX.Element {
   return (
-    <div className={cn('flex items-start gap-3 py-2 px-1', className)}>
-      <div className="w-5 h-5 flex items-center justify-center shrink-0 text-violet-glow mt-0.5">
-        <Icon className="w-4 h-4" aria-hidden />
+    <div
+      className={cn(
+        'group flex items-start gap-4 rounded-xl border border-transparent p-3.5 transition-all duration-200 hover:border-border/30 hover:bg-muted/10',
+        className
+      )}
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/20 text-muted-foreground transition-colors group-hover:border-violet-core/30 group-hover:bg-violet-core/10 group-hover:text-violet-glow">
+        <Icon className="h-4.5 w-4.5 transition-transform duration-200 group-hover:scale-110" aria-hidden />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/80">
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/85 transition-colors group-hover:text-violet-glow/80">
           {label}
         </p>
-        <p className="text-sm font-semibold text-cloud mt-0.5 break-all leading-normal">{value}</p>
+        <p
+          className="truncate text-sm font-semibold tracking-wide text-foreground sm:whitespace-normal sm:text-base"
+          title={value}
+        >
+          {value}
+        </p>
       </div>
     </div>
   )

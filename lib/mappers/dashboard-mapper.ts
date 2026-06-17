@@ -123,13 +123,17 @@ function mapEmployeeKpis(cards: BackendEmployeeDashboard['cards']): DashboardKpi
 }
 
 export function mapBackendEmployeeDashboard(data: BackendEmployeeDashboard): EmployeeDashboardData {
-  const pendingRequests = (data.pending_approval_list ?? []).map((item, index) => ({
-    id: item.id ?? index,
-    type: item.type ?? 'Request',
-    submittedDate: item.request_date ?? '',
-    status: item.status ?? 'Unknown',
-    details: item.details ?? '—',
-  }))
+  const pendingRequests = (data.pending_approval_list ?? []).map((item, index) => {
+    const type = item.type ?? 'Request'
+    const rawId = item.id ?? index
+    return {
+      id: `${type}-${rawId}`,
+      type,
+      submittedDate: item.request_date ?? '',
+      status: item.status ?? 'Unknown',
+      details: item.details ?? '—',
+    }
+  })
 
   return {
     kpis: mapEmployeeKpis(data.cards),

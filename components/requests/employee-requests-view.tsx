@@ -4,27 +4,15 @@
 import { useEffect, useState } from 'react'
 import { FileQuestion, Plus, ShieldAlert } from 'lucide-react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { PrimaryButton } from '@/components/ui/primary-button'
 import Link from 'next/link'
 import { usePermissions } from '@/components/auth/permissions-provider'
-import { employeeSelfService } from '@/services/employee-self-service'
-import {
-  mapLeaveRequest,
-  mapSalaryAdvanceRequest,
-  mapLoanRequest,
-  mapDocumentRequest,
-} from '@/lib/mappers/request-mapper'
-import { mapDashboardAllRequest } from '@/lib/mappers/employee-self-service-mapper'
-import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import { RequestCard } from './request-card'
 import { RequestsSkeleton } from './requests-skeleton'
 import { CommonEmptyState, CommonFilterChips, CommonMobileCardGrid, CommonErrorBanner } from '@/components/common'
-import { uiCard, uiOutlineBtn } from '@/lib/ui/design-system'
+import { PrimaryButton } from '@/components/ui/primary-button'
+import { uiCard } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { Request } from '@/types/request'
-
-type RequestTab = 'all' | 'leave' | 'salary-advance' | 'loan' | 'document'
+import { useEmployeeRequests, type EmployeeRequestTab } from './useEmployeeRequests'
 
 const TAB_OPTIONS = [
   { value: 'all', label: 'All Requests' },
@@ -41,92 +29,24 @@ export function EmployeeRequestsView({ embedded = false }: { embedded?: boolean 
   const requestIdParam = searchParams.get('requestId')
 
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
-  const [activeTab, setActiveTab] = useState<RequestTab>('all')
-  const [requests, setRequests] = useState<Request[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [reloadToken, setReloadToken] = useState(0)
+  const [activeTab, setActiveTab] = useState<EmployeeRequestTab>('all')
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null)
+
+  const { requests, isLoading, hasError, errorMessage, reload } = useEmployeeRequests({
+    employeeProfileId,
+    activeTab,
+    enabled: !isAuthLoading && employeeProfileId !== null,
+  })
 
   useEffect(() => {
     if (!requestIdParam) return
     setExpandedRequestId(requestIdParam)
 
-    // Clean up query param
     const nextParams = new URLSearchParams(searchParams.toString())
     nextParams.delete('requestId')
     const queryString = nextParams.toString()
     router.replace(`${pathname}${queryString ? `?${queryString}` : ''}`)
   }, [requestIdParam, searchParams, router, pathname])
-
-  useEffect(() => {
-    if (isAuthLoading) return
-    if (!employeeProfileId) {
-      setIsLoading(false)
-      return
-    }
-
-    const profileId = employeeProfileId
-    const controller = new AbortController()
-
-    async function loadRequests() {
-      setIsLoading(true)
-      setHasError(false)
-      setErrorMessage('')
-      try {
-        const scopedParams = { employeeId: profileId, signal: controller.signal }
-
-        if (activeTab === 'all') {
-          const allItems = await employeeSelfService.getAllRequests(scopedParams)
-          const mapped = allItems.map(mapDashboardAllRequest)
-          mapped.sort((a, b) => {
-            const dateA = a?.submittedAt ? new Date(a.submittedAt).getTime() : 0
-            const dateB = b?.submittedAt ? new Date(b.submittedAt).getTime() : 0
-            return dateB - dateA
-          })
-          setRequests(mapped)
-          return
-        }
-
-        if (activeTab === 'leave') {
-          const res = await employeeSelfService.getLeaveRequests(scopedParams)
-          setRequests((Array.isArray(res) ? res : []).map(mapLeaveRequest))
-          return
-        }
-
-        if (activeTab === 'salary-advance') {
-          const res = await employeeSelfService.getSalaryAdvanceRequests(scopedParams)
-          setRequests((Array.isArray(res) ? res : []).map(mapSalaryAdvanceRequest))
-          return
-        }
-
-        if (activeTab === 'loan') {
-          const res = await employeeSelfService.getLoanRequests(scopedParams)
-          setRequests((Array.isArray(res) ? res : []).map(mapLoanRequest))
-          return
-        }
-
-        if (activeTab === 'document') {
-          const res = await employeeSelfService.getDocumentRequests(scopedParams)
-          setRequests((Array.isArray(res) ? res : []).map(mapDocumentRequest))
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return
-        setRequests([])
-        setHasError(true)
-        setErrorMessage(getApiErrorMessage(error, 'Failed to load requests. Please try again.'))
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadRequests()
-
-    return () => controller.abort()
-  }, [activeTab, employeeProfileId, isAuthLoading, reloadToken])
-
-  const handleRetry = () => setReloadToken((prev) => prev + 1)
 
   const newRequestHref =
     activeTab === 'all' ? '/requests/new' : `/requests/new?type=${activeTab}`
@@ -172,11 +92,11 @@ export function EmployeeRequestsView({ embedded = false }: { embedded?: boolean 
       <CommonFilterChips
         options={TAB_OPTIONS}
         value={activeTab}
-        onChange={(val) => setActiveTab(val as RequestTab)}
+        onChange={(val) => setActiveTab(val as EmployeeRequestTab)}
       />
 
       {hasError ? (
-        <CommonErrorBanner message={errorMessage} onRetry={handleRetry} />
+        <CommonErrorBanner message={errorMessage ?? 'Failed to load requests'} onRetry={reload} />
       ) : null}
 
       {requests.length > 0 ? (
@@ -196,7 +116,7 @@ export function EmployeeRequestsView({ embedded = false }: { embedded?: boolean 
             />
           ))}
         </CommonMobileCardGrid>
-      ) : (
+      ) : !hasError ? (
         <CommonEmptyState
           icon={FileQuestion}
           title="No requests found"
@@ -210,7 +130,7 @@ export function EmployeeRequestsView({ embedded = false }: { embedded?: boolean 
             </PrimaryButton>
           }
         />
-      )}
+      ) : null}
     </div>
   )
 }

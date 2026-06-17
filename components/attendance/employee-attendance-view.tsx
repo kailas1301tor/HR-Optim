@@ -1,7 +1,7 @@
 // components/attendance/employee-attendance-view.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Calendar,
   CheckCircle2,
@@ -11,18 +11,12 @@ import {
   Palmtree,
 } from 'lucide-react'
 import { usePermissions } from '@/components/auth/permissions-provider'
-import { employeeSelfService } from '@/services/employee-self-service'
 import { CommonEmptyState, CommonErrorBanner, MonthYearPicker } from '@/components/common'
-import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import { uiCard } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { AttendanceStatus, EmployeeAttendanceData } from '@/types/attendance'
+import type { AttendanceStatus } from '@/types/attendance'
 import { AttendanceSkeleton } from './attendance-skeleton'
-
-const EMPTY_ATTENDANCE: EmployeeAttendanceData = {
-  summary: { present: 0, late: 0, absent: 0, leave: 0, weekend: 0, holiday: 0 },
-  days: [],
-}
+import { useEmployeeAttendance } from './useEmployeeAttendance'
 
 const statusConfig: Record<
   AttendanceStatus,
@@ -44,50 +38,14 @@ function getCurrentMonthYear() {
 export function EmployeeAttendanceView({ embedded = false }: { embedded?: boolean }) {
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
   const [{ month, year }, setMonthYear] = useState(getCurrentMonthYear)
-  const [data, setData] = useState<EmployeeAttendanceData>(EMPTY_ATTENDANCE)
-  const [isLoading, setIsLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [reloadToken, setReloadToken] = useState(0)
 
-  useEffect(() => {
-    if (isAuthLoading) return
-    if (!employeeProfileId) {
-      setIsLoading(false)
-      return
-    }
+  const { data, isLoading, hasError, errorMessage, reload } = useEmployeeAttendance({
+    employeeProfileId,
+    month,
+    year,
+    enabled: !isAuthLoading && employeeProfileId !== null,
+  })
 
-    const profileId = employeeProfileId
-    const controller = new AbortController()
-
-    async function loadAttendance() {
-      setIsLoading(true)
-      setHasError(false)
-      setErrorMessage('')
-      try {
-        const result = await employeeSelfService.getAttendance({
-          employeeId: profileId,
-          month,
-          year,
-          signal: controller.signal,
-        })
-        setData(result)
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return
-        setData(EMPTY_ATTENDANCE)
-        setHasError(true)
-        setErrorMessage(getApiErrorMessage(error, 'Failed to load attendance. Please try again.'))
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadAttendance()
-
-    return () => controller.abort()
-  }, [employeeProfileId, isAuthLoading, month, year, reloadToken])
-
-  const handleRetry = () => setReloadToken((prev) => prev + 1)
   const handleMonthChange = (nextMonth: number) => setMonthYear((prev) => ({ ...prev, month: nextMonth }))
   const handleYearChange = (nextYear: number) => setMonthYear((prev) => ({ ...prev, year: nextYear }))
 
@@ -134,7 +92,7 @@ export function EmployeeAttendanceView({ embedded = false }: { embedded?: boolea
       </div>
 
       {hasError ? (
-        <CommonErrorBanner message={errorMessage} onRetry={handleRetry} />
+        <CommonErrorBanner message={errorMessage ?? 'Failed to load attendance'} onRetry={reload} />
       ) : null}
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -229,13 +187,13 @@ export function EmployeeAttendanceView({ embedded = false }: { embedded?: boolea
             </table>
           </div>
         </div>
-      ) : (
+      ) : !hasError ? (
         <CommonEmptyState
           icon={Calendar}
           title="No attendance data"
           description="No attendance records are available for the selected month."
         />
-      )}
+      ) : null}
     </div>
   )
 }

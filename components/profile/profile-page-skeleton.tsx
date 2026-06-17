@@ -2,90 +2,112 @@
 'use client'
 
 import { Skeleton } from '@/components/ui/skeleton'
-import { uiSkeletonBlock, uiSquircleMd } from '@/lib/ui/design-system'
+import { uiSkeletonBlock, uiSquircleLg } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 
-function ProfileDetailFieldSkeleton({ className }: { className?: string }) {
+function ProfileDetailFieldSkeleton({ className }: { className?: string }): React.JSX.Element {
   return (
-    <div className={cn('flex items-start gap-3 py-2 px-1', className)}>
-      <Skeleton className={cn('w-4 h-4 shrink-0 mt-0.5 rounded', uiSkeletonBlock)} />
-      <div className="min-w-0 flex-1 space-y-2">
-        <Skeleton className={cn('h-2.5 w-20 rounded', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-4 w-full max-w-[200px] rounded', uiSkeletonBlock)} />
+    <div
+      className={cn(
+        'flex items-start gap-4 rounded-xl border border-transparent p-3.5',
+        className
+      )}
+    >
+      <Skeleton className={cn('h-9 w-9 shrink-0 rounded-lg', uiSkeletonBlock)} />
+      <div className="min-w-0 flex-1 space-y-2 py-0.5">
+        <Skeleton className={cn('h-2.5 w-16 rounded', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-4 w-full max-w-[180px] rounded', uiSkeletonBlock)} />
       </div>
     </div>
   )
 }
 
-function ProfileSectionSkeleton({
-  fieldCount,
-  lastFieldSpan = false,
-}: {
-  fieldCount: number
-  lastFieldSpan?: boolean
-}) {
+function ProfileQuickActionRowSkeleton(): React.JSX.Element {
   return (
-    <div className="space-y-4">
-      <div className="pb-2 border-b border-border/30">
-        <Skeleton className={cn('h-3 w-40 rounded', uiSkeletonBlock)} />
-      </div>
-      <div className="grid gap-x-8 gap-y-1 sm:grid-cols-2">
-        {Array.from({ length: fieldCount }).map((_, index) => (
-          <ProfileDetailFieldSkeleton
-            key={index}
-            className={lastFieldSpan && index === fieldCount - 1 ? 'sm:col-span-2' : undefined}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function ProfileQuickActionRowSkeleton() {
-  return (
-    <div className="flex items-center justify-between py-3.5 px-2">
-      <div className="flex items-center gap-3.5 min-w-0 flex-1">
-        <Skeleton className={cn('w-8 h-8 shrink-0 rounded-lg', uiSkeletonBlock)} />
+    <div className="flex min-h-12 items-center justify-between rounded-xl border border-transparent p-2.5">
+      <div className="flex min-w-0 flex-1 items-center gap-3.5">
+        <Skeleton className={cn('h-9 w-9 shrink-0 rounded-lg', uiSkeletonBlock)} />
         <div className="min-w-0 flex-1 space-y-2">
-          <Skeleton className={cn('h-4 w-32 rounded', uiSkeletonBlock)} />
-          <Skeleton className={cn('h-3 w-48 max-w-full rounded', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-3.5 w-24 rounded', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-3 w-40 max-w-full rounded', uiSkeletonBlock)} />
         </div>
       </div>
-      <Skeleton className={cn('w-4 h-4 shrink-0 rounded', uiSkeletonBlock)} />
+      <Skeleton className={cn('h-4 w-4 shrink-0 rounded', uiSkeletonBlock)} />
     </div>
   )
 }
 
-export function ProfilePageSkeleton() {
+export function ProfilePageSkeleton(): React.JSX.Element {
   return (
     <div className="space-y-8" aria-label="Loading profile" role="status">
-      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-6 border-b border-border/30">
-        <Skeleton className={cn('w-28 h-28 shrink-0 rounded-2xl', uiSquircleMd, uiSkeletonBlock)} />
-        <div className="space-y-2 text-center sm:text-left min-w-0 flex-1 mt-2 w-full">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 justify-center sm:justify-start">
-            <Skeleton className={cn('h-8 w-48 max-w-full rounded-xl', uiSkeletonBlock)} />
-            <Skeleton className={cn('h-6 w-16 rounded-full mx-auto sm:mx-0', uiSkeletonBlock)} />
+      {/* Flat Header Skeleton */}
+      <div className="flex w-full flex-col sm:flex-row items-start sm:items-center gap-5 border-b border-border/40 pb-6">
+        <Skeleton className={cn('h-20 w-20 sm:h-24 sm:w-24 shrink-0 ring-2 ring-border/20 z-10', uiSquircleLg, uiSkeletonBlock)} />
+        <div className="min-w-0 flex-1 space-y-2.5 py-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <Skeleton className={cn('h-7 w-40 max-w-full rounded-lg sm:h-8', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-5 w-16 rounded-full', uiSkeletonBlock)} />
           </div>
-          <Skeleton className={cn('h-5 w-36 max-w-full rounded-xl mx-auto sm:mx-0', uiSkeletonBlock)} />
-          <Skeleton className={cn('h-4 w-28 max-w-full rounded-xl mx-auto sm:mx-0', uiSkeletonBlock)} />
+          <div className="flex items-center gap-3">
+            <Skeleton className={cn('h-4.5 w-32 rounded', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-4 w-28 rounded', uiSkeletonBlock)} />
+          </div>
         </div>
       </div>
 
-      <div className="space-y-8">
-        <ProfileSectionSkeleton fieldCount={3} />
-        <ProfileSectionSkeleton fieldCount={6} />
-        <ProfileSectionSkeleton fieldCount={5} lastFieldSpan />
-      </div>
-
-      <div className="space-y-4">
-        <div className="pb-2 border-b border-border/30">
-          <Skeleton className={cn('h-3 w-28 rounded', uiSkeletonBlock)} />
+      {/* Split-pane grid layout skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Main Details Panel Skeleton */}
+        <div className="lg:col-span-8 space-y-6">
+          {/* Tab Header Skeleton */}
+          <div className="flex border-b border-border/40 gap-4 overflow-x-auto pb-1">
+            <Skeleton className={cn('h-8 w-28 rounded-t-lg', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-8 w-28 rounded-t-lg', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-8 w-28 rounded-t-lg', uiSkeletonBlock)} />
+          </div>
+          {/* Fields Grid Skeleton */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-5 pt-2">
+            <ProfileDetailFieldSkeleton />
+            <ProfileDetailFieldSkeleton />
+            <ProfileDetailFieldSkeleton />
+            <ProfileDetailFieldSkeleton />
+            <ProfileDetailFieldSkeleton />
+            <ProfileDetailFieldSkeleton />
+          </div>
         </div>
-        <div className="divide-y divide-border/20">
-          <ProfileQuickActionRowSkeleton />
-          <ProfileQuickActionRowSkeleton />
+
+        {/* Sidebar Skeleton */}
+        <div className="lg:col-span-4 space-y-6 lg:border-l lg:border-border/30 lg:pl-8">
+          {/* Status Block Skeleton */}
+          <div className="space-y-4">
+            <div className="border-b border-border/40 pb-2">
+              <Skeleton className={cn('h-3.5 w-28 rounded', uiSkeletonBlock)} />
+            </div>
+            <div className="space-y-3.5">
+              <div className="flex items-center justify-between">
+                <Skeleton className={cn('h-3.5 w-24 rounded', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-3.5 w-16 rounded', uiSkeletonBlock)} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Skeleton className={cn('h-3.5 w-20 rounded', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-3.5 w-20 rounded', uiSkeletonBlock)} />
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions Skeleton */}
+          <section className="space-y-4">
+            <div className="border-b border-border/40 pb-2">
+              <Skeleton className={cn('h-3.5 w-24 rounded', uiSkeletonBlock)} />
+            </div>
+            <div className="space-y-2">
+              <ProfileQuickActionRowSkeleton />
+              <ProfileQuickActionRowSkeleton />
+            </div>
+          </section>
         </div>
       </div>
     </div>
   )
 }
+

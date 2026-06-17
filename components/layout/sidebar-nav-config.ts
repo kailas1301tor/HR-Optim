@@ -16,7 +16,7 @@ import {
   UserCircle,
 } from 'lucide-react'
 
-export type SidebarSection = 'Main' | 'Operations' | 'System'
+export type SidebarSection = 'Main' | 'Operations' | 'Support' | 'System'
 
 export interface SidebarNavItem {
   href: string
@@ -28,7 +28,7 @@ export interface SidebarNavItem {
   hasEmployeeFallback?: boolean
 }
 
-export const SIDEBAR_SECTIONS: SidebarSection[] = ['Main', 'Operations', 'System']
+export const SIDEBAR_SECTIONS: SidebarSection[] = ['Main', 'Operations', 'Support', 'System']
 
 export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
   {
@@ -65,7 +65,7 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     moduleKey: 'requests',
     hasEmployeeFallback: true,
   },
-  { href: '/tickets', icon: LifeBuoy, label: HELP_SUPPORT_LABEL, section: 'Operations', moduleKey: 'tickets' },
+  { href: '/tickets', icon: LifeBuoy, label: HELP_SUPPORT_LABEL, section: 'Support', moduleKey: 'tickets' },
   {
     href: '/payroll',
     icon: DollarSign,
@@ -75,7 +75,7 @@ export const SIDEBAR_NAV_ITEMS: SidebarNavItem[] = [
     hasEmployeeFallback: true,
   },
   { href: '/reports', icon: BarChart3, label: 'Reports', section: 'Operations', moduleKey: 'reports' },
-  { href: '/settings', icon: Settings, label: 'Settings', section: 'System', moduleKey: 'settings' },
+  { href: '/settings', icon: Settings, label: 'Settings', section: 'System', moduleKey: 'settings', alwaysVisible: true },
   { href: '/profile', icon: UserCircle, label: 'Profile', section: 'System', alwaysVisible: true },
 ]
 
