@@ -17,6 +17,7 @@ import { SystemSettings } from './system-settings'
 import { SettingsSkeleton } from './settings-skeleton'
 import {
   INITIAL_WORKFLOW_TEMPLATES,
+  isSettingsMasterTab,
 } from './settings-constants'
 import type { WorkflowTemplate } from '@/types/settings'
 import { usePermissions } from '@/components/auth/permissions-provider'
@@ -25,10 +26,13 @@ export function SettingsPanel() {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
+  const { isLoading: isPermissionsLoading, canView, canManage } = usePermissions()
+  const canViewMasters = canView('settings')
   const canManageSettings = canManage('settings')
 
-  const activeTab = searchParams.get('tab') || 'company'
+  const tabParam = searchParams.get('tab')
+  const defaultTab = canViewMasters ? 'company' : 'security'
+  const activeTab = tabParam || defaultTab
 
   const setActiveTab = useCallback((tab: string) => {
     if (tab === activeTab) return
@@ -41,11 +45,29 @@ export function SettingsPanel() {
 
   useEffect(() => {
     if (isPermissionsLoading) return
-    if (canManageSettings || activeTab !== 'roles') return
+
+    let nextTab: string | null = null
+
+    if (!canViewMasters && isSettingsMasterTab(activeTab)) {
+      nextTab = 'security'
+    } else if (!canManageSettings && activeTab === 'roles') {
+      nextTab = canViewMasters ? 'company' : 'security'
+    }
+
+    if (!nextTab) return
+
     const params = new URLSearchParams(searchParams.toString())
-    params.set('tab', 'company')
+    params.set('tab', nextTab)
     router.replace(`${pathname}?${params.toString()}`)
-  }, [isPermissionsLoading, canManageSettings, activeTab, pathname, router, searchParams])
+  }, [
+    isPermissionsLoading,
+    canViewMasters,
+    canManageSettings,
+    activeTab,
+    pathname,
+    router,
+    searchParams,
+  ])
 
   const tabTriggerClass = cn(
     uiTabChipBase,
@@ -60,31 +82,34 @@ export function SettingsPanel() {
 
   return (
     <div className="space-y-6">
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-midnight/60 border border-border/40 p-1.5 rounded-[20px] [corner-shape:squircle] h-auto gap-1.5 flex flex-wrap w-full justify-start items-start content-start select-none">
-          <TabsTrigger value="company" className={tabTriggerClass}>
-            <Building2 className="h-4 w-4" />
-            Company Structure
-          </TabsTrigger>
-          {canManageSettings ? (
-          <TabsTrigger value="roles" className={tabTriggerClass}>
-            <ShieldCheck className="h-4 w-4" />
-            Roles & Permissions
-          </TabsTrigger>
+          {canViewMasters ? (
+            <>
+              <TabsTrigger value="company" className={tabTriggerClass}>
+                <Building2 className="h-4 w-4" />
+                Company Structure
+              </TabsTrigger>
+              {canManageSettings ? (
+                <TabsTrigger value="roles" className={tabTriggerClass}>
+                  <ShieldCheck className="h-4 w-4" />
+                  Roles & Permissions
+                </TabsTrigger>
+              ) : null}
+              <TabsTrigger value="hr" className={tabTriggerClass}>
+                <Users className="h-4 w-4" />
+                HR Management
+              </TabsTrigger>
+              <TabsTrigger value="payroll" className={tabTriggerClass}>
+                <Calculator className="h-4 w-4" />
+                Payroll
+              </TabsTrigger>
+              <TabsTrigger value="assets" className={tabTriggerClass}>
+                <Package className="h-4 w-4" />
+                Asset Management
+              </TabsTrigger>
+            </>
           ) : null}
-          <TabsTrigger value="hr" className={tabTriggerClass}>
-            <Users className="h-4 w-4" />
-            HR Management
-          </TabsTrigger>
-          <TabsTrigger value="payroll" className={tabTriggerClass}>
-            <Calculator className="h-4 w-4" />
-            Payroll
-          </TabsTrigger>
-          <TabsTrigger value="assets" className={tabTriggerClass}>
-            <Package className="h-4 w-4" />
-            Asset Management
-          </TabsTrigger>
           <TabsTrigger value="security" className={tabTriggerClass}>
             <Lock className="h-4 w-4" />
             Security
@@ -95,28 +120,32 @@ export function SettingsPanel() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="company" className="space-y-6 outline-none">
-          <CompanySettings />
-        </TabsContent>
+        {canViewMasters ? (
+          <>
+            <TabsContent value="company" className="space-y-6 outline-none">
+              <CompanySettings />
+            </TabsContent>
 
-        <TabsContent value="roles" className="space-y-6 outline-none">
-          {activeTab === 'roles' && canManageSettings ? <RolesPermissions /> : null}
-        </TabsContent>
+            <TabsContent value="roles" className="space-y-6 outline-none">
+              {activeTab === 'roles' && canManageSettings ? <RolesPermissions /> : null}
+            </TabsContent>
 
-        <TabsContent value="hr" className="space-y-6 outline-none">
-          <HRTabContent
-            workflowTemplates={workflowTemplates}
-            setWorkflowTemplates={setWorkflowTemplates}
-          />
-        </TabsContent>
+            <TabsContent value="hr" className="space-y-6 outline-none">
+              <HRTabContent
+                workflowTemplates={workflowTemplates}
+                setWorkflowTemplates={setWorkflowTemplates}
+              />
+            </TabsContent>
 
-        <TabsContent value="payroll" className="space-y-6 outline-none">
-          <PayRulesMaster />
-        </TabsContent>
+            <TabsContent value="payroll" className="space-y-6 outline-none">
+              <PayRulesMaster />
+            </TabsContent>
 
-        <TabsContent value="assets" className="space-y-6 outline-none">
-          <AssetMasters />
-        </TabsContent>
+            <TabsContent value="assets" className="space-y-6 outline-none">
+              <AssetMasters />
+            </TabsContent>
+          </>
+        ) : null}
 
         <TabsContent value="security" className="space-y-6 outline-none">
           <SecuritySettings />

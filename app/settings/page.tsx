@@ -2,17 +2,14 @@
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
 import { SettingsPanel } from '@/components/settings/settings-panel'
-import { CommonPageHeader } from '@/components/common'
+import { SettingsPageHeader } from '@/components/settings/settings-page-header'
 import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
 
 export default function SettingsPage(): React.JSX.Element {
   return (
     <AppShell>
       <div className="space-y-6">
-        <CommonPageHeader
-          title="Masters & Configuration"
-          subtitle="Manage system masters and configuration settings"
-        />
+        <SettingsPageHeader />
         <Suspense fallback={<SettingsSkeleton showHeader={false} />}>
           <SettingsPanel />
         </Suspense>

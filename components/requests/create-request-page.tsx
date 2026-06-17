@@ -22,7 +22,7 @@ import { LeaveRequestForm } from './forms/leave-request-form'
 import { SalaryAdvanceRequestForm } from './forms/salary-advance-request-form'
 import { LoanRequestForm } from './forms/loan-request-form'
 import { DocumentRequestForm } from './forms/document-request-form'
-import { usePermissions } from '@/components/auth/permissions-provider'
+import { useModuleGate } from '@/lib/permissions/use-module-gate'
 import { CreateRequestPageSkeleton } from './create-request-page-skeleton'
 
 const REQUEST_TYPE_OPTIONS: CreateRequestType[] = [
@@ -40,13 +40,13 @@ function parseTypeParam(value: string | null): CreateRequestType {
 }
 
 export function CreateRequestPage() {
-  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
+  const requestsGate = useModuleGate('requests')
 
-  if (isPermissionsLoading) {
+  if (requestsGate.isLoading) {
     return <CreateRequestPageSkeleton />
   }
 
-  if (!canManage('requests')) {
+  if (requestsGate.isRestricted) {
     return <ModuleRestrictedState moduleKey="requests" />
   }
 

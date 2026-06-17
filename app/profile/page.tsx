@@ -8,9 +8,9 @@ import { ProfilePageSkeleton } from '@/components/profile/profile-page-skeleton'
 export default function ProfileRoutePage(): React.JSX.Element {
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <ProfilePageHeader />
-        <div className="max-w-3xl">
+        <div className="w-full">
           <Suspense fallback={<ProfilePageSkeleton />}>
             <ProfilePage />
           </Suspense>

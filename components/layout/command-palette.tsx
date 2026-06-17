@@ -32,6 +32,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   // Filter static pages, quick actions, account pages locally using Javascript
   const filteredPages = pages
     .filter((page) => {
+      if (page.moduleKey === 'settings') return true
       if (page.moduleKey === 'employees') {
         return canViewEmployeesSection(permissions)
       }
