@@ -83,7 +83,7 @@ function mapMaintenanceHistory(items: MaintenanceHistoryRaw[]): AssetHistoryEntr
     action: item.action ?? 'Maintenance Scheduled',
     date: item.created_at ?? item.date ?? '',
     performed_by: item.service_provider_name ?? (item.service_provider ? `Provider #${item.service_provider}` : 'IT Service'),
-    remarks: item.remarks ?? (item.estimated_cost ? `Estimated Cost: AED ${item.estimated_cost}` : ''),
+    remarks: item.remarks ?? (item.estimated_cost ? `Estimated Cost: ₹${item.estimated_cost}` : ''),
   }));
 }
 

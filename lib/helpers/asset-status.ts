@@ -23,5 +23,5 @@ export function isAssetInService(status: string | null | undefined): boolean {
 export function formatAssetCost(value: string | number | null | undefined): string {
   const parsed = typeof value === 'string' ? parseFloat(value) : (value ?? 0)
   if (!Number.isFinite(parsed)) return '—'
-  return `AED ${parsed.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+  return `₹${parsed.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
 }

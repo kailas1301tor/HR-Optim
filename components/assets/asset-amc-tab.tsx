@@ -146,7 +146,7 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
                   <div>
                     <span className="text-[9px] text-slate-500 font-semibold uppercase tracking-wider block">Contract Cost</span>
                     <p className="text-[11px] font-bold text-cloud font-mono">
-                      AED {parseFloat(amc.amc_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      ₹ {parseFloat(amc.amc_cost).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
@@ -240,7 +240,7 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
 
             {/* AMC Cost */}
             <div className="space-y-1.5">
-              <Label htmlFor="amc_cost" className="text-xs text-slate-400">Contract Cost (AED)</Label>
+              <Label htmlFor="amc_cost" className="text-xs text-slate-400">Contract Cost (₹)</Label>
               <Input
                 id="amc_cost"
                 type="number"

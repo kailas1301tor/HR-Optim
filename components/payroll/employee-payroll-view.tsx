@@ -41,7 +41,7 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
 
   const handleDownloadPayslip = (record: PayrollRecord) => {
     toast.info(`Downloading payslip for ${new Date(record.startDate).toLocaleString('default', { month: 'long', year: 'numeric' })}...`)
-    const fileContent = `HRMS PAYSLIP - ${record.employeeName}\nID: ${record.employeeId}\nPeriod: ${record.startDate} to ${record.endDate}\nBasic Salary: AED ${record.baseSalary}\nAllowances: AED ${record.allowances}\nOvertime: AED ${record.overtime}\nDeductions: AED ${record.deductions}\nNet Pay: AED ${record.netSalary}`
+    const fileContent = `HRMS PAYSLIP - ${record.employeeName}\nID: ${record.employeeId}\nPeriod: ${record.startDate} to ${record.endDate}\nBasic Salary: ₹${record.baseSalary}\nAllowances: ₹${record.allowances}\nOvertime: ₹${record.overtime}\nDeductions: ₹${record.deductions}\nNet Pay: ₹${record.netSalary}`
     const blob = new Blob([fileContent], { type: 'text/plain' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -105,7 +105,7 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
           <div>
             <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Latest Net Salary</p>
             <p className="text-xl font-bold text-cloud font-mono tracking-tight mt-0.5 min-h-7">
-              AED {stats.latestPay.toLocaleString()}
+              ₹ {stats.latestPay.toLocaleString()}
             </p>
           </div>
         </div>
@@ -117,7 +117,7 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
           <div>
             <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Cumulative Payout</p>
             <p className="text-xl font-bold text-cloud font-mono tracking-tight mt-0.5 min-h-7">
-              AED {stats.totalEarnings.toLocaleString()}
+              ₹ {stats.totalEarnings.toLocaleString()}
             </p>
           </div>
         </div>
@@ -161,12 +161,12 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
                         year: 'numeric',
                       })}
                     </td>
-                    <td className="py-4 font-mono text-slate-300">AED {item.baseSalary.toLocaleString()}</td>
-                    <td className="py-4 font-mono text-slate-300">AED {item.allowances.toLocaleString()}</td>
-                    <td className="py-4 font-mono text-lime-400">+AED {item.overtime.toLocaleString()}</td>
-                    <td className="py-4 font-mono text-red-400">-AED {item.deductions.toLocaleString()}</td>
+                    <td className="py-4 font-mono text-slate-300">₹ {item.baseSalary.toLocaleString()}</td>
+                    <td className="py-4 font-mono text-slate-300">₹ {item.allowances.toLocaleString()}</td>
+                    <td className="py-4 font-mono text-lime-400">+₹ {item.overtime.toLocaleString()}</td>
+                    <td className="py-4 font-mono text-red-400">-₹ {item.deductions.toLocaleString()}</td>
                     <td className="py-4 font-mono font-semibold text-cloud text-sm">
-                      AED {item.netSalary.toLocaleString()}
+                      ₹ {item.netSalary.toLocaleString()}
                     </td>
                     <td className="py-4">
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-lime-500/10 text-lime-400">

@@ -214,7 +214,7 @@ export function ReturnAssetDialog({ open, onOpenChange, assetId, onSuccess }: Re
 
           <div className="space-y-1.5">
             <Label htmlFor="service_cost" className="text-xs text-slate-400">
-              Final Maintenance/Servicing Cost (AED — Optional)
+              Final Maintenance/Servicing Cost (₹ — Optional)
             </Label>
             <Input
               id="service_cost"

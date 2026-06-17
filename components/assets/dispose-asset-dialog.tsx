@@ -108,7 +108,7 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
 
           {/* Recovery Value */}
           <div className="space-y-1.5">
-            <Label htmlFor="disposal_value" className="text-xs text-slate-400">Recovery Value (AED)</Label>
+            <Label htmlFor="disposal_value" className="text-xs text-slate-400">Recovery Value (₹)</Label>
             <Input
               id="disposal_value"
               type="number"

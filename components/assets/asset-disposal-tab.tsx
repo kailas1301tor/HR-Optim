@@ -118,7 +118,7 @@ export function AssetDisposalTab({ assetId, dropdowns }: AssetDisposalTabProps) 
             <div>
               <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block">Recovery Value</span>
               <p className="text-sm font-bold font-mono text-cloud mt-0.5">
-                AED {parseFloat(disposal.disposal_value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                ₹ {parseFloat(disposal.disposal_value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
