@@ -1,23 +1,29 @@
 // components/login/useLoginForm.ts
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { authService, type LoginResponse } from '@/services/auth-service'
+import { authService } from '@/services/auth-service'
+import { invalidatePermissions } from '@/components/auth/permissions-provider'
+import {
+  canAccessPath,
+  getDefaultPostLoginPath,
+} from '@/lib/permissions/get-default-post-login-path'
 import { loginSchema, type LoginValues } from '@/validations/auth.schema'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import { applyAuthFieldErrors } from '@/lib/helpers/parse-auth-form-errors'
 import { ApiError } from '@/lib/api'
-
-interface PendingAuth {
-  token: string
-  username: string
-  email: string
-  userId: number
-}
+import { getSafeRedirectPath } from '@/lib/helpers/get-safe-redirect-path'
+import { PRODUCT_NAME } from '@/lib/brand'
+import {
+  setPendingAuth,
+  getPendingAuth,
+  clearPendingAuth,
+} from '@/lib/helpers/pending-auth-storage'
+import type { PendingAuthSession } from '@/types/auth'
 
 interface UseLoginFormReturn {
   showPassword: boolean
@@ -28,13 +34,7 @@ interface UseLoginFormReturn {
   pendingAuthToken: string | null
   methods: UseFormReturn<LoginValues>
   onSubmit: (data: LoginValues) => Promise<void>
-  onSetPasswordSuccess: () => void
-}
-
-function getSafeRedirectPath(redirect: string | null): string {
-  if (!redirect) return '/'
-  if (!redirect.startsWith('/') || redirect.startsWith('//')) return '/'
-  return redirect
+  onSetPasswordSuccess: () => Promise<void>
 }
 
 export function useLoginForm(): UseLoginFormReturn {
@@ -44,7 +44,7 @@ export function useLoginForm(): UseLoginFormReturn {
   const [isLoading, setIsLoading] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [showSetPasswordModal, setShowSetPasswordModal] = useState(false)
-  const [pendingAuth, setPendingAuth] = useState<PendingAuth | null>(null)
+  const [pendingAuth, setPendingAuthState] = useState<PendingAuthSession | null>(null)
 
   const methods = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -52,32 +52,56 @@ export function useLoginForm(): UseLoginFormReturn {
   })
 
   const { setError, clearErrors } = methods
-
   const redirectPath = getSafeRedirectPath(searchParams.get('redirect'))
 
-  const navigateAfterLogin = useCallback(() => {
-    router.refresh()
-    setTimeout(() => {
-      router.push(redirectPath)
-    }, 800)
-  }, [router, redirectPath])
+  useEffect(() => {
+    const stored = getPendingAuth()
+    if (stored) {
+      setPendingAuthState(stored)
+      setShowSetPasswordModal(true)
+    }
+  }, [])
 
-  const persistAuthSession = useCallback(
-    async (token: string, username: string, email: string, userId: number): Promise<void> => {
-      await authService.persistSession(token, username, email, userId)
+  const navigateAfterLogin = useCallback(
+    async (targetPath: string) => {
+      router.refresh()
+      router.push(targetPath)
     },
-    []
+    [router],
+  )
+
+  const completeLogin = useCallback(
+    async (session: Pick<PendingAuthSession, 'token' | 'username' | 'email' | 'userId' | 'refresh'>) => {
+      authService.storeTokensFromLogin(session.token, session.refresh)
+      await authService.persistSession(session.token, session.username, session.email, session.userId)
+      clearPendingAuth()
+      setPendingAuthState(null)
+      setShowSetPasswordModal(false)
+      invalidatePermissions()
+
+      const profile = await authService.getCurrentUserProfile()
+      const permissions = new Set(
+        profile.permissions.map((permission) => permission.codename).filter(Boolean),
+      )
+      const targetPath = canAccessPath(permissions, redirectPath)
+        ? redirectPath
+        : getDefaultPostLoginPath(permissions)
+
+      toast.success('Login successful! Redirecting...', {
+        description: `Welcome to your ${PRODUCT_NAME} dashboard.`,
+      })
+      await navigateAfterLogin(targetPath)
+    },
+    [navigateAfterLogin, redirectPath],
   )
 
   const handleLoginFailure = useCallback(
     (error: unknown) => {
       const errorData = error instanceof ApiError ? error.data : undefined
-
       applyAuthFieldErrors<LoginValues>(errorData, setError, {
         username: 'username',
         password: 'password',
       })
-
       const errorMessage = getApiErrorMessage(error, 'Invalid username or password.')
       setFormError(errorMessage)
       toast.error('Login Failed', { description: errorMessage })
@@ -91,7 +115,7 @@ export function useLoginForm(): UseLoginFormReturn {
     clearErrors()
 
     try {
-      const response: LoginResponse = await authService.login(data.username, data.password)
+      const response = await authService.login(data.username, data.password)
       const dataObj = response.results?.data
       const token = dataObj?.access
 
@@ -102,19 +126,31 @@ export function useLoginForm(): UseLoginFormReturn {
         return
       }
 
-      const username = dataObj?.username ?? ''
-      const email = dataObj?.email ?? ''
-      const userId = dataObj?.user_id ?? 0
+      const session = {
+        token,
+        refresh: dataObj?.refresh,
+        username: dataObj?.username ?? '',
+        email: dataObj?.email ?? '',
+        userId: dataObj?.user_id ?? 0,
+      }
 
       if (dataObj && dataObj.has_password_changed === false) {
-        setPendingAuth({ token, username, email, userId })
+        setPendingAuth(session)
+        setPendingAuthState({ ...session, expiresAt: Date.now() + 10 * 60 * 1000 })
         setShowSetPasswordModal(true)
         return
       }
 
-      await persistAuthSession(token, username, email, userId)
-      toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
-      navigateAfterLogin()
+      try {
+        await completeLogin(session)
+      } catch (persistError: unknown) {
+        const errorMessage = getApiErrorMessage(
+          persistError,
+          'Failed to save your session. Please try again.'
+        )
+        setFormError(errorMessage)
+        toast.error('Login Failed', { description: errorMessage })
+      }
     } catch (error: unknown) {
       handleLoginFailure(error)
     } finally {
@@ -123,8 +159,14 @@ export function useLoginForm(): UseLoginFormReturn {
   }
 
   const onSetPasswordSuccess = async () => {
-    if (!pendingAuth) {
-      navigateAfterLogin()
+    const session = getPendingAuth()
+    if (!session) {
+      setShowSetPasswordModal(false)
+      clearPendingAuth()
+      setPendingAuthState(null)
+      const message = 'Your login session expired. Please sign in again to continue.'
+      setFormError(message)
+      toast.error('Session expired', { description: message })
       return
     }
 
@@ -132,16 +174,7 @@ export function useLoginForm(): UseLoginFormReturn {
     setFormError(null)
 
     try {
-      await persistAuthSession(
-        pendingAuth.token,
-        pendingAuth.username,
-        pendingAuth.email,
-        pendingAuth.userId
-      )
-      setPendingAuth(null)
-      setShowSetPasswordModal(false)
-      toast.success('Login successful! Redirecting...', { description: 'Welcome to your HRMS dashboard.' })
-      navigateAfterLogin()
+      await completeLogin(session)
     } catch (error: unknown) {
       const errorMessage = getApiErrorMessage(error, 'Failed to save your session. Please sign in again.')
       setFormError(errorMessage)
@@ -157,7 +190,7 @@ export function useLoginForm(): UseLoginFormReturn {
     isLoading,
     formError,
     showSetPasswordModal,
-    pendingAuthToken: pendingAuth?.token ?? null,
+    pendingAuthToken: pendingAuth?.token ?? getPendingAuth()?.token ?? null,
     methods,
     onSubmit,
     onSetPasswordSuccess,

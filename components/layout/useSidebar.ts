@@ -2,6 +2,12 @@
 import { useState, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { authService } from '@/services/auth-service'
+import { invalidatePermissions } from '@/components/auth/permissions-provider'
+import { HELP_SUPPORT_LABEL } from '@/lib/support'
+
+const BREADCRUMB_LABELS: Record<string, string> = {
+  tickets: HELP_SUPPORT_LABEL,
+}
 
 export interface BreadcrumbItem {
   label: string
@@ -12,6 +18,9 @@ export interface UseSidebarReturn {
   collapsed: boolean
   setCollapsed: (val: boolean) => void
   handleLogout: () => void
+  handleGoToProfile: () => void
+  handleGoToSettings: () => void
+  handleGoToNotifications: () => void
   breadcrumbs: BreadcrumbItem[]
   pathname: string
 }
@@ -22,15 +31,28 @@ export function useSidebar(): UseSidebarReturn {
   const router = useRouter()
 
   const handleLogout = useCallback((): void => {
+    invalidatePermissions()
     authService.logout()
   }, [])
+
+  const handleGoToProfile = useCallback((): void => {
+    router.push('/profile')
+  }, [router])
+
+  const handleGoToSettings = useCallback((): void => {
+    router.push('/settings')
+  }, [router])
+
+  const handleGoToNotifications = useCallback((): void => {
+    router.push('/notifications')
+  }, [router])
 
   const getBreadcrumbs = useCallback((): BreadcrumbItem[] => {
     const paths = pathname.split('/').filter(Boolean)
     if (paths.length === 0) return [{ label: 'Dashboard', href: '/' }]
     
     return paths.map((path, index) => ({
-      label: path.charAt(0).toUpperCase() + path.slice(1),
+      label: BREADCRUMB_LABELS[path] ?? path.charAt(0).toUpperCase() + path.slice(1),
       href: '/' + paths.slice(0, index + 1).join('/'),
     }))
   }, [pathname])
@@ -41,6 +63,9 @@ export function useSidebar(): UseSidebarReturn {
     collapsed,
     setCollapsed,
     handleLogout,
+    handleGoToProfile,
+    handleGoToSettings,
+    handleGoToNotifications,
     breadcrumbs,
     pathname,
   }

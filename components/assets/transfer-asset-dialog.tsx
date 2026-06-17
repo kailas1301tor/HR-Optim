@@ -13,8 +13,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader2, RefreshCw } from 'lucide-react'
-import { type Department } from '@/services/department-service'
+import { type Department } from '@/types/settings'
 import { useTransferAssetDialog } from './useTransferAssetDialog'
+import { LIMIT_REMARKS } from '@/validations/field-limits'
 
 interface TransferAssetDialogProps {
   open: boolean
@@ -45,7 +46,7 @@ export function TransferAssetDialog({ open, onOpenChange, assetId, onSuccess }: 
       onOpenChange(val)
       if (!val) reset()
     }}>
-      <DialogContent className="bg-card text-foreground border border-border/80 rounded-2xl max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="bg-card text-foreground border border-border/80 rounded-[32px] [corner-shape:squircle] max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-cloud font-semibold text-lg flex items-center gap-2">
             <RefreshCw className="w-5 h-5 text-violet-glow" /> Transfer Asset
@@ -84,6 +85,7 @@ export function TransferAssetDialog({ open, onOpenChange, assetId, onSuccess }: 
               placeholder="Explain the reason for transfer, new custodian, or physical location updates..."
               className="bg-midnight border-border min-h-[80px]"
               {...register('remarks')}
+              maxLength={LIMIT_REMARKS}
             />
             {errors.remarks && (
               <p className="text-[11px] text-destructive font-medium">{errors.remarks.message}</p>
@@ -96,14 +98,14 @@ export function TransferAssetDialog({ open, onOpenChange, assetId, onSuccess }: 
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="rounded-xl h-10 w-full"
+              className="rounded-[20px] [corner-shape:squircle] h-10 w-full"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl h-10 w-full"
+              className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-[20px] [corner-shape:squircle] h-10 w-full"
             >
               {isSubmitting ? (
                 <>

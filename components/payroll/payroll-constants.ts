@@ -1,85 +1,13 @@
 // components/payroll/payroll-constants.ts
-export interface PayrollRecord {
-  id: string
-  employeeId: string
-  employeeName: string
-  initials: string
-  department: string
-  baseSalary: number
-  allowances: number
-  overtime: number
-  deductions: number
-  netSalary: number
-  wpsStatus: 'processed' | 'pending' | 'failed'
-}
+export type { PayrollRecord } from '@/types/payroll'
 
-export const INITIAL_PAYROLL_DATA: PayrollRecord[] = [
-  {
-    id: 'PAY-001',
-    employeeId: 'EMP-001',
-    employeeName: 'Ahmed Al Maktoum',
-    initials: 'AM',
-    department: 'Engineering',
-    baseSalary: 25000,
-    allowances: 5000,
-    overtime: 2500,
-    deductions: 1500,
-    netSalary: 31000,
-    wpsStatus: 'processed',
-  },
-  {
-    id: 'PAY-002',
-    employeeId: 'EMP-002',
-    employeeName: 'Sarah Johnson',
-    initials: 'SJ',
-    department: 'HR',
-    baseSalary: 20000,
-    allowances: 4000,
-    overtime: 0,
-    deductions: 1200,
-    netSalary: 22800,
-    wpsStatus: 'processed',
-  },
-  {
-    id: 'PAY-003',
-    employeeId: 'EMP-003',
-    employeeName: 'Mohammed Hassan',
-    initials: 'MH',
-    department: 'Finance',
-    baseSalary: 18000,
-    allowances: 3500,
-    overtime: 1500,
-    deductions: 1100,
-    netSalary: 21900,
-    wpsStatus: 'pending',
-  },
-  {
-    id: 'PAY-004',
-    employeeId: 'EMP-004',
-    employeeName: 'Fatima Al Rashid',
-    initials: 'FR',
-    department: 'Marketing',
-    baseSalary: 22000,
-    allowances: 4500,
-    overtime: 800,
-    deductions: 1300,
-    netSalary: 26000,
-    wpsStatus: 'processed',
-  },
-  {
-    id: 'PAY-005',
-    employeeId: 'EMP-005',
-    employeeName: 'James Wilson',
-    initials: 'JW',
-    department: 'Operations',
-    baseSalary: 15000,
-    allowances: 3000,
-    overtime: 2000,
-    deductions: 950,
-    netSalary: 19050,
-    wpsStatus: 'failed',
-  },
-]
+/** Mock KPI summary — kept static per product decision (table uses live API). */
+export const MOCK_PAYROLL_KPIS = {
+  totalPayroll: 126_800,
+  totalDeductions: 6_050,
+  netPayout: 120_750,
+  employeeCount: 5,
+}
 
 export const monthlyData = [
   { month: 'Jul', base: 420000, allowances: 85000, overtime: 32000 },
@@ -97,3 +25,11 @@ export const wpsStatusConfig = {
 }
 export type WPSStatus = 'processed' | 'pending' | 'failed'
 export type WPSStatusConfig = typeof wpsStatusConfig
+
+export type { PayrollStatusFilter } from '@/types/payroll'
+
+export const payrollStatusFilterConfig = {
+  all: { label: 'All statuses', apiValue: undefined as string | undefined },
+  processing: { label: 'Processing', apiValue: 'Processing' },
+  finalized: { label: 'Finalized', apiValue: 'Finalized' },
+} as const

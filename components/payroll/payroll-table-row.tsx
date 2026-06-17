@@ -6,16 +6,31 @@ import { Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import type { PayrollRecord } from './payroll-constants'
+import { Checkbox } from '@/components/ui/checkbox'
+import type { PayrollRecord } from '@/types/payroll'
+import { getPayrollStatusLabel } from '@/lib/mappers/payroll-mapper'
 import { wpsStatusConfig } from './payroll-constants'
 
 interface PayrollTableRowProps {
   record: PayrollRecord
   index: number
+  isSelected: boolean
+  onToggleSelect: (id: number) => void
+  onAddAdjustment: (record: PayrollRecord) => void
+  canManage?: boolean
 }
 
-export function PayrollTableRow({ record, index }: PayrollTableRowProps) {
+export function PayrollTableRow({
+  record,
+  index,
+  isSelected,
+  onToggleSelect,
+  onAddAdjustment,
+  canManage = false,
+}: PayrollTableRowProps) {
   const wpsStatus = wpsStatusConfig[record.wpsStatus]
+  const statusLabel = getPayrollStatusLabel(record.status)
+
   return (
     <motion.tr
       initial={{ opacity: 0 }}
@@ -23,6 +38,15 @@ export function PayrollTableRow({ record, index }: PayrollTableRowProps) {
       transition={{ delay: index * 0.02 }}
       className="border-b border-border/50 hover:bg-violet-core/5 transition-colors"
     >
+      <td className="px-4 py-3 w-12">
+        {canManage && record.canFinalize ? (
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect(record.id)}
+            aria-label={`Select ${record.employeeName} for finalization`}
+          />
+        ) : null}
+      </td>
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar className="w-8 h-8">
@@ -32,7 +56,7 @@ export function PayrollTableRow({ record, index }: PayrollTableRowProps) {
           </Avatar>
           <div>
             <p className="text-sm font-medium text-cloud">{record.employeeName}</p>
-            <p className="text-xs text-muted-foreground">{record.department}</p>
+            <p className="text-xs text-muted-foreground">{record.employeeId}</p>
           </div>
         </div>
       </td>
@@ -63,13 +87,21 @@ export function PayrollTableRow({ record, index }: PayrollTableRowProps) {
       </td>
       <td className="px-4 py-3 text-center">
         <span className={cn('px-2 py-1 rounded-full text-[10px] font-medium', wpsStatus.className)}>
-          {wpsStatus.label}
+          {statusLabel}
         </span>
       </td>
       <td className="px-4 py-3">
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+        {canManage ? (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={() => onAddAdjustment(record)}
+          aria-label={`Add adjustment for ${record.employeeName}`}
+        >
           <Eye className="w-4 h-4" />
         </Button>
+        ) : null}
       </td>
     </motion.tr>
   )

@@ -1,23 +1,26 @@
 // components/assets/useAssetDocumentsTab.ts
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { assetService, type AssetDocument, type AssetDropdowns } from '@/services/asset-service'
+import { assetService } from '@/services/asset-service'
 import { uploadDocumentSchema, type UploadDocumentInput } from '@/validations/asset-actions.schema'
-import { DOCUMENT_TYPE_FALLBACKS } from './assets-constants'
+import type { AssetDocument, AssetDropdowns } from '@/types/asset'
 import { toast } from 'sonner'
 
 export interface UseAssetDocumentsTabReturn {
   documents: AssetDocument[]
   isLoading: boolean
+  hasError: boolean
   isUploading: boolean
   isDeletingId: number | null
-  docTypes: readonly { id: number; name: string }[]
+  docTypes: { id: number; name: string }[]
+  hasDocTypesError: boolean
   form: UseFormReturn<UploadDocumentInput>
   selectedFile: File | undefined
-  fetchDocuments: () => Promise<void>
+  fetchDocuments: () => void
+  handleRetry: () => void
   onUploadSubmit: (data: UploadDocumentInput) => Promise<void>
   handleDelete: (docId: number) => Promise<void>
   getDocTypeName: (typeVal: string | number) => string
@@ -29,47 +32,72 @@ export function useAssetDocumentsTab(
 ): UseAssetDocumentsTabReturn {
   const [documents, setDocuments] = useState<AssetDocument[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null)
+  const [reloadToken, setReloadToken] = useState(0)
+  const fetchIdRef = useRef(0)
 
-  const docTypes = dropdowns?.asset_document_types || DOCUMENT_TYPE_FALLBACKS
+  const docTypes = dropdowns?.asset_document_types ?? []
+  const hasDocTypesError = !dropdowns || docTypes.length === 0
 
   const form = useForm<UploadDocumentInput>({
     resolver: zodResolver(uploadDocumentSchema),
     defaultValues: {
       document_type: undefined,
-      file: undefined
-    }
+      file: undefined,
+    },
   })
 
   const { watch, reset } = form
   const selectedFile = watch('file') as File | undefined
 
-  const fetchDocuments = async (signal?: AbortSignal) => {
-    setIsLoading(true)
-    try {
-      const data = await assetService.getAssetDocuments(assetId, signal)
-      if (signal?.aborted) return
-      setDocuments(data)
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') return
-      console.error('Failed to load asset documents:', err)
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoading(false)
-      }
-    }
-  }
+  const fetchDocuments = useCallback(() => {
+    setReloadToken((prev) => prev + 1)
+  }, [])
+
+  const handleRetry = fetchDocuments
+
+  useEffect(() => {
+    reset({
+      document_type: undefined,
+      file: undefined,
+    })
+  }, [assetId, reset])
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchDocuments(controller.signal)
-    return () => {
-      controller.abort()
+    const fetchId = ++fetchIdRef.current
+
+    async function loadDocuments(): Promise<void> {
+      setIsLoading(true)
+      setHasError(false)
+      try {
+        const data = await assetService.getAssetDocuments(assetId, controller.signal)
+        if (controller.signal.aborted || fetchId !== fetchIdRef.current) return
+        setDocuments(data)
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === 'AbortError') return
+        if (fetchId !== fetchIdRef.current) return
+        setHasError(true)
+        setDocuments([])
+        toast.error('Failed to load asset documents')
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setIsLoading(false)
+        }
+      }
     }
-  }, [assetId])
+
+    void loadDocuments()
+    return () => controller.abort()
+  }, [assetId, reloadToken])
 
   const onUploadSubmit = async (data: UploadDocumentInput) => {
+    if (hasDocTypesError) {
+      toast.error('Document types are unavailable. Please try again later.')
+      return
+    }
     setIsUploading(true)
     try {
       const formData = new FormData()
@@ -105,19 +133,22 @@ export function useAssetDocumentsTab(
 
   const getDocTypeName = (typeVal: string | number) => {
     const typeId = Number(typeVal)
-    const match = docTypes.find(t => t.id === typeId)
+    const match = docTypes.find((t) => t.id === typeId)
     return match ? match.name : `Document Type #${typeVal}`
   }
 
   return {
     documents,
     isLoading,
+    hasError,
     isUploading,
     isDeletingId,
     docTypes,
+    hasDocTypesError,
     form,
     selectedFile,
     fetchDocuments,
+    handleRetry,
     onUploadSubmit,
     handleDelete,
     getDocTypeName,

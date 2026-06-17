@@ -1,5 +1,6 @@
 // validations/leave-rule.schema.ts
 import * as z from 'zod'
+import { LIMIT_DESCRIPTION, requiredTrimmedString } from './field-limits'
 
 export const leaveRuleSchema = z.object({
   leave_type: z.coerce.number().min(1, { message: 'Leave type is required' }),
@@ -11,7 +12,7 @@ export const leaveRuleSchema = z.object({
     required_error: 'Accrual frequency is required',
   }),
   is_paid_leave: z.boolean(),
-  description: z.string().min(1, { message: 'Description is required' }).trim(),
+  description: requiredTrimmedString('Description', LIMIT_DESCRIPTION),
 })
 
 export type LeaveRuleInput = z.infer<typeof leaveRuleSchema>

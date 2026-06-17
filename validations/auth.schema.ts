@@ -1,6 +1,10 @@
 // validations/auth.schema.ts
 import * as z from 'zod'
 
+/**
+ * Login validates existing credentials only (min 6 chars).
+ * New passwords use setPasswordSchema with stronger rules.
+ */
 export const loginSchema = z.object({
   username: z.string().min(1, { message: 'Username or Email is required' }).trim(),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),

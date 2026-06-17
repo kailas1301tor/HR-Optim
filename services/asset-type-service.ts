@@ -25,16 +25,9 @@ interface SingleAssetTypeResponse {
 }
 
 export const assetTypeService = {
-  /** Fetch all asset types from the API. Handles network failures gracefully. */
-  async getAssetTypes(fallback: AssetType[], signal?: AbortSignal): Promise<AssetType[]> {
-    try {
-      const response = await api.get<AssetTypeListResponse>('/api/master/asset-types/', { signal });
-      return response.results?.data ?? fallback;
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') throw error;
-      console.warn('🔴 Network error fetching asset types. Loading mock fallback.', error);
-      return fallback;
-    }
+  async getAssetTypes(signal?: AbortSignal): Promise<AssetType[]> {
+    const response = await api.get<AssetTypeListResponse>('/api/master/asset-types/', { signal })
+    return response.results?.data ?? []
   },
 
   /** Create a new asset type. */

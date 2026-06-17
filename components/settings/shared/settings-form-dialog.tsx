@@ -22,6 +22,8 @@ interface SettingsFormDialogProps {
   description?: string
   isSubmitting?: boolean
   submitLabel?: string
+  readOnly?: boolean
+  submitDisabled?: boolean
   onSubmit: (e: FormEvent) => void
   children: ReactNode
   size?: 'md' | 'lg' | 'xl'
@@ -34,6 +36,8 @@ export function SettingsFormDialog({
   description,
   isSubmitting = false,
   submitLabel = 'Save',
+  readOnly = false,
+  submitDisabled = false,
   onSubmit,
   children,
   size = 'md',
@@ -42,7 +46,13 @@ export function SettingsFormDialog({
     size === 'xl' ? 'max-w-2xl' : size === 'lg' ? 'max-w-lg' : 'max-w-md'
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen && isSubmitting) return
+        onOpenChange(nextOpen)
+      }}
+    >
       <DialogContent className={cn(uiDialog, sizeClass, 'max-h-[90vh] overflow-y-auto')}>
         <form onSubmit={onSubmit}>
           <DialogHeader>
@@ -60,11 +70,18 @@ export function SettingsFormDialog({
               disabled={isSubmitting}
               className={cn(uiOutlineBtn, 'text-xs w-full sm:w-auto')}
             >
-              Cancel
+              {readOnly ? 'Close' : 'Cancel'}
             </Button>
-            <PrimaryButton type="submit" isLoading={isSubmitting} className="text-xs w-full sm:w-auto">
-              {submitLabel}
-            </PrimaryButton>
+            {!readOnly ? (
+              <PrimaryButton
+                type="submit"
+                isLoading={isSubmitting}
+                disabled={submitDisabled}
+                className="text-xs w-full sm:w-auto"
+              >
+                {submitLabel}
+              </PrimaryButton>
+            ) : null}
           </DialogFooter>
         </form>
       </DialogContent>

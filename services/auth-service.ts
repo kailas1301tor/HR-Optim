@@ -1,17 +1,49 @@
 // services/auth-service.ts
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
+import {
+  AUTH_COOKIE_NAMES,
+  clearAuthCookies,
+  getClientCookie,
+  setAuthSessionCookies,
+} from '@/lib/cookies'
+import { clearRefreshToken, getRefreshToken, setRefreshToken } from '@/lib/auth/refresh-token-storage'
+import { clearPendingAuth } from '@/lib/helpers/pending-auth-storage'
+import type {
+  CurrentUserProfile,
+  CurrentUserProfileResponse,
+  CurrentUserProfileWire,
+  LoginResponse,
+  ProfileField,
+  RefreshTokenApiContract,
+  RefreshTokenResponse,
+  RefreshTokenResult,
+} from '@/types/auth'
+export type { LoginResponse } from '@/types/auth'
 
-export interface LoginResponse {
-  message: string
-  results: {
-    data: {
-      refresh: string
-      access: string
-      user_id: number
-      username: string
-      email: string
-      has_password_changed: boolean
-    }
+const REFRESH_ENDPOINT: RefreshTokenApiContract['endpoint'] = '/api/auth/token/refresh/'
+
+function isProfileField<T>(field: unknown): field is ProfileField<T> {
+  return (
+    typeof field === 'object' &&
+    field !== null &&
+    'value' in field &&
+    'is_editable' in field
+  )
+}
+
+function unwrapField<T>(field: T | ProfileField<T> | undefined | null): T | undefined {
+  if (field === undefined || field === null) return undefined
+  if (isProfileField<T>(field)) return field.value
+  return field
+}
+
+function normalizeCurrentUserProfile(data: CurrentUserProfileWire): CurrentUserProfile {
+  return {
+    id: unwrapField(data.id) ?? 0,
+    username: unwrapField(data.username) ?? '',
+    email: unwrapField(data.email) ?? '',
+    permissions: unwrapField(data.permissions) ?? [],
+    employee_profile_id: unwrapField(data.employee_profile_id) ?? null,
   }
 }
 
@@ -39,29 +71,81 @@ export const authService = {
     )
   },
 
-  async persistSession(
+  persistSession(
     token: string,
     username: string,
     email: string,
     userId?: number
-  ): Promise<void> {
-    const response = await fetch('/api/auth/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, username, email, userId }),
-    })
+  ): void {
+    setAuthSessionCookies({ token, username, email, userId })
+  },
 
-    if (!response.ok) {
-      throw new Error('Failed to persist session')
+  persistSessionFromCookies(accessToken: string): void {
+    const username = getClientCookie(AUTH_COOKIE_NAMES.username) ?? ''
+    const email = getClientCookie(AUTH_COOKIE_NAMES.email) ?? ''
+    const rawUserId = getClientCookie(AUTH_COOKIE_NAMES.userId)
+    const parsedUserId = rawUserId ? Number(rawUserId) : undefined
+    setAuthSessionCookies({
+      token: accessToken,
+      username,
+      email,
+      userId: parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : undefined,
+    })
+  },
+
+  storeTokensFromLogin(access: string, refresh?: string): void {
+    if (refresh) {
+      setRefreshToken(refresh)
+    }
+  },
+
+  /**
+   * Renews access token via backend refresh endpoint.
+   * Returns null when no refresh token is stored or the API rejects the request.
+   */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    confirmPassword: string,
+  ): Promise<{ message: string }> {
+    return await api.post<{ message: string }>('/api/auth/change-password/', {
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    })
+  },
+
+  async getCurrentUserProfile(): Promise<CurrentUserProfile> {
+    const response = await api.get<CurrentUserProfileResponse>('/api/auth/profile/')
+    const data = response.results?.data
+    if (!data) {
+      throw new ApiError('Failed to load user profile', 500, response)
+    }
+    return normalizeCurrentUserProfile(data)
+  },
+
+  async refreshAccessToken(): Promise<RefreshTokenResult | null> {
+    const refresh = getRefreshToken()
+    if (!refresh) return null
+
+    try {
+      const response = await api.post<RefreshTokenResponse>(
+        REFRESH_ENDPOINT,
+        { refresh } satisfies RefreshTokenApiContract['body'],
+        { skipAuthHeader: true, skipSessionRedirect: true }
+      )
+      const data = response.results?.data
+      if (!data?.access) return null
+      return { access: data.access, refresh: data.refresh }
+    } catch {
+      return null
     }
   },
 
   async logout(): Promise<void> {
-    try {
-      await fetch('/api/auth/session', { method: 'DELETE' })
-    } catch {
-      // Proceed with redirect even if session clear fails
-    }
+    clearAuthCookies()
+    clearRefreshToken()
+    clearPendingAuth()
     window.location.href = '/login'
   },
 }

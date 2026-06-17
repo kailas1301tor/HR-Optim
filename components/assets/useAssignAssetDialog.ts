@@ -6,9 +6,9 @@ import { useForm, type UseFormReturn } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { assignAssetSchema, type AssignAssetInput } from '@/validations/asset-actions.schema'
 import { assetService } from '@/services/asset-service'
-import { employeeService } from '@/services/employee-service'
-import type { Employee } from '@/components/employees/employee-table'
+import type { Employee } from '@/types/employee'
 import { toast } from 'sonner'
+import { useAssetEmployeeSearch } from './useAssetEmployeeSearch'
 
 export interface UseAssignAssetDialogReturn {
   employees: Employee[]
@@ -17,7 +17,6 @@ export interface UseAssignAssetDialogReturn {
   isSubmitting: boolean
   form: UseFormReturn<AssignAssetInput>
   selectedEmployeeId: number
-  filteredEmployees: Employee[]
   selectedEmp: Employee | undefined
   setSearchQuery: (query: string) => void
   onSubmit: (data: AssignAssetInput) => Promise<void>
@@ -29,44 +28,27 @@ export function useAssignAssetDialog(
   assetId: number,
   onSuccess: () => void
 ): UseAssignAssetDialogReturn {
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false)
+  const { employees, searchQuery, setSearchQuery, isLoading: isLoadingEmployees } =
+    useAssetEmployeeSearch(open)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<AssignAssetInput>({
     resolver: zodResolver(assignAssetSchema),
     defaultValues: {
-      remarks: ''
-    }
+      remarks: '',
+    },
   })
 
   const { watch, reset } = form
   const selectedEmployeeId = watch('assign_to_employee')
+  const selectedEmp = employees.find((emp) => emp.id === selectedEmployeeId)
 
   useEffect(() => {
-    const controller = new AbortController()
-    async function loadEmployees() {
-      if (!open) return
-      setIsLoadingEmployees(true)
-      try {
-        const response = await employeeService.getEmployees({ page_size: 100 }, controller.signal)
-        setEmployees(response.data)
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') return
-        console.error('Failed to load employees list:', err)
-        toast.error('Failed to load employees list')
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsLoadingEmployees(false)
-        }
-      }
+    if (!open) {
+      reset({ remarks: '' })
+      setSearchQuery('')
     }
-    loadEmployees()
-    return () => {
-      controller.abort()
-    }
-  }, [open])
+  }, [open, reset, setSearchQuery])
 
   const onSubmit = async (data: AssignAssetInput) => {
     setIsSubmitting(true)
@@ -74,7 +56,7 @@ export function useAssignAssetDialog(
       await assetService.assignAsset({
         asset_id: assetId,
         assign_to_employee: data.assign_to_employee,
-        remarks: data.remarks
+        remarks: data.remarks,
       })
       toast.success('Asset assigned successfully')
       onOpenChange(false)
@@ -89,14 +71,6 @@ export function useAssignAssetDialog(
     }
   }
 
-  const filteredEmployees = employees.filter((emp) =>
-    (emp.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (emp.employee_id || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (emp.user?.email || '').toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  const selectedEmp = employees.find((emp) => emp.id === selectedEmployeeId)
-
   return {
     employees,
     searchQuery,
@@ -104,7 +78,6 @@ export function useAssignAssetDialog(
     isSubmitting,
     form,
     selectedEmployeeId,
-    filteredEmployees,
     selectedEmp,
     setSearchQuery,
     onSubmit,

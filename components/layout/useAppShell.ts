@@ -8,7 +8,10 @@ import {
   getClientCookie,
   initialsFromName,
 } from '@/lib/cookies'
+import { formatPersonName } from '@/lib/helpers/format-display-text'
 import { resolveCurrentEmployeeRecord } from '@/lib/helpers/resolve-current-employee'
+import { loadCachedUserProfile } from '@/components/auth/permissions-provider'
+import { canViewModule } from '@/lib/permissions/module-permissions'
 import type { UserProfile } from './app-shell'
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -52,13 +55,30 @@ export function useAppShell(): UseAppShellReturn {
 
     async function loadProfile(): Promise<void> {
       try {
+        const profile = await loadCachedUserProfile()
+        if (controller.signal.aborted) return
+
+        const profileName = formatPersonName(
+          formatDisplayNameFromUsername(profile.username) || profile.email || inferredName,
+        )
+        setUserProfile({
+          fullName: profileName,
+          email: profile.email || email,
+          roleName: DEFAULT_PROFILE.roleName,
+          initials: initialsFromName(profileName),
+        })
+
+        const permissions = new Set(profile.permissions.map((permission) => permission.codename))
+        if (!canViewModule(permissions, 'employees')) return
+
         const profileSource = await resolveCurrentEmployeeRecord(controller.signal)
         if (!profileSource || controller.signal.aborted) return
 
         setUserProfile({
-          fullName: profileSource.full_name,
+          fullName: formatPersonName(profileSource.full_name),
           email: profileSource.user.email,
-          roleName: profileSource.designation || profileSource.role_name || 'Employee',
+          roleName:
+            profileSource.designation || profileSource.role_name || DEFAULT_PROFILE.roleName,
           initials: initialsFromName(profileSource.full_name),
         })
       } catch (err: unknown) {

@@ -1,15 +1,23 @@
 // components/settings/useDepartmentSettings.ts
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { departmentService, type Department } from '@/services/department-service'
+import { departmentService } from '@/services/department-service'
+import type { Department } from '@/types/settings'
 import { toast } from 'sonner'
+import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
+import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeDropdowns'
+import { loadMasterList } from '@/lib/helpers/load-master-list'
+import { invalidateSettingsDepartments } from './invalidate-settings-departments'
+import { masterNameWithDescriptionSchema } from '@/validations/settings-master.schema'
 
 export interface UseDepartmentSettingsReturn {
   selectedDeptId: string
   departments: Department[]
   isLoading: boolean
+  hasError: boolean
+  reload: () => Promise<void>
   isOpen: boolean
   editId: number | null
   formName: string
@@ -33,20 +41,29 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
+  const searchParamsString = searchParams.toString()
   const selectedDeptId = searchParams.get('dept_id') || ''
+  const activeTab = searchParams.get('tab') || 'company'
+  const shouldSyncDeptUrl = activeTab === 'company'
 
-  const setSelectedDeptId = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString())
+  const setSelectedDeptId = useCallback((id: string) => {
+    const params = new URLSearchParams(searchParamsString)
+    const currentDeptId = params.get('dept_id') || ''
+    if (id === currentDeptId) return
+
     if (id) {
       params.set('dept_id', id)
     } else {
       params.delete('dept_id')
     }
     router.replace(`${pathname}?${params.toString()}`)
-  }
+  }, [router, pathname, searchParamsString])
+
+  const lastRequestedDeptIdRef = useRef(selectedDeptId)
 
   const [departments, setDepartments] = useState<Department[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
 
   // Add/Edit Dialog State
   const [isOpen, setIsOpen] = useState(false)
@@ -58,22 +75,36 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
   // Delete Dialog State
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const requestIdRef = useRef(0)
 
-  const loadDepartments = async () => {
-    setIsLoading(true)
-    try {
-      const data = await departmentService.getDepartments()
-      setDepartments(data)
-    } catch (error) {
-      toast.error('Failed to load departments')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const reload = useCallback(async (): Promise<void> => {
+    await loadMasterList({
+      setLoading: setIsLoading,
+      setHasError,
+      fetcher: () => departmentService.getDepartments(),
+      onSuccess: setDepartments,
+      errorMessage: 'Failed to load departments',
+      requestIdRef,
+    })
+  }, [])
 
   useEffect(() => {
-    loadDepartments()
-  }, [])
+    reload()
+  }, [reload])
+
+  useEffect(() => {
+    lastRequestedDeptIdRef.current = selectedDeptId
+  }, [selectedDeptId])
+
+  useEffect(() => {
+    if (!shouldSyncDeptUrl) return
+    if (isLoading || departments.length === 0) return
+    if (selectedDeptId && !departments.some((dept) => String(dept.id) === selectedDeptId)) {
+      if (lastRequestedDeptIdRef.current === '') return
+      lastRequestedDeptIdRef.current = ''
+      setSelectedDeptId('')
+    }
+  }, [shouldSyncDeptUrl, isLoading, departments, selectedDeptId, setSelectedDeptId])
 
   const handleOpenAdd = () => {
     setFormName('')
@@ -91,19 +122,36 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formName.trim()) return
+    const parsed = masterNameWithDescriptionSchema.safeParse({
+      name: formName,
+      description: formDescription,
+    })
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Please fix the form errors')
+      return
+    }
 
     setIsSubmitting(true)
     try {
       if (editId !== null) {
-        await departmentService.updateDepartment(editId, formName.trim().toUpperCase(), formDescription.trim())
+        await departmentService.updateDepartment(
+          editId,
+          parsed.data.name.toUpperCase(),
+          parsed.data.description ?? '',
+        )
         toast.success('Department updated successfully')
       } else {
-        await departmentService.createDepartment(formName.trim().toUpperCase(), formDescription.trim())
+        await departmentService.createDepartment(
+          parsed.data.name.toUpperCase(),
+          parsed.data.description ?? '',
+        )
         toast.success('Department created successfully')
       }
       setIsOpen(false)
-      await loadDepartments()
+      invalidateEmployeeDropdowns()
+      invalidateAssetDropdowns()
+      invalidateSettingsDepartments()
+      await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save department'
       toast.error(message)
@@ -122,7 +170,10 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
         setSelectedDeptId('')
       }
       setDeleteId(null)
-      await loadDepartments()
+      invalidateEmployeeDropdowns()
+      invalidateAssetDropdowns()
+      invalidateSettingsDepartments()
+      await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete department'
       toast.error(message)
@@ -131,10 +182,21 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
     }
   }
 
+  const handleDialogOpenChange = (open: boolean): void => {
+    if (!open && !isSubmitting) {
+      setEditId(null)
+      setFormName('')
+      setFormDescription('')
+    }
+    if (!isSubmitting) setIsOpen(open)
+  }
+
   return {
     selectedDeptId,
     departments,
     isLoading,
+    hasError,
+    reload,
     isOpen,
     editId,
     formName,
@@ -142,7 +204,7 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
     isSubmitting,
     deleteId,
     isDeleting,
-    setIsOpen,
+    setIsOpen: handleDialogOpenChange,
     setFormName,
     setFormDescription,
     setDeleteId,

@@ -1,20 +1,22 @@
+// app/payroll/page.tsx
+import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
+import { SelfServicePageHeader } from '@/components/common'
 import { PayrollDashboard } from '@/components/payroll/payroll-dashboard'
+import { PayrollSkeleton } from '@/components/payroll/payroll-skeleton'
 
 export default function PayrollPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-2xl font-semibold text-cloud mb-1">Payroll</h1>
-          <p className="text-muted-foreground">
-            Manage employee salaries and WPS processing
-          </p>
-        </div>
-
-        {/* Payroll Dashboard */}
-        <PayrollDashboard />
+        <SelfServicePageHeader
+          moduleKey="payroll"
+          title="Payroll"
+          subtitle="Manage employee salaries and WPS processing"
+        />
+        <Suspense fallback={<PayrollSkeleton variant="employee" showHeader={false} />}>
+          <PayrollDashboard />
+        </Suspense>
       </div>
     </AppShell>
   )

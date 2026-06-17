@@ -1,16 +1,26 @@
 // components/settings/useDesignationSettings.ts
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
-import { departmentService, type Department } from '@/services/department-service'
-import { designationService, type Designation } from '@/services/designation-service'
+import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
+import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeDropdowns'
+import { loadMasterList } from '@/lib/helpers/load-master-list'
+import { departmentService } from '@/services/department-service'
+import { designationService } from '@/services/designation-service'
+import { subscribeSettingsDepartmentsInvalidation } from './invalidate-settings-departments'
+import type { Department, Designation } from '@/types/settings'
+import { designationSchema } from '@/validations/settings-master.schema'
 
 export interface UseDesignationSettingsReturn {
   selectedDeptId: string
   departments: Department[]
   isDeptLoading: boolean
+  deptHasError: boolean
+  reloadDepartments: () => Promise<void>
   designations: Designation[]
   isLoading: boolean
+  designationsHasError: boolean
+  reloadDesignations: () => Promise<void>
   isOpen: boolean
   editId: number | null
   formName: string
@@ -36,25 +46,34 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
+  const searchParamsString = searchParams.toString()
   const selectedDeptId = searchParams.get('dept_id') || ''
+  const activeTab = searchParams.get('tab') || 'company'
+  const shouldSyncDeptUrl = activeTab === 'company'
 
   const setSelectedDeptId = useCallback((id: string) => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParamsString)
+    const currentDeptId = params.get('dept_id') || ''
+    if (id === currentDeptId) return
+
     if (id) {
       params.set('dept_id', id)
     } else {
       params.delete('dept_id')
     }
     router.replace(`${pathname}?${params.toString()}`)
-  }, [router, pathname, searchParams])
+  }, [router, pathname, searchParamsString])
+
+  const lastRequestedDeptIdRef = useRef(selectedDeptId)
 
   // Department data
   const [departments, setDepartments] = useState<Department[]>([])
   const [isDeptLoading, setIsDeptLoading] = useState(true)
+  const [deptHasError, setDeptHasError] = useState(false)
 
-  // Designation data
   const [designations, setDesignations] = useState<Designation[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [designationsHasError, setDesignationsHasError] = useState(false)
 
   // Add/Edit Dialog
   const [isOpen, setIsOpen] = useState(false)
@@ -67,49 +86,84 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
   // Delete Dialog
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const deptRequestIdRef = useRef(0)
+  const designationsRequestIdRef = useRef(0)
 
-  useEffect(() => {
-    const loadDepts = async (): Promise<void> => {
-      setIsDeptLoading(true)
-      try {
-        const data = await departmentService.getDepartments()
-        setDepartments(data)
-      } catch {
-        toast.error('Failed to load departments')
-      } finally {
-        setIsDeptLoading(false)
-      }
-    }
-    loadDepts()
+  const reloadDepartments = useCallback(async (): Promise<void> => {
+    await loadMasterList({
+      setLoading: setIsDeptLoading,
+      setHasError: setDeptHasError,
+      fetcher: () => departmentService.getDepartments(),
+      onSuccess: setDepartments,
+      errorMessage: 'Failed to load departments',
+      requestIdRef: deptRequestIdRef,
+    })
   }, [])
 
   useEffect(() => {
-    if (!selectedDeptId && departments.length > 0) {
-      setSelectedDeptId(String(departments[0].id))
-    }
-  }, [selectedDeptId, departments, setSelectedDeptId])
+    reloadDepartments()
+  }, [reloadDepartments])
 
-  const loadDesignations = useCallback(async (deptId: number): Promise<void> => {
-    setIsLoading(true)
-    try {
-      const data = await designationService.getDesignations(deptId)
-      setDesignations(data)
-    } catch {
-      toast.error('Failed to load designations')
-    } finally {
+  useEffect(() => {
+    return subscribeSettingsDepartmentsInvalidation(() => {
+      void reloadDepartments()
+    })
+  }, [reloadDepartments])
+
+  useEffect(() => {
+    lastRequestedDeptIdRef.current = selectedDeptId
+  }, [selectedDeptId])
+
+  useEffect(() => {
+    if (!shouldSyncDeptUrl) return
+    if (isDeptLoading || departments.length === 0) return
+    if (selectedDeptId && !departments.some((dept) => String(dept.id) === selectedDeptId)) {
+      const target = ''
+      if (lastRequestedDeptIdRef.current === target) return
+      lastRequestedDeptIdRef.current = target
+      setSelectedDeptId(target)
+      return
+    }
+    if (!selectedDeptId) {
+      const target = String(departments[0].id)
+      if (lastRequestedDeptIdRef.current === target) return
+      lastRequestedDeptIdRef.current = target
+      setSelectedDeptId(target)
+    }
+  }, [shouldSyncDeptUrl, isDeptLoading, selectedDeptId, departments, setSelectedDeptId])
+
+  const reloadDesignations = useCallback(async (): Promise<void> => {
+    if (!selectedDeptId) {
+      setDesignations([])
       setIsLoading(false)
+      return
     }
-  }, [])
+    const deptId = Number(selectedDeptId)
+    await loadMasterList({
+      setLoading: setIsLoading,
+      setHasError: setDesignationsHasError,
+      fetcher: () => designationService.getDesignations(deptId),
+      onSuccess: setDesignations,
+      errorMessage: 'Failed to load designations',
+      requestIdRef: designationsRequestIdRef,
+    })
+  }, [selectedDeptId])
 
   useEffect(() => {
-    if (selectedDeptId) {
-      loadDesignations(Number(selectedDeptId))
+    if (!selectedDeptId) {
+      setDesignations([])
+      setIsLoading(false)
+      return
     }
-  }, [selectedDeptId, loadDesignations])
+    setIsLoading(true)
+    reloadDesignations()
+  }, [selectedDeptId, reloadDesignations])
 
   const handleDeptChange = (value: string): void => {
+    if (value === selectedDeptId) return
     setSelectedDeptId(value)
     setDesignations([])
+    setIsLoading(true)
   }
 
   const handleOpenAdd = (): void => {
@@ -130,22 +184,39 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
-    if (!formName.trim() || !formDepartmentId) return
+    const parsed = designationSchema.safeParse({
+      name: formName,
+      description: formDescription,
+      departmentId: formDepartmentId,
+    })
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Please fix the form errors')
+      return
+    }
 
-    const deptId = Number(formDepartmentId)
+    const deptId = Number(parsed.data.departmentId)
     setIsSubmitting(true)
     try {
       if (editId !== null) {
-        await designationService.updateDesignation(editId, deptId, formName.trim(), formDescription.trim())
+        await designationService.updateDesignation(
+          editId,
+          deptId,
+          parsed.data.name,
+          parsed.data.description ?? '',
+        )
         toast.success('Designation updated successfully')
       } else {
-        await designationService.createDesignation(deptId, formName.trim(), formDescription.trim())
+        await designationService.createDesignation(
+          deptId,
+          parsed.data.name,
+          parsed.data.description ?? '',
+        )
         toast.success('Designation created successfully')
       }
       setIsOpen(false)
-      if (selectedDeptId) {
-        await loadDesignations(Number(selectedDeptId))
-      }
+      invalidateEmployeeDropdowns()
+      invalidateAssetDropdowns()
+      await reloadDesignations()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save designation'
       toast.error(message)
@@ -161,7 +232,9 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
       await designationService.deleteDesignation(deleteId)
       toast.success('Designation deleted successfully')
       setDeleteId(null)
-      await loadDesignations(Number(selectedDeptId))
+      invalidateEmployeeDropdowns()
+      invalidateAssetDropdowns()
+      await reloadDesignations()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete designation'
       toast.error(message)
@@ -170,12 +243,26 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
     }
   }
 
+  const handleDialogOpenChange = (open: boolean): void => {
+    if (!open && !isSubmitting) {
+      setEditId(null)
+      setFormName('')
+      setFormDescription('')
+      setFormDepartmentId('')
+    }
+    if (!isSubmitting) setIsOpen(open)
+  }
+
   return {
     selectedDeptId,
     departments,
     isDeptLoading,
+    deptHasError,
+    reloadDepartments,
     designations,
     isLoading,
+    designationsHasError,
+    reloadDesignations,
     isOpen,
     editId,
     formName,
@@ -184,7 +271,7 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
     isSubmitting,
     deleteId,
     isDeleting,
-    setIsOpen,
+    setIsOpen: handleDialogOpenChange,
     setFormName,
     setFormDescription,
     setFormDepartmentId,

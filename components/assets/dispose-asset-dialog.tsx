@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Loader2, Trash2, AlertTriangle } from 'lucide-react'
-import { type AssetDropdowns } from '@/services/asset-service'
+import { type AssetDropdowns } from '@/types/asset'
 import { useDisposeAssetDialog } from './useDisposeAssetDialog'
 
 interface DisposeAssetDialogProps {
@@ -28,6 +28,7 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
   const {
     isSubmitting,
     disposalChoices,
+    hasDisposalChoicesError,
     form,
     onSubmit,
   } = useDisposeAssetDialog(open, onOpenChange, assetId, dropdowns, onSuccess)
@@ -45,7 +46,7 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
       onOpenChange(val)
       if (!val) reset()
     }}>
-      <DialogContent className="bg-card text-foreground border border-border/80 rounded-2xl max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="bg-card text-foreground border border-border/80 rounded-[32px] [corner-shape:squircle] max-w-md p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-rose-400 font-semibold text-lg flex items-center gap-2">
             <Trash2 className="w-5 h-5 text-rose-400" /> Dispose & Retire Asset
@@ -56,10 +57,16 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
         </DialogHeader>
 
         {/* Warn details */}
-        <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl flex gap-2 items-start text-[11px] text-rose-300">
+        <div className="bg-rose-500/10 border border-rose-500/20 p-3 rounded-[20px] [corner-shape:squircle] flex gap-2 items-start text-[11px] text-rose-300">
           <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
           <span>Confirming this will update the asset status to "Disposed" and lock editing capabilities.</span>
         </div>
+
+        {hasDisposalChoicesError && (
+          <p className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-[20px] [corner-shape:squircle] p-3">
+            Disposal methods could not be loaded. Close and try again, or contact your administrator.
+          </p>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-2">
           {/* Disposal Date */}
@@ -80,6 +87,7 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
           <div className="space-y-1.5">
             <Label htmlFor="disposal_method" className="text-xs text-slate-400">Disposal Method</Label>
             <Select
+              disabled={hasDisposalChoicesError}
               onValueChange={(val) => setValue('disposal_method', val, { shouldValidate: true })}
             >
               <SelectTrigger className="w-full bg-midnight border-border">
@@ -120,14 +128,14 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="rounded-xl h-10 w-full"
+              className="rounded-[20px] [corner-shape:squircle] h-10 w-full"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="bg-destructive hover:bg-destructive/95 text-white font-semibold rounded-xl h-10 w-full"
+              disabled={isSubmitting || hasDisposalChoicesError}
+              className="bg-destructive hover:bg-destructive/95 text-white font-semibold rounded-[20px] [corner-shape:squircle] min-h-11 w-full"
             >
               {isSubmitting ? (
                 <>

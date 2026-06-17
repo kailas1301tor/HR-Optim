@@ -1,15 +1,20 @@
 // components/settings/useAssetCategoriesAndShops.ts
-import { useState, useEffect, useCallback } from 'react'
-import { toast } from 'sonner'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
+import { toastAndRethrow } from '@/lib/helpers/toast-and-rethrow'
+import { loadMasterList } from '@/lib/helpers/load-master-list'
 import { assetCategoryService, type AssetCategory } from '@/services/asset-category-service'
 import { maintenanceShopService, type MaintenanceShop } from '@/services/maintenance-shop-service'
-import { INITIAL_ASSET_CATEGORIES_OBJECTS, INITIAL_MAINTENANCE_SHOPS_OBJECTS } from './settings-constants'
 
 export interface UseAssetCategoriesAndShopsReturn {
   assetCategories: AssetCategory[]
   assetCategoriesLoading: boolean
+  assetCategoriesHasError: boolean
   maintenanceShops: MaintenanceShop[]
   maintenanceShopsLoading: boolean
+  maintenanceShopsHasError: boolean
+  loadAssetCategories: () => Promise<void>
+  loadMaintenanceShops: () => Promise<void>
   handleAssetCategorySave: (id: number | null, name: string) => Promise<void>
   handleAssetCategoryDelete: (id: number) => Promise<void>
   handleMaintenanceShopSave: (id: number | null, name: string) => Promise<void>
@@ -19,31 +24,33 @@ export interface UseAssetCategoriesAndShopsReturn {
 export function useAssetCategoriesAndShops(): UseAssetCategoriesAndShopsReturn {
   const [assetCategories, setAssetCategories] = useState<AssetCategory[]>([])
   const [assetCategoriesLoading, setAssetCategoriesLoading] = useState(true)
+  const [assetCategoriesHasError, setAssetCategoriesHasError] = useState(false)
   const [maintenanceShops, setMaintenanceShops] = useState<MaintenanceShop[]>([])
   const [maintenanceShopsLoading, setMaintenanceShopsLoading] = useState(true)
+  const [maintenanceShopsHasError, setMaintenanceShopsHasError] = useState(false)
+  const categoriesRequestIdRef = useRef(0)
+  const shopsRequestIdRef = useRef(0)
 
   const loadAssetCategories = useCallback(async (): Promise<void> => {
-    setAssetCategoriesLoading(true)
-    try {
-      const data = await assetCategoryService.getAssetCategories(INITIAL_ASSET_CATEGORIES_OBJECTS)
-      setAssetCategories(data)
-    } catch {
-      toast.error('Failed to load asset categories')
-    } finally {
-      setAssetCategoriesLoading(false)
-    }
+    await loadMasterList({
+      setLoading: setAssetCategoriesLoading,
+      setHasError: setAssetCategoriesHasError,
+      fetcher: () => assetCategoryService.getAssetCategories(),
+      onSuccess: setAssetCategories,
+      errorMessage: 'Failed to load asset categories',
+      requestIdRef: categoriesRequestIdRef,
+    })
   }, [])
 
   const loadMaintenanceShops = useCallback(async (): Promise<void> => {
-    setMaintenanceShopsLoading(true)
-    try {
-      const data = await maintenanceShopService.getMaintenanceShops(INITIAL_MAINTENANCE_SHOPS_OBJECTS)
-      setMaintenanceShops(data)
-    } catch {
-      toast.error('Failed to load maintenance shops')
-    } finally {
-      setMaintenanceShopsLoading(false)
-    }
+    await loadMasterList({
+      setLoading: setMaintenanceShopsLoading,
+      setHasError: setMaintenanceShopsHasError,
+      fetcher: () => maintenanceShopService.getMaintenanceShops(),
+      onSuccess: setMaintenanceShops,
+      errorMessage: 'Failed to load maintenance shops',
+      requestIdRef: shopsRequestIdRef,
+    })
   }, [])
 
   useEffect(() => {
@@ -58,20 +65,20 @@ export function useAssetCategoriesAndShops(): UseAssetCategoriesAndShopsReturn {
       } else {
         await assetCategoryService.createAssetCategory(name)
       }
+      invalidateAssetDropdowns()
       await loadAssetCategories()
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save asset category'
-      toast.error(message)
+      toastAndRethrow(error, 'Failed to save asset category')
     }
   }
 
   const handleAssetCategoryDelete = async (id: number): Promise<void> => {
     try {
       await assetCategoryService.deleteAssetCategory(id)
+      invalidateAssetDropdowns()
       await loadAssetCategories()
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to delete asset category'
-      toast.error(message)
+      toastAndRethrow(error, 'Failed to delete asset category')
     }
   }
 
@@ -82,28 +89,32 @@ export function useAssetCategoriesAndShops(): UseAssetCategoriesAndShopsReturn {
       } else {
         await maintenanceShopService.createMaintenanceShop(name)
       }
+      invalidateAssetDropdowns()
       await loadMaintenanceShops()
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save maintenance shop'
-      toast.error(message)
+      toastAndRethrow(error, 'Failed to save maintenance shop')
     }
   }
 
   const handleMaintenanceShopDelete = async (id: number): Promise<void> => {
     try {
       await maintenanceShopService.deleteMaintenanceShop(id)
+      invalidateAssetDropdowns()
       await loadMaintenanceShops()
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to delete maintenance shop'
-      toast.error(message)
+      toastAndRethrow(error, 'Failed to delete maintenance shop')
     }
   }
 
   return {
     assetCategories,
     assetCategoriesLoading,
+    assetCategoriesHasError,
     maintenanceShops,
     maintenanceShopsLoading,
+    maintenanceShopsHasError,
+    loadAssetCategories,
+    loadMaintenanceShops,
     handleAssetCategorySave,
     handleAssetCategoryDelete,
     handleMaintenanceShopSave,

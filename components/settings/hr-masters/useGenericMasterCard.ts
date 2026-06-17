@@ -1,6 +1,7 @@
 // components/settings/hr-masters/useGenericMasterCard.ts
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { masterNameSchema } from '@/validations/settings-master.schema'
 import type { MasterItem } from './generic-master-card'
 
 export interface UseGenericMasterCardProps {
@@ -15,6 +16,8 @@ export interface UseGenericMasterCardReturn {
   editItem: MasterItem | null
   formValue: string
   setFormValue: (val: string) => void
+  formError: string | null
+  isFormValid: boolean
   isSubmitting: boolean
   deleteTarget: MasterItem | null
   setDeleteTarget: (item: MasterItem | null) => void
@@ -33,31 +36,40 @@ export function useGenericMasterCard({
   const [isOpen, setIsOpen] = useState(false)
   const [editItem, setEditItem] = useState<MasterItem | null>(null)
   const [formValue, setFormValue] = useState('')
+  const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Delete confirmation state
   const [deleteTarget, setDeleteTarget] = useState<MasterItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const isFormValid = useMemo(() => masterNameSchema.safeParse(formValue).success, [formValue])
+
   const handleOpenAdd = (): void => {
     setFormValue('')
+    setFormError(null)
     setEditItem(null)
     setIsOpen(true)
   }
 
   const handleOpenEdit = (item: MasterItem): void => {
     setFormValue(item.name)
+    setFormError(null)
     setEditItem(item)
     setIsOpen(true)
   }
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
-    if (!formValue.trim()) return
+    const parsed = masterNameSchema.safeParse(formValue)
+    if (!parsed.success) {
+      setFormError(parsed.error.flatten().formErrors[0] ?? parsed.error.issues[0]?.message ?? 'Invalid name')
+      return
+    }
 
+    setFormError(null)
     setIsSubmitting(true)
     try {
-      await onSave(editItem?.id ?? null, formValue.trim().toUpperCase())
+      await onSave(editItem?.id ?? null, parsed.data.toUpperCase())
       setIsOpen(false)
       toast.success(editItem ? `${label} updated successfully` : `${label} created successfully`)
     } catch (error: unknown) {
@@ -84,12 +96,28 @@ export function useGenericMasterCard({
     }
   }
 
+  const handleDialogOpenChange = (open: boolean): void => {
+    if (!open && !isSubmitting) {
+      setFormValue('')
+      setFormError(null)
+      setEditItem(null)
+    }
+    if (!isSubmitting) setIsOpen(open)
+  }
+
+  const handleSetFormValue = (val: string): void => {
+    setFormValue(val)
+    if (formError) setFormError(null)
+  }
+
   return {
     isOpen,
-    setIsOpen,
+    setIsOpen: handleDialogOpenChange,
     editItem,
     formValue,
-    setFormValue,
+    setFormValue: handleSetFormValue,
+    formError,
+    isFormValid,
     isSubmitting,
     deleteTarget,
     setDeleteTarget,

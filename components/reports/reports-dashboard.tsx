@@ -1,212 +1,113 @@
 // components/reports/reports-dashboard.tsx
+'use client'
 
-"use client"
+import { useState } from 'react'
+import { RefreshCw } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { CommonErrorBanner, CommonPageHeader } from '@/components/common'
+import { uiOutlineBtn, uiTabChipActive, uiTabChipBase, uiTabChipInactive } from '@/lib/ui/design-system'
+import type { ReportsData } from '@/types/reports'
+import { ReportsOverviewTab } from './reports-overview-tab'
+import { ReportsEmployeesTab } from './reports-employees-tab'
+import { ReportsAttendanceTab } from './reports-attendance-tab'
+import { ReportsPayrollTab } from './reports-payroll-tab'
+import { ReportsAssetsTab } from './reports-assets-tab'
+import { ReportsRequestsTab } from './reports-requests-tab'
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts"
-import { Download, RefreshCw } from "lucide-react"
-import { OverviewTab } from "./overview-tab"
-import { TemplatesTab } from "./templates-tab"
-import { HEADCOUNT_DATA, ATTENDANCE_DATA, PAYROLL_DATA } from "./reports-constants"
+type ReportTab = 'overview' | 'employees' | 'attendance' | 'payroll' | 'assets' | 'requests'
 
-export function ReportsDashboard() {
-  const [selectedPeriod, setSelectedPeriod] = useState("6months")
-  const [activeTab, setActiveTab] = useState("overview")
+const TAB_OPTIONS: { value: ReportTab; label: string }[] = [
+  { value: 'overview', label: 'Overview' },
+  { value: 'employees', label: 'Employees' },
+  { value: 'attendance', label: 'Attendance' },
+  { value: 'payroll', label: 'Payroll' },
+  { value: 'assets', label: 'Assets' },
+  { value: 'requests', label: 'Requests' },
+]
+
+interface ReportsDashboardProps {
+  data: ReportsData
+  isLoading: boolean
+  hasError: boolean
+  errorMessage: string | null
+  onReload: () => void
+}
+
+export function ReportsDashboard({
+  data,
+  isLoading,
+  hasError,
+  errorMessage,
+  onReload,
+}: ReportsDashboardProps) {
+  const [activeTab, setActiveTab] = useState<ReportTab>('overview')
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Reports & Analytics</h1>
-          <p className="text-muted-foreground">
-            Generate insights and export data across all modules
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="30days">Last 30 Days</SelectItem>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
-              <SelectItem value="1year">Last Year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="icon">
-            <RefreshCw className="h-4 w-4" />
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <CommonPageHeader
+        title="Reports & Analytics"
+        subtitle="Live insights across employees, attendance, payroll, assets, and requests"
+        action={
+          <Button
+            variant="outline"
+            size="icon"
+            className={cn(uiOutlineBtn, 'h-10 w-10')}
+            onClick={onReload}
+            disabled={isLoading}
+            aria-label="Refresh reports"
+          >
+            <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
           </Button>
-        </div>
+        }
+      />
+
+      {hasError ? (
+        <CommonErrorBanner
+          message={errorMessage ?? 'Failed to load reports'}
+          onRetry={onReload}
+        />
+      ) : null}
+
+      <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+        {TAB_OPTIONS.map((tab) => (
+          <button
+            key={tab.value}
+            type="button"
+            onClick={() => setActiveTab(tab.value)}
+            className={cn(
+              uiTabChipBase,
+              activeTab === tab.value ? uiTabChipActive : uiTabChipInactive,
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-muted/50 p-1.5 rounded-xl h-auto gap-1 flex w-full overflow-x-auto scrollbar-none justify-start select-none">
-          <TabsTrigger value="overview" className="shrink-0">Overview</TabsTrigger>
-          <TabsTrigger value="headcount" className="shrink-0">Headcount</TabsTrigger>
-          <TabsTrigger value="attendance" className="shrink-0">Attendance</TabsTrigger>
-          <TabsTrigger value="payroll" className="shrink-0">Payroll</TabsTrigger>
-          <TabsTrigger value="templates" className="shrink-0">Report Templates</TabsTrigger>
-        </TabsList>
+      {activeTab === 'overview' ? (
+        <ReportsOverviewTab data={data} isLoading={isLoading} />
+      ) : null}
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <OverviewTab />
-        </TabsContent>
+      {activeTab === 'employees' ? (
+        <ReportsEmployeesTab data={data.employees} isLoading={isLoading} />
+      ) : null}
 
-        {/* Headcount Tab */}
-        <TabsContent value="headcount" className="space-y-6">
-          <Card className="bg-card/50 backdrop-blur border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Headcount Analysis</CardTitle>
-                <CardDescription>Hires, departures, and net change</CardDescription>
-              </div>
-              <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={HEADCOUNT_DATA}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                    <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
-                    <YAxis className="text-xs fill-muted-foreground" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Bar dataKey="hires" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="departures" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {activeTab === 'attendance' ? (
+        <ReportsAttendanceTab data={data.attendance} isLoading={isLoading} />
+      ) : null}
 
-        {/* Attendance Tab */}
-        <TabsContent value="attendance" className="space-y-6">
-          <Card className="bg-card/50 backdrop-blur border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Attendance Trends</CardTitle>
-                <CardDescription>Present, absent, and late percentages</CardDescription>
-              </div>
-              <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={ATTENDANCE_DATA}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                    <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
-                    <YAxis className="text-xs fill-muted-foreground" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="present"
-                      stroke="hsl(var(--chart-1))"
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--chart-1))" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="absent"
-                      stroke="hsl(var(--chart-2))"
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--chart-2))" }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="late"
-                      stroke="hsl(var(--chart-3))"
-                      strokeWidth={2}
-                      dot={{ fill: "hsl(var(--chart-3))" }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {activeTab === 'payroll' ? (
+        <ReportsPayrollTab data={data.payroll} isLoading={isLoading} />
+      ) : null}
 
-        {/* Payroll Tab */}
-        <TabsContent value="payroll" className="space-y-6">
-          <Card className="bg-card/50 backdrop-blur border-border/50">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Payroll Analysis</CardTitle>
-                <CardDescription>Gross, net, and deductions breakdown</CardDescription>
-              </div>
-              <Button variant="outline" size="sm">
-                <Download className="mr-2 h-4 w-4" />
-                Export
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={PAYROLL_DATA}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
-                    <XAxis dataKey="month" className="text-xs fill-muted-foreground" />
-                    <YAxis
-                      className="text-xs fill-muted-foreground"
-                      tickFormatter={(value) => `$${value / 1000}K`}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                      }}
-                      formatter={(value: number) => [`$${value.toLocaleString()}`, ""]}
-                    />
-                    <Bar dataKey="gross" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="net" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="deductions" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {activeTab === 'assets' ? (
+        <ReportsAssetsTab data={data.assets} isLoading={isLoading} />
+      ) : null}
 
-        {/* Templates Tab */}
-        <TabsContent value="templates" className="space-y-6">
-          <TemplatesTab />
-        </TabsContent>
-      </Tabs>
+      {activeTab === 'requests' ? (
+        <ReportsRequestsTab data={data.requests} isLoading={isLoading} />
+      ) : null}
     </div>
   )
 }

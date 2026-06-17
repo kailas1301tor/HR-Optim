@@ -1,5 +1,6 @@
 // validations/request.schema.ts
 import * as z from 'zod'
+import { LIMIT_PURPOSE, LIMIT_REASON, minTrimmedString } from './field-limits'
 
 const dateStringSchema = z
   .string()
@@ -14,7 +15,7 @@ export const leaveRequestSchema = z
     start_session: z.string().min(1, { message: 'Start session is required' }),
     end_session: z.string().min(1, { message: 'End session is required' }),
     number_of_days: z.coerce.number().min(0.5, { message: 'Calculate leave days first' }),
-    reason: z.string().min(3, { message: 'Reason must be at least 3 characters' }).trim(),
+    reason: minTrimmedString('Reason', 3, LIMIT_REASON),
   })
   .refine((data) => data.to_date >= data.from_date, {
     message: 'End date must be on or after start date',
@@ -30,14 +31,14 @@ export const salaryAdvanceRequestSchema = z.object({
     .int({ message: 'Tenure must be a whole number' })
     .min(1, { message: 'Tenure must be at least 1 month' })
     .max(60, { message: 'Tenure cannot exceed 60 months' }),
-  reason: z.string().min(3, { message: 'Reason must be at least 3 characters' }).trim(),
+  reason: minTrimmedString('Reason', 3, LIMIT_REASON),
 })
 
 export const loanRequestSchema = salaryAdvanceRequestSchema
 
 export const documentRequestSchema = z.object({
   document_type: z.string().min(1, { message: 'Document type is required' }),
-  purpose: z.string().min(3, { message: 'Purpose must be at least 3 characters' }).trim(),
+  purpose: minTrimmedString('Purpose', 3, LIMIT_PURPOSE),
 })
 
 export type LeaveRequestInput = z.infer<typeof leaveRequestSchema>

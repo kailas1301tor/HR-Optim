@@ -2,19 +2,26 @@
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
 import { SettingsPanel } from '@/components/settings/settings-panel'
-import { CommonPageSkeleton } from '@/components/common'
+import { CommonPageHeader } from '@/components/common'
+import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
 
-export default function SettingsPage() {
+export default function SettingsPage(): React.JSX.Element {
   return (
     <AppShell>
-      <Suspense fallback={<CommonPageSkeleton />}>
-        <SettingsPanel />
-      </Suspense>
+      <div className="space-y-6">
+        <CommonPageHeader
+          title="Masters & Configuration"
+          subtitle="Manage system masters and configuration settings"
+        />
+        <Suspense fallback={<SettingsSkeleton showHeader={false} />}>
+          <SettingsPanel />
+        </Suspense>
+      </div>
     </AppShell>
   )
 }
 
 export const metadata = {
-  title: 'Settings | HRMS',
+  title: 'Settings',
   description: 'Manage your organization, users, and system preferences',
 }

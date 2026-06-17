@@ -21,7 +21,7 @@ export function EmployeeCardSkeleton() {
       <Skeleton className={cn('h-3 w-24 rounded', uiSkeletonBlock)} />
       <div className="flex items-center justify-between pt-3 border-t border-border/40">
         <Skeleton className={cn('h-3 w-20 rounded', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-8 w-8 rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-8 w-8 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
       </div>
     </div>
   )

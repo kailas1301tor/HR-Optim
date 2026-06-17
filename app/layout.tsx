@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
+import { COMPANY_NAME, PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 
 // Mock font variables to avoid Google Fonts network request failure during build in sandbox
@@ -8,25 +9,21 @@ const inter = { variable: 'font-sans' }
 const jetbrainsMono = { variable: 'font-mono' }
 
 export const metadata: Metadata = {
-  title: 'HRMS - Human Resource Management System',
-  description: 'Enterprise-grade Human Resource Management and Asset Management System for UAE companies',
+  title: {
+    default: `${PRODUCT_NAME} · ${COMPANY_NAME}`,
+    template: `%s | ${PRODUCT_NAME}`,
+  },
+  description: PRODUCT_DESCRIPTION,
   generator: 'v0.app',
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/brand/icon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/brand/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/brand/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: '/apple-icon.png',
+    shortcut: '/favicon.ico',
   },
 }
 

@@ -10,8 +10,17 @@ export const getApiErrorMessage = (error: unknown, fallback: string): string => 
     return error instanceof Error ? error.message : fallback
   }
 
+  if (error.status === 0) {
+    return error.message || "You're offline. Check your internet connection."
+  }
+
+  if (error.status && error.status >= 500) {
+    return 'Server is temporarily unavailable. Please try again.'
+  }
+
   const parsed = parseAuthErrorPayload(error.data)
   if (parsed.length > 0) return parsed.join('. ')
 
   return error.message || fallback
 }
+

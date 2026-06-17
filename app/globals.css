@@ -63,7 +63,7 @@
   --chart-3: #a3e635;
   --chart-4: #14b8a6;
   --chart-5: #f59e0b;
-  --radius: 0.75rem;
+  --radius: 1.25rem;
   --sidebar: #0f172a;
   --sidebar-foreground: #f1f5f9;
   --sidebar-primary: #7c3aed;
@@ -258,4 +258,36 @@ input:-webkit-autofill:active {
   caret-color: var(--foreground) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
+
+/* Network banner slide-in and slide-out animations */
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 

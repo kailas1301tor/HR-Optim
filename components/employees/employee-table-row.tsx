@@ -6,6 +6,7 @@ import { Calendar, Eye, Pencil, Trash2, MoreHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CommonStatusBadge } from '@/components/common'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,26 +16,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { getEmployeeStatusBadgeVariant } from '@/lib/ui/design-system'
+import { getEmployeeStatusBadgeVariant, uiSkeletonBlock } from '@/lib/ui/design-system'
 import { departmentConfig } from './employee-constants'
 import type { Employee } from './employee-table-types'
 
 interface EmployeeTableRowProps {
   employee: Employee
   index: number
+  isTogglingStatus?: boolean
   onSelect: () => void
   onToggleStatus: (employee: Employee, active: boolean) => void
   onEdit: (employee: Employee) => void
   onDelete: (id: number) => void
+  canManage?: boolean
 }
 
 export function EmployeeTableRow({
   employee,
   index,
+  isTogglingStatus = false,
   onSelect,
   onToggleStatus,
   onEdit,
   onDelete,
+  canManage = false,
 }: EmployeeTableRowProps) {
   const initials = employee.full_name
     ? employee.full_name
@@ -46,6 +51,7 @@ export function EmployeeTableRow({
     : 'EM'
 
   const statusVariant = getEmployeeStatusBadgeVariant(employee.status)
+  const isActive = employee.status?.toLowerCase() === 'active'
 
   return (
     <motion.tr
@@ -73,7 +79,7 @@ export function EmployeeTableRow({
         <span
           className={cn(
             departmentConfig[employee.department]?.className ||
-              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-lg text-xs font-medium'
+              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium'
           )}
         >
           {employee.department}
@@ -85,11 +91,31 @@ export function EmployeeTableRow({
       <td className="px-4 py-3">
         <CommonStatusBadge variant={statusVariant} label={employee.status} />
       </td>
-      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
-        <Switch
-          checked={employee.status === 'Active'}
-          onCheckedChange={(checked) => onToggleStatus(employee, checked)}
-        />
+      <td
+        className="px-4 py-3"
+        onClick={(e) => e.stopPropagation()}
+        aria-busy={isTogglingStatus}
+      >
+        {canManage ? (
+          isTogglingStatus ? (
+            <Skeleton className={cn('h-5 w-9 rounded-full', uiSkeletonBlock)} />
+          ) : (
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={isActive}
+                onCheckedChange={(checked) => onToggleStatus(employee, checked)}
+                aria-label={`Set ${employee.full_name} active`}
+              />
+              <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                {isActive ? 'Yes' : 'No'}
+              </span>
+            </div>
+          )
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            {isActive ? 'Yes' : 'No'}
+          </span>
+        )}
       </td>
       <td className="px-4 py-3">
         <span className="flex items-center gap-1.5 text-sm text-slate-300 font-mono">
@@ -110,11 +136,13 @@ export function EmployeeTableRow({
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-popover border border-border text-xs rounded-xl">
+          <DropdownMenuContent align="end" className="bg-popover border border-border text-xs rounded-[20px] [corner-shape:squircle]">
             <DropdownMenuItem onClick={onSelect} className="cursor-pointer">
               <Eye className="w-4 h-4 mr-2" />
               View Profile
             </DropdownMenuItem>
+            {canManage && (
+              <>
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation()
@@ -136,6 +164,8 @@ export function EmployeeTableRow({
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
             </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </td>

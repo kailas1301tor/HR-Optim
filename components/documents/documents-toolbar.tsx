@@ -22,8 +22,10 @@ interface DocumentsToolbarProps {
   categoryFilter: string
   onCategoryChange: (val: string) => void
   categories: Array<{ id: number; name: string }>
-  onExport: () => void
   onUploadClick: () => void
+  onExportExpiry?: () => void
+  isExporting?: boolean
+  canManage?: boolean
 }
 
 export function DocumentsToolbar({
@@ -33,8 +35,10 @@ export function DocumentsToolbar({
   categoryFilter,
   onCategoryChange,
   categories,
-  onExport,
   onUploadClick,
+  onExportExpiry,
+  isExporting = false,
+  canManage = false,
 }: DocumentsToolbarProps) {
   return (
     <CommonListToolbar
@@ -58,22 +62,27 @@ export function DocumentsToolbar({
         </Select>
       }
       actions={
+        canManage ? (
         <>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onExport}
-            className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
-          <PrimaryButton type="button" onClick={onUploadClick} className="gap-2 text-xs flex-1 sm:flex-none">
+          {onExportExpiry ? (
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(uiOutlineBtn, 'gap-2 text-xs min-h-11 flex-1 sm:flex-none')}
+              onClick={onExportExpiry}
+              disabled={isExporting}
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? 'Exporting…' : 'Export Expiry'}
+            </Button>
+          ) : null}
+          <PrimaryButton type="button" onClick={onUploadClick} className="gap-2 text-xs min-h-11 flex-1 sm:flex-none">
             <Upload className="w-4 h-4" />
             <span className="sm:hidden">Upload</span>
             <span className="hidden sm:inline">Upload Document</span>
           </PrimaryButton>
         </>
+        ) : null
       }
     />
   )

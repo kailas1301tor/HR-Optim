@@ -12,6 +12,7 @@ import { PrimaryButton } from '@/components/ui/primary-button'
 import { cn } from '@/lib/utils'
 import { uiInput, uiOutlineBtn } from '@/lib/ui/design-system'
 import { salaryAdvanceRequestSchema, type SalaryAdvanceRequestInput } from '@/validations/request.schema'
+import { LIMIT_REASON } from '@/validations/field-limits'
 
 interface SalaryAdvanceRequestFormProps {
   isSubmitting: boolean
@@ -74,6 +75,7 @@ export function SalaryAdvanceRequestForm({
           placeholder="Reason for salary advance..."
           className={cn(uiInput, 'text-xs min-h-[100px] resize-none')}
           aria-label="Salary advance reason"
+          maxLength={LIMIT_REASON}
         />
         {errors.reason?.message && <CommonFormFieldError message={errors.reason.message} />}
       </div>

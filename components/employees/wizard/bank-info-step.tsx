@@ -1,18 +1,37 @@
 // components/employees/wizard/bank-info-step.tsx
 'use client'
 
+import { useState } from 'react'
 import { useFormContext } from 'react-hook-form'
+import { Eye, EyeOff } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { CommonFormFieldError } from '@/components/common'
+import { maskAccountNumber } from '@/lib/helpers/mask-sensitive'
 import { uiInput } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
+import {
+  LIMIT_ACCOUNT_NUMBER,
+  LIMIT_IFSC,
+  LIMIT_SHORT_NAME,
+} from '@/validations/field-limits'
 
-export function BankInfoStep() {
+interface BankInfoStepProps {
+  isEditMode?: boolean
+}
+
+export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
+  const [accountRevealed, setAccountRevealed] = useState(false)
+
   const {
     register,
+    watch,
     formState: { errors },
   } = useFormContext<EmployeeInput>()
+
+  const accountValue = watch('account_number')
+  const showMaskedAccount = isEditMode && !accountRevealed && Boolean(accountValue)
 
   return (
     <div className="space-y-4">
@@ -31,6 +50,7 @@ export function BankInfoStep() {
             placeholder="e.g. Global Bank, FAB"
             className={uiInput}
             required
+            maxLength={LIMIT_SHORT_NAME}
           />
           {errors.bank_name?.message && <CommonFormFieldError message={errors.bank_name.message} />}
         </div>
@@ -38,13 +58,50 @@ export function BankInfoStep() {
           <Label htmlFor="emp-account-no" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Account Number
           </Label>
-          <Input
-            {...register('account_number')}
-            id="emp-account-no"
-            placeholder="e.g. 1234567890"
-            className={uiInput}
-            required
-          />
+          {showMaskedAccount ? (
+            <div className="flex gap-2">
+              <Input
+                id="emp-account-no"
+                readOnly
+                value={maskAccountNumber(accountValue)}
+                className={uiInput}
+                aria-label="Account number (masked)"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="shrink-0 min-h-11 min-w-11"
+                onClick={() => setAccountRevealed(true)}
+                aria-label="Reveal account number"
+              >
+                <Eye className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                {...register('account_number')}
+                id="emp-account-no"
+                placeholder="e.g. 1234567890"
+                className={uiInput}
+                required
+                maxLength={LIMIT_ACCOUNT_NUMBER}
+              />
+              {isEditMode && accountValue && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0 min-h-11 min-w-11"
+                  onClick={() => setAccountRevealed(false)}
+                  aria-label="Mask account number"
+                >
+                  <EyeOff className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          )}
           {errors.account_number?.message && <CommonFormFieldError message={errors.account_number.message} />}
         </div>
       </div>
@@ -60,6 +117,7 @@ export function BankInfoStep() {
             placeholder="e.g. GLOB0001"
             className={uiInput}
             required
+            maxLength={LIMIT_IFSC}
           />
           {errors.ifsc?.message && <CommonFormFieldError message={errors.ifsc.message} />}
         </div>
@@ -73,6 +131,7 @@ export function BankInfoStep() {
             placeholder="e.g. Downtown"
             className={uiInput}
             required
+            maxLength={LIMIT_SHORT_NAME}
           />
           {errors.branch?.message && <CommonFormFieldError message={errors.branch.message} />}
         </div>

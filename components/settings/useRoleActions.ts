@@ -15,10 +15,9 @@ export interface UseRoleActionsReturn {
   handleDeleteRole: (
     role: BackendRole,
     index: number,
-    roles: BackendRole[],
-    setRoles: React.Dispatch<React.SetStateAction<BackendRole[]>>,
     selectedRoleIndex: number | null,
-    setSelectedRoleIndex: (i: number | null) => void
+    setSelectedRoleIndex: (i: number | null) => void,
+    refreshData: () => Promise<void>
   ) => Promise<void>
 }
 
@@ -28,38 +27,38 @@ export function useRoleActions(): UseRoleActionsReturn {
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
+  const searchParamsString = searchParams.toString()
   const action = searchParams.get('action') || ''
   const roleIdParam = searchParams.get('role_id') || ''
   const roleEditId = roleIdParam ? parseInt(roleIdParam, 10) : null
 
   const handleOpenAddRole = useCallback((): void => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParamsString)
     params.set('action', 'add')
     params.delete('role_id')
     router.replace(`${pathname}?${params.toString()}`)
-  }, [router, pathname, searchParams])
+  }, [router, pathname, searchParamsString])
 
   const handleOpenEditRole = useCallback((role: BackendRole): void => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParamsString)
     params.set('action', 'edit')
     params.set('role_id', String(role.id))
     router.replace(`${pathname}?${params.toString()}`)
-  }, [router, pathname, searchParams])
+  }, [router, pathname, searchParamsString])
 
   const handleCancelForm = useCallback((): void => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParamsString)
     params.delete('action')
     params.delete('role_id')
     router.replace(`${pathname}?${params.toString()}`)
-  }, [router, pathname, searchParams])
+  }, [router, pathname, searchParamsString])
 
   const handleDeleteRole = useCallback(async (
     role: BackendRole,
     index: number,
-    roles: BackendRole[],
-    setRoles: React.Dispatch<React.SetStateAction<BackendRole[]>>,
     selectedRoleIndex: number | null,
-    setSelectedRoleIndex: (i: number | null) => void
+    setSelectedRoleIndex: (i: number | null) => void,
+    refreshData: () => Promise<void>
   ): Promise<void> => {
     if (!confirm(`Are you sure you want to delete the role "${role.name}"?`)) return
 
@@ -67,15 +66,14 @@ export function useRoleActions(): UseRoleActionsReturn {
       try {
         await roleService.deleteRole(role.id)
         toast.success(`Role "${role.name}" deleted successfully`)
-        
-        const updatedRoles = roles.filter((r) => r.id !== role.id)
-        setRoles(updatedRoles)
-        
+
         if (selectedRoleIndex === index) {
-          setSelectedRoleIndex(updatedRoles.length > 0 ? 0 : null)
+          setSelectedRoleIndex(null)
         } else if (selectedRoleIndex !== null && selectedRoleIndex > index) {
           setSelectedRoleIndex(selectedRoleIndex - 1)
         }
+
+        await refreshData()
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Failed to delete role'
         toast.error(message)

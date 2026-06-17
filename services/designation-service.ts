@@ -1,17 +1,8 @@
 // services/designation-service.ts
-import { api } from '@/lib/api';
+import { api } from '@/lib/api'
+import type { Designation } from '@/types/settings'
 
-export interface Designation {
-  id: number;
-  name: string;
-  description: string;
-  department: number;
-  department_name: string;
-  is_active?: boolean;
-  deleted?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
+export type { Designation } from '@/types/settings'
 
 export interface DesignationListResponse {
   message: string;

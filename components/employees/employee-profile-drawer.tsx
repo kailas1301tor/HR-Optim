@@ -1,79 +1,104 @@
 // components/employees/employee-profile-drawer.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { uiSkeletonBlock, uiTabChipActive, uiTabChipBase, uiTabChipInactive } from '@/lib/ui/design-system'
 import { CommonErrorState, CommonStatusBadge } from '@/components/common'
 import { getEmployeeStatusBadgeVariant } from '@/lib/ui/design-system'
 import {
   X,
   Building2,
-  FileText,
-  Package,
-  Clock,
-  CalendarDays,
-  Activity,
   Pencil,
 } from 'lucide-react'
 import type { Employee } from './employee-table-types'
 import { PersonalTab } from './profile/personal-tab'
-import { DocumentsTab } from './profile/documents-tab'
-import { AssetsTab } from './profile/assets-tab'
-import { AttendanceTab } from './profile/attendance-tab'
-import { LeaveTab } from './profile/leave-tab'
-import { ActivityTab } from './profile/activity-tab'
 import { OnboardingChecklistTab } from './profile/onboarding-checklist-tab'
 import { OffboardingChecklistTab } from './profile/offboarding-checklist-tab'
 import { ClipboardCheck, FileX } from 'lucide-react'
 import { employeeService } from '@/services/employee-service'
+import { usePermissions } from '@/components/auth/permissions-provider'
+import type { DropdownItem } from '@/types/employee'
 
 interface EmployeeProfileDrawerProps {
   employee: Employee | null
   open: boolean
+  detailVersion?: number
   onClose: () => void
   onEdit: (employee: Employee) => void
+  canManage?: boolean
+  onboardingDocumentTypes?: DropdownItem[]
+  offboardingDocumentTypes?: DropdownItem[]
+  isDropdownLoading?: boolean
 }
 
-const tabs = [
+const ALL_TABS = [
   { id: 'personal', label: 'Personal', icon: Building2 },
   { id: 'onboarding', label: 'Onboarding', icon: ClipboardCheck },
   { id: 'offboarding', label: 'Offboarding', icon: FileX },
-  { id: 'documents', label: 'Documents', icon: FileText },
-  { id: 'assets', label: 'Assets', icon: Package },
-  { id: 'attendance', label: 'Attendance', icon: Clock },
-  { id: 'leave', label: 'Leave', icon: CalendarDays },
-  { id: 'activity', label: 'Activity', icon: Activity },
-]
+] as const
 
-export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: EmployeeProfileDrawerProps) {
+export function EmployeeProfileDrawer({
+  employee,
+  open,
+  detailVersion = 0,
+  onClose,
+  onEdit,
+  canManage = false,
+  onboardingDocumentTypes = [],
+  offboardingDocumentTypes = [],
+  isDropdownLoading = false,
+}: EmployeeProfileDrawerProps) {
+  const { canView } = usePermissions()
+  const visibleTabs = useMemo(
+    () =>
+      ALL_TABS.filter((tab) => {
+        if (tab.id === 'personal') return true
+        if (tab.id === 'onboarding') return canView('onboarding')
+        if (tab.id === 'offboarding') return canView('offboarding')
+        return true
+      }),
+    [canView]
+  )
   const [activeTab, setActiveTab] = useState('personal')
   const [detailedEmployee, setDetailedEmployee] = useState<Employee | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const fetchIdRef = useRef(0)
 
   const fetchDetail = async (id: number, signal?: AbortSignal) => {
+    const fetchId = ++fetchIdRef.current
     setIsLoadingDetail(true)
     setError(null)
     try {
       const data = await employeeService.getEmployee(id, signal)
+      if (signal?.aborted || fetchId !== fetchIdRef.current) return
       setDetailedEmployee(data)
     } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return
-      }
+      if (err instanceof Error && err.name === 'AbortError') return
+      if (fetchId !== fetchIdRef.current) return
       console.error('Failed to load employee details:', err)
       setError(err instanceof Error ? err.message : 'Failed to load employee details')
     } finally {
-      if (!signal?.aborted) {
+      if (fetchId === fetchIdRef.current) {
         setIsLoadingDetail(false)
       }
     }
   }
+
+  useEffect(() => {
+    setActiveTab('personal')
+  }, [employee?.id])
+
+  useEffect(() => {
+    if (!visibleTabs.some((tab) => tab.id === activeTab)) {
+      setActiveTab('personal')
+    }
+  }, [activeTab, visibleTabs])
 
   useEffect(() => {
     if (!open || !employee?.id) {
@@ -86,7 +111,7 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
     return () => {
       controller.abort()
     }
-  }, [open, employee?.id])
+  }, [open, employee?.id, detailVersion])
 
   if (!employee) return null
 
@@ -124,12 +149,12 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 h-screen w-full max-w-[600px] bg-carbon border-l border-border z-50 flex flex-col"
+            className="fixed right-0 top-0 h-screen w-full max-w-[600px] bg-carbon border-l border-border z-50 flex flex-col min-w-0 overflow-hidden"
           >
             {/* Header */}
             <div className="p-4 sm:p-6 border-b border-border">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                <div className="flex items-center gap-4 min-w-0">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
                   <Avatar className="w-14 h-14 sm:w-16 sm:h-16 shrink-0">
                     <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-lg">
                       {initials}
@@ -146,31 +171,43 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                  <Button variant="outline" size="sm" className="gap-2" onClick={() => onEdit(displayEmployee)}>
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close profile">
-                    <X className="w-5 h-5" />
+                <div className="flex items-center gap-2 shrink-0">
+                  {canManage ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9 gap-2 px-3"
+                      onClick={() => onEdit(displayEmployee)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                      Edit
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={onClose}
+                    aria-label="Close profile"
+                  >
+                    <X className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
 
-              <div className="flex gap-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {tabs.map((tab) => (
+              <div className="flex flex-wrap gap-1.5 min-w-0">
+                {visibleTabs.map((tab) => (
                   <button
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-colors whitespace-nowrap',
-                      activeTab === tab.id
-                        ? 'bg-violet-core/20 text-violet-glow'
-                        : 'text-slate-400 hover:text-cloud hover:bg-midnight'
+                      uiTabChipBase,
+                      'flex items-center gap-1.5 sm:gap-2 whitespace-nowrap',
+                      activeTab === tab.id ? uiTabChipActive : uiTabChipInactive
                     )}
                   >
-                    <tab.icon className="w-4 h-4" />
+                    <tab.icon className="w-4 h-4 shrink-0" />
                     {tab.label}
                   </button>
                 ))}
@@ -178,7 +215,7 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 min-w-0">
               {activeTab === 'personal' && (
                 isLoadingDetail ? (
                   <PersonalTabSkeleton />
@@ -192,17 +229,22 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
                   <PersonalTab employee={displayEmployee} />
                 )
               )}
-              {activeTab === 'onboarding' && (
-                <OnboardingChecklistTab employeeId={displayEmployee.id} />
-              )}
-              {activeTab === 'offboarding' && (
-                <OffboardingChecklistTab employeeId={displayEmployee.id} />
-              )}
-              {activeTab === 'documents' && <DocumentsTab />}
-              {activeTab === 'assets' && <AssetsTab />}
-              {activeTab === 'attendance' && <AttendanceTab />}
-              {activeTab === 'leave' && <LeaveTab />}
-              {activeTab === 'activity' && <ActivityTab />}
+              {activeTab === 'onboarding' ? (
+                <OnboardingChecklistTab
+                  key={`onboarding-${displayEmployee.id}`}
+                  employeeId={displayEmployee.id}
+                  documentTypes={onboardingDocumentTypes}
+                  isDropdownLoading={isDropdownLoading}
+                />
+              ) : null}
+              {activeTab === 'offboarding' ? (
+                <OffboardingChecklistTab
+                  key={`offboarding-${displayEmployee.id}`}
+                  employeeId={displayEmployee.id}
+                  documentTypes={offboardingDocumentTypes}
+                  isDropdownLoading={isDropdownLoading}
+                />
+              ) : null}
             </div>
           </motion.div>
         </>
@@ -215,30 +257,30 @@ function PersonalTabSkeleton() {
   return (
     <div className="space-y-6" aria-label="Loading employee details" role="status">
       <div>
-        <Skeleton className={cn('h-3 w-32 rounded-xl mb-3', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-3 w-32 rounded-[20px] [corner-shape:squircle] mb-3', uiSkeletonBlock)} />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-midnight/60 border border-border/40 rounded-xl p-3 flex flex-col gap-2">
-              <Skeleton className={cn('w-8 h-8 rounded-xl', uiSkeletonBlock)} />
+            <div key={i} className="bg-midnight/60 border border-border/40 rounded-[20px] [corner-shape:squircle] p-3 flex flex-col gap-2">
+              <Skeleton className={cn('w-8 h-8 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               <div className="space-y-1.5">
-                <Skeleton className={cn('h-2 w-12 rounded-xl', uiSkeletonBlock)} />
-                <Skeleton className={cn('h-3 w-20 rounded-xl', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-2 w-12 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-3 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               </div>
             </div>
           ))}
         </div>
-        <Skeleton className={cn('h-10 w-full rounded-xl mt-3', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-10 w-full rounded-[20px] [corner-shape:squircle] mt-3', uiSkeletonBlock)} />
       </div>
 
       <div>
-        <Skeleton className={cn('h-3 w-28 rounded-xl mb-3', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-3 w-28 rounded-[20px] [corner-shape:squircle] mb-3', uiSkeletonBlock)} />
         <div className="grid grid-cols-2 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="bg-midnight/40 border border-border/40 rounded-xl p-4 flex items-start gap-3">
-              <Skeleton className={cn('w-9 h-9 rounded-xl shrink-0', uiSkeletonBlock)} />
+            <div key={i} className="bg-midnight/40 border border-border/40 rounded-[20px] [corner-shape:squircle] p-4 flex items-start gap-3">
+              <Skeleton className={cn('w-9 h-9 rounded-[20px] [corner-shape:squircle] shrink-0', uiSkeletonBlock)} />
               <div className="space-y-1.5 flex-1">
-                <Skeleton className={cn('h-2 w-12 rounded-xl', uiSkeletonBlock)} />
-                <Skeleton className={cn('h-3.5 w-24 rounded-xl', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-2 w-12 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-3.5 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
               </div>
             </div>
           ))}
@@ -246,8 +288,8 @@ function PersonalTabSkeleton() {
       </div>
 
       <div className="space-y-4">
-        <Skeleton className={cn('h-3 w-20 rounded-xl', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-20 w-full rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-3 w-20 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-20 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
       </div>
     </div>
   )

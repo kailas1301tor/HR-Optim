@@ -16,6 +16,7 @@
 /build
 
 # misc
+/scratch/
 .DS_Store
 *.pem
 
@@ -29,12 +30,14 @@ pnpm-debug.log*
 .env
 .env*.local
 
+# cursor mcp config (contains secrets)
+.cursor/mcp.json
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 # v0 sandbox internal files
 __v0_runtime_loader.js

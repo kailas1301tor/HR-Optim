@@ -1,11 +1,12 @@
 // components/assets/asset-disposal-tab.tsx
 'use client'
 
-import { type AssetDropdowns } from '@/services/asset-service'
+import { type AssetDropdowns } from '@/types/asset'
 import { Trash2, Calendar, DollarSign, RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { CommonErrorState } from '@/components/common'
 import { useAssetDisposalTab } from './useAssetDisposalTab'
 
 interface AssetDisposalTabProps {
@@ -14,30 +15,30 @@ interface AssetDisposalTabProps {
 }
 
 export function AssetDisposalTab({ assetId, dropdowns }: AssetDisposalTabProps) {
-  const { disposal, isLoading, formatDate } = useAssetDisposalTab(assetId)
+  const { disposal, isLoading, hasError, handleRetry, formatDate } = useAssetDisposalTab(assetId)
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         {/* Warning Banner Shimmer */}
-        <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-5 flex items-start gap-4">
-          <Skeleton className={cn('w-6 h-6 rounded-xl shrink-0', uiSkeletonBlock)} />
+        <div className="bg-rose-500/5 border border-rose-500/10 rounded-[32px] [corner-shape:squircle] p-5 flex items-start gap-4">
+          <Skeleton className={cn('w-6 h-6 rounded-[20px] [corner-shape:squircle] shrink-0', uiSkeletonBlock)} />
           <div className="space-y-2 w-full">
-            <Skeleton className={cn('h-4 w-40 rounded-xl', uiSkeletonBlock)} />
-            <Skeleton className={cn('h-3 w-3/4 rounded-xl', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-4 w-40 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-3 w-3/4 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
           </div>
         </div>
 
         {/* Details Card Shimmer */}
-        <div className="bg-card border border-border/80 rounded-2xl p-6 space-y-6">
-          <Skeleton className={cn('h-4 w-44 rounded-xl', uiSkeletonBlock)} />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-midnight/35 border border-border/40 p-5 rounded-xl">
+        <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 space-y-6">
+          <Skeleton className={cn('h-4 w-44 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-midnight/35 border border-border/40 p-5 rounded-[20px] [corner-shape:squircle]">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-start gap-3">
-                <Skeleton className={cn('w-5 h-5 rounded-xl shrink-0', uiSkeletonBlock)} />
+                <Skeleton className={cn('w-5 h-5 rounded-[20px] [corner-shape:squircle] shrink-0', uiSkeletonBlock)} />
                 <div className="space-y-1.5 w-full">
-                  <Skeleton className={cn('h-2.5 w-16 rounded-xl', uiSkeletonBlock)} />
-                  <Skeleton className={cn('h-4 w-24 rounded-xl', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-2.5 w-16 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                  <Skeleton className={cn('h-4 w-24 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
                 </div>
               </div>
             ))}
@@ -47,9 +48,20 @@ export function AssetDisposalTab({ assetId, dropdowns }: AssetDisposalTabProps) 
     )
   }
 
+  if (hasError) {
+    return (
+      <CommonErrorState
+        title="Failed to load disposal record"
+        message="Disposal details could not be retrieved."
+        onRetry={handleRetry}
+        className="rounded-[32px] [corner-shape:squircle] border border-border bg-card"
+      />
+    )
+  }
+
   if (!disposal) {
     return (
-      <div className="bg-card border border-border/80 rounded-2xl p-8 flex flex-col items-center justify-center text-center animate-in fade-in-50 duration-200">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-8 flex flex-col items-center justify-center text-center animate-in fade-in-50 duration-200">
         <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-4">
           <CheckCircle className="w-6 h-6" />
         </div>
@@ -64,7 +76,7 @@ export function AssetDisposalTab({ assetId, dropdowns }: AssetDisposalTabProps) 
   return (
     <div className="space-y-6 animate-in fade-in-50 duration-200">
       {/* Warning Decommission Banner */}
-      <div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl p-5 flex items-start gap-4">
+      <div className="bg-rose-500/10 border border-rose-500/20 rounded-[32px] [corner-shape:squircle] p-5 flex items-start gap-4">
         <AlertTriangle className="w-6 h-6 text-rose-400 shrink-0 mt-0.5" />
         <div>
           <h4 className="text-sm font-bold text-rose-400">Asset Decommissioned</h4>
@@ -75,12 +87,12 @@ export function AssetDisposalTab({ assetId, dropdowns }: AssetDisposalTabProps) 
       </div>
 
       {/* Disposal Details card */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 space-y-6">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 space-y-6">
         <h3 className="text-sm font-semibold text-cloud flex items-center gap-2">
           <Trash2 className="w-4 h-4 text-rose-400" /> Disposal Record Details
         </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-midnight/35 border border-border/40 p-5 rounded-xl">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 bg-midnight/35 border border-border/40 p-5 rounded-[20px] [corner-shape:squircle]">
           <div className="flex items-start gap-3">
             <Calendar className="w-5 h-5 text-slate-500 mt-0.5" />
             <div>

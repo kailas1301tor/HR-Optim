@@ -2,14 +2,15 @@
 'use client'
 
 import { Clock, CheckCircle2, XCircle } from 'lucide-react'
-import { CommonStatCards, type StatCardItem } from '@/components/common'
-import type { RequestStatusFilter } from './requests-constants'
-import type { StatusCounts } from './useRequestsList'
+import { CommonErrorBanner, CommonStatCards, type StatCardItem } from '@/components/common'
+import type { RequestStatusFilter, StatusCounts } from '@/types/request'
 
 interface RequestsStatsCardsProps {
   statusCounts: StatusCounts
   statusFilter: RequestStatusFilter
   isCountsLoading: boolean
+  countsHasError?: boolean
+  onRetryCounts?: () => void
   onStatusChange: (status: RequestStatusFilter) => void
 }
 
@@ -44,6 +45,8 @@ export function RequestsStatsCards({
   statusCounts,
   statusFilter,
   isCountsLoading,
+  countsHasError = false,
+  onRetryCounts,
   onStatusChange,
 }: RequestsStatsCardsProps) {
   const items = STAT_CARDS.map((card) => ({
@@ -52,12 +55,20 @@ export function RequestsStatsCards({
   }))
 
   return (
-    <CommonStatCards
-      items={items}
-      activeKey={statusFilter === 'all' ? '' : statusFilter}
-      isLoading={isCountsLoading}
-      allowDeselect
-      onSelect={(key) => onStatusChange(key === 'all' ? 'all' : (key as RequestStatusFilter))}
-    />
+    <div className="space-y-2">
+      {countsHasError && (
+        <CommonErrorBanner
+          message="Request status counts could not be loaded."
+          onRetry={onRetryCounts}
+        />
+      )}
+      <CommonStatCards
+        items={items}
+        activeKey={statusFilter === 'all' ? '' : statusFilter}
+        isLoading={isCountsLoading}
+        allowDeselect
+        onSelect={(key) => onStatusChange(key === 'all' ? 'all' : (key as RequestStatusFilter))}
+      />
+    </div>
   )
 }

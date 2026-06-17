@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { AssetDropdowns } from '@/services/asset-service'
+import type { AssetDropdowns } from '@/types/asset'
 
 interface AssetsToolbarProps {
   localSearch: string
@@ -24,8 +24,10 @@ interface AssetsToolbarProps {
   dropdowns: AssetDropdowns | null
   onStatusChange: (val: string) => void
   onTypeChange: (val: string) => void
-  onExport: () => void
   onAddAsset: () => void
+  onExport?: () => void
+  isExporting?: boolean
+  canManage?: boolean
 }
 
 export function AssetsToolbar({
@@ -36,8 +38,10 @@ export function AssetsToolbar({
   dropdowns,
   onStatusChange,
   onTypeChange,
-  onExport,
   onAddAsset,
+  onExport,
+  isExporting = false,
+  canManage = false,
 }: AssetsToolbarProps) {
   return (
     <CommonListToolbar
@@ -76,22 +80,27 @@ export function AssetsToolbar({
         </>
       }
       actions={
+        canManage ? (
         <>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onExport}
-            className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
-          </Button>
+          {onExport ? (
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(uiOutlineBtn, 'gap-2 text-xs flex-1 sm:flex-none')}
+              onClick={onExport}
+              disabled={isExporting}
+            >
+              <Download className="w-4 h-4" />
+              {isExporting ? 'Exporting…' : 'Export'}
+            </Button>
+          ) : null}
           <PrimaryButton type="button" onClick={onAddAsset} className="gap-2 text-xs flex-1 sm:flex-none">
             <Plus className="w-4 h-4" />
             <span className="sm:hidden">Add</span>
             <span className="hidden sm:inline">Add Asset</span>
           </PrimaryButton>
         </>
+        ) : null
       }
     />
   )

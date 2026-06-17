@@ -6,8 +6,9 @@ import { ArrowLeft, FileText, History, MoreHorizontal, User, RefreshCw, Trash2, 
 import { CommonErrorState } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { type BackendAsset, type AssetDropdowns } from '@/services/asset-service'
+import { type BackendAsset, type AssetDropdowns } from '@/types/asset'
 import { useAssetDetail } from './useAssetDetail'
+import { usePermissions } from '@/components/auth/permissions-provider'
 import { AddAssetModal } from './add-asset-modal'
 
 // Tabs
@@ -39,10 +40,15 @@ interface AssetDetailViewProps {
 
 export function AssetDetailView({ assetId }: AssetDetailViewProps) {
   const router = useRouter()
+  const { canManage } = usePermissions()
+  const canManageAssets = canManage('assets')
   const {
     asset,
     dropdowns,
     departments,
+    dropdownsLoading,
+    dropdownsError,
+    reloadDropdowns,
     isLoading,
     error,
     isAssignOpen,
@@ -76,8 +82,8 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
       <CommonErrorState
         title="Asset Not Found"
         message={error || 'The requested asset records could not be retrieved from the server.'}
-        onRetry={() => router.push('/assets')}
-        retryLabel="Back to Assets"
+        onRetry={fetchAssetDetails}
+        retryLabel="Retry"
       />
     )
   }
@@ -98,12 +104,12 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
           <ArrowLeft className="h-4 w-4" /> Back to Assets
         </Button>
 
-        {!isDisposed && (
+        {!isDisposed && canManageAssets && (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto sm:self-auto">
             {!isAssigned && !inRepair && (
               <Button
                 onClick={() => setIsAssignOpen(true)}
-                className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-xl flex items-center justify-center gap-1.5 w-full sm:w-auto"
+                className="bg-violet-core hover:bg-violet-deep text-white font-semibold rounded-[20px] [corner-shape:squircle] flex items-center justify-center gap-1.5 w-full sm:w-auto"
               >
                 <User className="h-4 w-4" /> Assign
               </Button>
@@ -171,11 +177,11 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
       </div>
 
       {/* Premium Dashboard Summary Panel */}
-      <div className="bg-card border border-border/80 rounded-2xl p-6 shadow-xl relative overflow-hidden transition-all duration-200">
+      <div className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-xl relative overflow-hidden transition-all duration-200">
         <div className="absolute right-0 top-0 w-64 h-64 bg-violet-core/5 rounded-full blur-3xl -z-10 pointer-events-none" />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="flex items-center gap-4">
-            <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg', typeConfig.color)}>
+            <div className={cn('w-14 h-14 rounded-[32px] [corner-shape:squircle] flex items-center justify-center shadow-lg', typeConfig.color)}>
               <TypeIcon className="w-7 h-7" />
             </div>
             <div>
@@ -259,6 +265,9 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
         editAsset={asset}
         dropdowns={dropdowns}
         departments={departments}
+        metadataLoading={dropdownsLoading}
+        metadataError={dropdownsError}
+        onReloadMetadata={reloadDropdowns}
       />
       <AssignAssetDialog
         open={isAssignOpen}

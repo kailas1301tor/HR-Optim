@@ -20,7 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { assetService, type AssetDropdowns, type BackendAsset } from '@/services/asset-service'
+import { CommonErrorBanner } from '@/components/common'
+import type { Asset, AssetDropdowns } from '@/types/asset'
+import { LIMIT_SHORT_NAME } from '@/validations/field-limits'
 import type { Department } from '@/services/department-service'
 import { useAddAssetModal } from './useAddAssetModal'
 
@@ -28,9 +30,12 @@ interface AddAssetModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
-  editAsset?: BackendAsset | null
+  editAsset?: Asset | null
   dropdowns: AssetDropdowns | null
   departments: Department[]
+  metadataLoading?: boolean
+  metadataError?: boolean
+  onReloadMetadata?: () => void
 }
 
 export function AddAssetModal({
@@ -40,14 +45,19 @@ export function AddAssetModal({
   editAsset,
   dropdowns,
   departments,
+  metadataLoading = false,
+  metadataError = false,
+  onReloadMetadata,
 }: AddAssetModalProps) {
-  const { isSubmitting, form, onSubmit } = useAddAssetModal(
+  const { isSubmitting, isFormLoading, hasFormLoadError, form, onSubmit } = useAddAssetModal(
     open,
     onOpenChange,
     onSuccess,
     editAsset,
     dropdowns,
-    departments
+    departments,
+    metadataLoading,
+    metadataError
   )
 
   const {
@@ -59,14 +69,33 @@ export function AddAssetModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-card border border-border/80 rounded-2xl max-w-2xl overflow-y-auto max-h-[90vh] p-6 shadow-2xl">
+      <DialogContent className="bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] max-w-xl md:max-w-2xl overflow-y-auto max-h-[90vh] p-6 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="text-cloud font-semibold text-lg">
             {editAsset ? 'Edit Asset' : 'Add New Asset'}
           </DialogTitle>
         </DialogHeader>
 
+        {isFormLoading ? (
+          <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-400">
+            <Loader2 className="w-5 h-5 animate-spin text-violet-glow" />
+            Loading asset details…
+          </div>
+        ) : hasFormLoadError ? (
+          <div className="py-8">
+            <CommonErrorBanner
+              message="Form options could not be loaded. Please try again."
+              onRetry={onReloadMetadata ? () => void onReloadMetadata() : undefined}
+            />
+          </div>
+        ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          {!editAsset && metadataError && (
+            <CommonErrorBanner
+              message="Form options could not be loaded. Some dropdowns may be empty."
+              onRetry={onReloadMetadata ? () => void onReloadMetadata() : undefined}
+            />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label className="text-xs text-slate-300">Asset Name *</Label>
@@ -75,6 +104,7 @@ export function AddAssetModal({
                 {...register('name')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
               {errors.name && <p className="text-[11px] text-destructive">{errors.name.message}</p>}
             </div>
@@ -86,6 +116,7 @@ export function AddAssetModal({
                 {...register('serial_number')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
               {errors.serial_number && <p className="text-[11px] text-destructive">{errors.serial_number.message}</p>}
             </div>
@@ -205,6 +236,7 @@ export function AddAssetModal({
                 {...register('location')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
             </div>
 
@@ -215,6 +247,7 @@ export function AddAssetModal({
                 {...register('sub_location')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
             </div>
 
@@ -268,12 +301,13 @@ export function AddAssetModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="min-h-11"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-violet-core hover:bg-violet-deep text-white"
+              className="bg-violet-core hover:bg-violet-deep text-white min-h-11"
               disabled={isSubmitting}
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
@@ -281,6 +315,7 @@ export function AddAssetModal({
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   )

@@ -44,7 +44,11 @@ export function CommonListToolbar({
           </div>
           {filters}
         </div>
-        {actions && <div className="flex items-center gap-2 justify-end shrink-0">{actions}</div>}
+        {actions && (
+          <div className="flex flex-wrap items-stretch sm:items-center gap-2 w-full lg:w-auto lg:justify-end">
+            {actions}
+          </div>
+        )}
       </div>
       {chips}
     </div>

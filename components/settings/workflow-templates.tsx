@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,10 +12,10 @@ import { Plus, Trash2, Edit3, X } from 'lucide-react'
 import { CommonStatusBadge } from '@/components/common'
 import { uiSectionHeader } from '@/lib/ui/design-system'
 
-export interface WorkflowTemplate {
-  name: string
-  steps: string[]
-}
+export type { WorkflowTemplate } from '@/types/settings'
+import type { WorkflowTemplate } from '@/types/settings'
+import { LIMIT_DESCRIPTION, LIMIT_SHORT_NAME, LIMIT_WORKFLOW_STEP } from '@/validations/field-limits'
+import { workflowNameSchema, workflowStepSchema } from '@/validations/settings-master.schema'
 
 interface WorkflowTemplatesProps {
   workflowTemplates: WorkflowTemplate[]
@@ -53,10 +54,14 @@ export function WorkflowTemplates({
 
   const handleSaveWorkflow = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!workflowName.trim()) return
+    const parsedName = workflowNameSchema.safeParse(workflowName)
+    if (!parsedName.success) {
+      toast.error(parsedName.error.issues[0]?.message ?? 'Workflow name is required')
+      return
+    }
 
     const newTemplate: WorkflowTemplate = {
-      name: workflowName.trim().toUpperCase(),
+      name: parsedName.data.toUpperCase(),
       steps: workflowSteps,
     }
 
@@ -71,8 +76,12 @@ export function WorkflowTemplates({
   }
 
   const handleAddStep = () => {
-    if (!newStepText.trim()) return
-    setWorkflowSteps([...workflowSteps, newStepText.trim()])
+    const parsedStep = workflowStepSchema.safeParse(newStepText)
+    if (!parsedStep.success) {
+      toast.error(parsedStep.error.issues[0]?.message ?? 'Invalid step')
+      return
+    }
+    setWorkflowSteps([...workflowSteps, parsedStep.data])
     setNewStepText('')
   }
 
@@ -106,7 +115,7 @@ export function WorkflowTemplates({
           {workflowTemplates.map((template, index) => (
             <div
               key={template.name + index}
-              className="flex items-center justify-between bg-midnight border border-border/60 rounded-xl p-3 hover:border-violet-core/40 transition-all group"
+              className="flex items-center justify-between bg-midnight border border-border/60 rounded-[20px] [corner-shape:squircle] p-3 hover:border-violet-core/40 transition-all group"
             >
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-slate-200">{template.name}</span>
@@ -118,7 +127,7 @@ export function WorkflowTemplates({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-lg cursor-pointer"
+                  className="h-8 w-8 text-violet-glow hover:bg-violet-core/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                   onClick={() => handleOpenEditWorkflow(index)}
                 >
                   <Edit3 className="h-4 w-4" />
@@ -126,7 +135,7 @@ export function WorkflowTemplates({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-lg cursor-pointer"
+                  className="h-8 w-8 text-red-400 hover:bg-red-500/20 border border-border/20 rounded-[16px] [corner-shape:squircle] cursor-pointer"
                   onClick={() => setWorkflowTemplates(workflowTemplates.filter((_, i) => i !== index))}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -139,7 +148,7 @@ export function WorkflowTemplates({
 
       {/* Workflow Modal */}
       <Dialog open={isWorkflowModalOpen} onOpenChange={setIsWorkflowModalOpen}>
-        <DialogContent className="max-w-md bg-card border border-border/80 rounded-2xl p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
+        <DialogContent className="max-w-md bg-card border border-border/80 rounded-[32px] [corner-shape:squircle] p-6 shadow-2xl overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="text-cloud font-semibold text-lg font-sans">
               {workflowEditIndex !== null ? 'Edit Workflow Template' : 'Add Workflow Template'}
@@ -148,20 +157,20 @@ export function WorkflowTemplates({
           <form onSubmit={handleSaveWorkflow} className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label htmlFor="workflow-name" className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Template Name</Label>
-              <Input id="workflow-name" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} placeholder="e.g. ONBOARDING" className="bg-midnight border-border rounded-xl text-sm" required />
+              <Input id="workflow-name" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} placeholder="e.g. ONBOARDING" className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm" required maxLength={LIMIT_SHORT_NAME} />
             </div>
 
             {/* Steps Section */}
             <div className="space-y-2 pt-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Checklist Steps</Label>
               <div className="flex gap-2">
-                <Input value={newStepText} onChange={(e) => setNewStepText(e.target.value)} placeholder="e.g. IT Setup" className="bg-midnight border-border rounded-xl text-sm flex-1" />
-                <Button type="button" onClick={handleAddStep} className="bg-violet-core hover:bg-violet-deep text-white rounded-xl h-10 px-4 cursor-pointer">Add</Button>
+                <Input value={newStepText} onChange={(e) => setNewStepText(e.target.value)} placeholder="e.g. IT Setup" className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm flex-1" maxLength={LIMIT_WORKFLOW_STEP} />
+                <Button type="button" onClick={handleAddStep} className="bg-violet-core hover:bg-violet-deep text-white rounded-[20px] [corner-shape:squircle] h-10 px-4 cursor-pointer">Add</Button>
               </div>
 
               <div className="space-y-1.5 pt-3">
                 {workflowSteps.map((step, idx) => (
-                  <div key={idx} className="flex items-center justify-between bg-midnight/60 border border-border/40 rounded-xl px-3 py-2 text-xs">
+                  <div key={idx} className="flex items-center justify-between bg-midnight/60 border border-border/40 rounded-[20px] [corner-shape:squircle] px-3 py-2 text-xs">
                     <span className="text-slate-300 font-medium">{idx + 1}. {step}</span>
                     <button type="button" onClick={() => handleRemoveStep(idx)} className="text-slate-400 hover:text-red-400 cursor-pointer">
                       <X className="h-4 w-4" />
@@ -172,8 +181,8 @@ export function WorkflowTemplates({
             </div>
 
             <DialogFooter className="pt-4 border-t border-border/40">
-              <DialogClose asChild><Button type="button" variant="outline" className="h-10 rounded-xl cursor-pointer">Cancel</Button></DialogClose>
-              <Button type="submit" className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-xl px-5 cursor-pointer">Save Template</Button>
+              <DialogClose asChild><Button type="button" variant="outline" className="h-10 rounded-[20px] [corner-shape:squircle] cursor-pointer">Cancel</Button></DialogClose>
+              <Button type="submit" className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer">Save Template</Button>
             </DialogFooter>
           </form>
         </DialogContent>

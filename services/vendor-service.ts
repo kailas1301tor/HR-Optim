@@ -1,23 +1,8 @@
 // services/vendor-service.ts
-import { api } from '@/lib/api';
+import { api } from '@/lib/api'
+import type { BackendVendor, FrontendVendor } from '@/types/settings'
 
-export interface BackendVendor {
-  id: number;
-  asset_type: number;
-  name: string;
-  description?: string;
-  is_active?: boolean;
-  deleted?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface FrontendVendor {
-  id: number;
-  assetTypeId: number;
-  name: string;
-  description: string;
-}
+export type { BackendVendor, FrontendVendor } from '@/types/settings'
 
 interface VendorListResponse {
   message: string;
@@ -43,16 +28,9 @@ function mapBackendToFrontend(vendor: BackendVendor): FrontendVendor {
 }
 
 export const vendorService = {
-  /** Fetch all vendors from the API. Handles network failures gracefully. */
-  async getVendors(fallback: FrontendVendor[], signal?: AbortSignal): Promise<FrontendVendor[]> {
-    try {
-      const response = await api.get<VendorListResponse>('/api/master/vendors/', { signal });
-      return (response.results?.data ?? []).map(mapBackendToFrontend);
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') throw error;
-      console.warn('🔴 Network error fetching vendors. Loading mock fallback.', error);
-      return fallback;
-    }
+  async getVendors(signal?: AbortSignal): Promise<FrontendVendor[]> {
+    const response = await api.get<VendorListResponse>('/api/master/vendors/', { signal })
+    return (response.results?.data ?? []).map(mapBackendToFrontend)
   },
 
   /** Create a new vendor. */

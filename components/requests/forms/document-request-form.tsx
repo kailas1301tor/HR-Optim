@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils'
 import { uiInput, uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { documentRequestSchema, type DocumentRequestInput } from '@/validations/request.schema'
+import { LIMIT_PURPOSE } from '@/validations/field-limits'
 
 interface DocumentRequestFormProps {
   documentTypeChoices: RequestChoiceItem[]
@@ -77,6 +78,7 @@ export function DocumentRequestForm({
           placeholder="Purpose of document request..."
           className={cn(uiInput, 'text-xs min-h-[100px] resize-none')}
           aria-label="Document request purpose"
+          maxLength={LIMIT_PURPOSE}
         />
         {errors.purpose?.message && <CommonFormFieldError message={errors.purpose.message} />}
       </div>

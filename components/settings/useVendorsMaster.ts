@@ -1,8 +1,11 @@
 // components/settings/useVendorsMaster.ts
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
-import { vendorService, type FrontendVendor } from '@/services/vendor-service'
+import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
+import { vendorService } from '@/services/vendor-service'
+import type { FrontendVendor } from '@/types/settings'
 import type { AssetType } from '@/services/asset-type-service'
+import { vendorSchema } from '@/validations/settings-master.schema'
 
 export interface UseVendorsMasterProps {
   assetTypes: AssetType[]
@@ -69,16 +72,20 @@ export function useVendorsMaster({
 
   const handleSaveVendor = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
-    if (!vendorName.trim() || !selectedAssetTypeId) {
-      toast.error('Name and Asset Type are required')
+    const parsed = vendorSchema.safeParse({
+      name: vendorName,
+      assetTypeId: selectedAssetTypeId,
+    })
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Please fix the form errors')
       return
     }
 
     setIsSubmitting(true)
     try {
       const payload = {
-        name: vendorName.trim().toUpperCase(),
-        assetTypeId: Number(selectedAssetTypeId),
+        name: parsed.data.name.toUpperCase(),
+        assetTypeId: Number(parsed.data.assetTypeId),
         description: vendorDescription.trim(),
       }
 
@@ -91,6 +98,7 @@ export function useVendorsMaster({
       }
       setIsVendorModalOpen(false)
       resetForm()
+      invalidateAssetDropdowns()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save vendor'
@@ -108,6 +116,7 @@ export function useVendorsMaster({
       await vendorService.deleteVendor(deleteTarget.id)
       toast.success('Vendor deleted successfully')
       setDeleteTarget(null)
+      invalidateAssetDropdowns()
       await onRefresh()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete vendor'
@@ -122,9 +131,16 @@ export function useVendorsMaster({
     return found ? found.name : 'Unknown'
   }
 
+  const handleDialogOpenChange = useCallback((open: boolean): void => {
+    if (!open && !isSubmitting) {
+      resetForm()
+    }
+    if (!isSubmitting) setIsVendorModalOpen(open)
+  }, [isSubmitting])
+
   return {
     isVendorModalOpen,
-    setIsVendorModalOpen,
+    setIsVendorModalOpen: handleDialogOpenChange,
     editingVendor,
     isSubmitting,
     vendorName,

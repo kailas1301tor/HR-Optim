@@ -1,80 +1,58 @@
 // components/employees/useAddEmployeeModal.ts
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm, type UseFormReturn, type Path } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { employeeService, type DropdownData, type DropdownItem, type CreateEmployeePayload } from '@/services/employee-service'
+import { bankDetailsService } from '@/services/bank-details-service'
+import { employeeService } from '@/services/employee-service'
 import { employeeSchema, type EmployeeInput } from '@/validations/employee.schema'
-import type { Employee } from './employee-table'
+import type { Employee } from '@/types/employee'
+import {
+  defaultFormValues,
+  employeeToFormValues,
+  formValuesToPayload,
+} from '@/lib/mappers/employee-form-mapper'
 import { toast } from 'sonner'
+import { useEmployeeDropdowns } from './useEmployeeDropdowns'
+
+const EMPTY_DEFAULTS: EmployeeInput = {
+  id: '',
+  username: '',
+  email: '',
+  full_name: '',
+  phone_number: '',
+  role: '',
+  department: '',
+  designation: '',
+  employee_id: '',
+  status: 'Active',
+  shift: '',
+  joined_date: '',
+  employee_type: '',
+  basic_salary: '',
+  accommodation: '',
+  date_of_birth: '',
+  nationality: '',
+  address: '',
+  bank_name: '',
+  account_number: '',
+  ifsc: '',
+  branch: '',
+}
 
 export interface UseAddEmployeeModalReturn {
   addStep: number
   isLoading: boolean
-  dropdowns: DropdownData | null
+  isFormLoading: boolean
+  hasEditLoadError: boolean
+  dropdowns: ReturnType<typeof useEmployeeDropdowns>['dropdowns']
   isEditMode: boolean
   methods: UseFormReturn<EmployeeInput>
   setAddStep: (step: number) => void
   onSubmit: (data: EmployeeInput) => Promise<void>
   handleNextStep: (e: React.MouseEvent) => Promise<void>
-}
-
-const defaultValues: EmployeeInput = {
-  id: '', username: '', email: '', full_name: '', phone_number: '', role: '2',
-  department: '1', designation: '1', employee_id: '', status: 'Active', shift: '1',
-  joined_date: new Date().toISOString().split('T')[0], employee_type: '1',
-  basic_salary: '', accommodation: 'Not provided', date_of_birth: '', nationality: '1', address: '',
-  bank_name: '', account_number: '', ifsc: '', branch: '',
-}
-
-const findIdByName = (list: DropdownItem[] | undefined, name: string): string => {
-  if (!list || !name) return list?.[0] ? String(list[0].id) : ''
-  const match = list.find(item => item.name.toLowerCase() === name.toLowerCase())
-  return match ? String(match.id) : (list[0] ? String(list[0].id) : '')
-}
-
-function getFormValuesFromEmployee(editEmployee: Employee, data: DropdownData): EmployeeInput {
-  return {
-    id: String(editEmployee.id),
-    username: editEmployee.user?.username || '',
-    email: editEmployee.user?.email || '',
-    full_name: editEmployee.full_name,
-    phone_number: editEmployee.phone_number,
-    role: editEmployee.role_name ? findIdByName(data.roles, editEmployee.role_name) : String(editEmployee.role),
-    department: findIdByName(data.departments, editEmployee.department),
-    designation: findIdByName(data.designations, editEmployee.designation),
-    employee_id: editEmployee.employee_id,
-    status: editEmployee.status,
-    shift: findIdByName(data.shifts, editEmployee.shift),
-    joined_date: editEmployee.joined_date ? editEmployee.joined_date.split('T')[0] : '',
-    employee_type: findIdByName(data.employee_types, editEmployee.employee_type),
-    basic_salary: editEmployee.basic_salary,
-    accommodation: editEmployee.accommodation,
-    date_of_birth: editEmployee.date_of_birth ? editEmployee.date_of_birth.split('T')[0] : '',
-    nationality: findIdByName(data.nationalities, editEmployee.nationality),
-    address: editEmployee.address,
-    bank_name: editEmployee.bank_details?.bank_name || '',
-    account_number: editEmployee.bank_details?.account_number || '',
-    ifsc: editEmployee.bank_details?.ifsc || '',
-    branch: editEmployee.bank_details?.branch || '',
-  }
-}
-
-function getDefaultFormValues(data: DropdownData): EmployeeInput {
-  return {
-    id: '', username: '', email: '', full_name: '', phone_number: '',
-    role: data.roles[0] ? String(data.roles[0].id) : '2',
-    department: data.departments[0] ? String(data.departments[0].id) : '1',
-    designation: data.designations[0] ? String(data.designations[0].id) : '1',
-    employee_id: '', status: 'Active',
-    shift: data.shifts[0] ? String(data.shifts[0].id) : '1',
-    joined_date: new Date().toISOString().split('T')[0],
-    employee_type: data.employee_types[0] ? String(data.employee_types[0].id) : '1',
-    basic_salary: '', accommodation: 'Not provided', date_of_birth: '',
-    nationality: data.nationalities[0] ? String(data.nationalities[0].id) : '1',
-    address: '', bank_name: '', account_number: '', ifsc: '', branch: '',
-  }
+  retryEditLoad: () => void
 }
 
 export function useAddEmployeeModal(
@@ -84,98 +62,132 @@ export function useAddEmployeeModal(
   editEmployee: Employee | null | undefined
 ): UseAddEmployeeModalReturn {
   const [addStep, setAddStep] = useState(1)
-  const [isLoading, setIsLoading] = useState(false)
-  const [dropdowns, setDropdowns] = useState<DropdownData | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loadedEditEmployee, setLoadedEditEmployee] = useState<Employee | null>(null)
+  const [isLoadingEditEmployee, setIsLoadingEditEmployee] = useState(false)
+  const [hasEditLoadError, setHasEditLoadError] = useState(false)
+  const [editReloadToken, setEditReloadToken] = useState(0)
+  const editFetchIdRef = useRef(0)
+  const { dropdowns, isLoading: dropdownsLoading } = useEmployeeDropdowns()
   const isEditMode = !!editEmployee
 
   const methods = useForm<EmployeeInput>({
     resolver: zodResolver(employeeSchema),
-    defaultValues,
+    defaultValues: EMPTY_DEFAULTS,
   })
 
   const { reset } = methods
 
   useEffect(() => {
-    if (!open) return
-    setAddStep(1)
-    setDropdowns(null)
-    
+    if (!open || !editEmployee?.id) {
+      setLoadedEditEmployee(null)
+      setHasEditLoadError(false)
+      setIsLoadingEditEmployee(false)
+      return
+    }
+
+    const fetchId = ++editFetchIdRef.current
     const controller = new AbortController()
 
-    async function initForm() {
-      setIsLoading(true)
+    const loadEmployeeForEdit = async (): Promise<void> => {
+      setIsLoadingEditEmployee(true)
+      setHasEditLoadError(false)
+      setLoadedEditEmployee(null)
+
       try {
-        const data = await employeeService.getDropdowns(controller.signal)
-        setDropdowns(data)
-        
-        if (editEmployee) {
-          reset(getFormValuesFromEmployee(editEmployee, data))
-        } else {
-          reset(getDefaultFormValues(data))
+        const employee = await employeeService.getEmployee(editEmployee.id, controller.signal)
+        if (controller.signal.aborted || fetchId !== editFetchIdRef.current) return
+
+        let employeeWithBank = employee
+        if (!employee.bank_details?.bank_name && !employee.bank_details?.account_number) {
+          const bankRecords = await bankDetailsService.list(controller.signal)
+          if (controller.signal.aborted || fetchId !== editFetchIdRef.current) return
+          const bankRecord = bankRecords.find((record) => record.employee === employee.id)
+          if (bankRecord) {
+            employeeWithBank = {
+              ...employee,
+              bank_details: {
+                bank_name: bankRecord.bank_name,
+                account_number: bankRecord.account_number,
+                ifsc: bankRecord.ifsc,
+                branch: bankRecord.branch,
+              },
+            }
+          }
         }
-      } catch (err: unknown) {
-        if (err instanceof Error && err.name === 'AbortError') return
-        toast.error('Failed to load form options')
+
+        setLoadedEditEmployee(employeeWithBank)
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        if (fetchId !== editFetchIdRef.current) return
+        setHasEditLoadError(true)
+        setLoadedEditEmployee(null)
       } finally {
-        if (!controller.signal.aborted) {
-          setIsLoading(false)
+        if (fetchId === editFetchIdRef.current) {
+          setIsLoadingEditEmployee(false)
         }
       }
     }
-    
-    initForm()
+
+    void loadEmployeeForEdit()
 
     return () => {
       controller.abort()
     }
-  }, [open, reset, editEmployee])
+  }, [open, editEmployee?.id, editReloadToken])
+
+  useEffect(() => {
+    if (!open || !dropdowns) return
+
+    setAddStep(1)
+
+    if (editEmployee) {
+      if (!loadedEditEmployee || loadedEditEmployee.id !== editEmployee.id) return
+      reset(employeeToFormValues(loadedEditEmployee, dropdowns))
+      return
+    }
+
+    reset(defaultFormValues(dropdowns))
+  }, [open, dropdowns, editEmployee, loadedEditEmployee, reset])
 
   const onSubmit = async (data: EmployeeInput) => {
-    setIsLoading(true)
+    setIsSubmitting(true)
     try {
-      const payload: CreateEmployeePayload = {
-        username: data.username.trim(),
-        email: data.email.trim(),
-        full_name: data.full_name.trim(),
-        phone_number: data.phone_number.trim(),
-        role: Number(data.role),
-        department: Number(data.department),
-        designation: Number(data.designation),
-        employee_id: data.employee_id.trim(),
-        status: data.status,
-        shift: Number(data.shift),
-        joined_date: data.joined_date,
-        employee_type: Number(data.employee_type),
-        basic_salary: data.basic_salary,
-        accommodation: data.accommodation,
-        date_of_birth: data.date_of_birth,
-        nationality: Number(data.nationality),
-        address: data.address.trim(),
-        bank_details: {
-          bank_name: data.bank_name.trim(),
-          account_number: data.account_number.trim(),
-          ifsc: data.ifsc.trim(),
-          branch: data.branch.trim(),
-        }
+      const payload = formValuesToPayload(data)
+      const editSource = loadedEditEmployee ?? editEmployee
+
+      let savedEmployee: Employee
+      if (isEditMode && editSource) {
+        savedEmployee = await employeeService.updateEmployee({ ...payload, id: Number(editSource.id) })
+        toast.success('Employee updated successfully')
+      } else {
+        savedEmployee = await employeeService.createEmployee(payload)
+        toast.success('Employee created successfully')
       }
 
-      if (isEditMode && editEmployee) {
-        const updated = await employeeService.updateEmployee({ ...payload, id: Number(editEmployee.id) })
-        toast.success('Employee updated successfully')
-        onSuccess(updated)
-      } else {
-        const created = await employeeService.createEmployee(payload)
-        toast.success('Employee created successfully')
-        onSuccess(created)
-      }
+      const employeeId = Number(savedEmployee.id)
+      const bankRecords = await bankDetailsService.list()
+      const existingBankId = bankRecords.find((record) => record.employee === employeeId)?.id
+      await bankDetailsService.upsertForEmployee(
+        employeeId,
+        {
+          bank_name: data.bank_name,
+          account_number: data.account_number,
+          ifsc: data.ifsc,
+          branch: data.branch,
+        },
+        existingBankId,
+      )
+
+      onSuccess(savedEmployee)
       onOpenChange(false)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Validation error'
       toast.error(isEditMode ? 'Failed to update employee' : 'Failed to create employee', {
-        description: msg
+        description: msg,
       })
     } finally {
-      setIsLoading(false)
+      setIsSubmitting(false)
     }
   }
 
@@ -184,9 +196,9 @@ export function useAddEmployeeModal(
     const fields = [
       ['full_name', 'username', 'email', 'phone_number', 'employee_id', 'role', 'department', 'designation', 'status', 'shift'],
       ['basic_salary', 'joined_date', 'employee_type', 'accommodation'],
-      ['date_of_birth', 'nationality', 'address']
+      ['date_of_birth', 'nationality', 'address'],
     ][addStep - 1]
-    
+
     if (fields) {
       const fieldsToValidate = fields as Path<EmployeeInput>[]
       const isValid = await methods.trigger(fieldsToValidate)
@@ -195,14 +207,24 @@ export function useAddEmployeeModal(
     setAddStep(addStep + 1)
   }
 
+  const retryEditLoad = (): void => {
+    setEditReloadToken((token) => token + 1)
+  }
+
+  const isFormLoading =
+    dropdownsLoading || (isEditMode && (isLoadingEditEmployee || !loadedEditEmployee))
+
   return {
     addStep,
-    isLoading,
+    isLoading: isFormLoading || isSubmitting,
+    isFormLoading,
+    hasEditLoadError,
     dropdowns,
     isEditMode,
     methods,
     setAddStep,
     onSubmit,
     handleNextStep,
+    retryEditLoad,
   }
 }

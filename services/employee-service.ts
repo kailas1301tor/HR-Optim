@@ -1,73 +1,139 @@
 // services/employee-service.ts
-import { api } from '@/lib/api';
-import { cleanParams } from '@/lib/types';
-import type { DropdownItem } from '@/lib/types';
-import type { Employee } from '@/components/employees/employee-table';
+import { api } from '@/lib/api'
+import {
+  formatEmployeeForDisplay,
+  formatEmployeesForDisplay,
+} from '@/lib/mappers/employee-display-mapper'
+import { cleanParams } from '@/lib/types'
+import { departmentService } from '@/services/department-service'
+import { designationService } from '@/services/designation-service'
+import { shiftService } from '@/services/shift-service'
+import type {
+  CreateEmployeePayload,
+  DropdownData,
+  DropdownItem,
+  DropdownResponse,
+  Employee,
+  EmployeeBankDetails,
+  EmployeeListParams,
+  EmployeeListPickerResponse,
+  EmployeeListResponse,
+  EmployeeListWireItem,
+} from '@/types/employee'
+import type { Department } from '@/types/settings'
 
-export type { DropdownItem };
+export type {
+  CreateEmployeePayload,
+  DropdownData,
+  DropdownItem,
+  DropdownResponse,
+  EmployeeListParams,
+} from '@/types/employee'
 
-export interface DropdownData {
-  roles: DropdownItem[];
-  departments: DropdownItem[];
-  designations: (DropdownItem & { department_id?: number })[];
-  shifts: DropdownItem[];
-  employee_types: DropdownItem[];
-  nationalities: DropdownItem[];
-  status_choices: DropdownItem[];
-  accommodation_choices: DropdownItem[];
-}
-
-export interface DropdownResponse {
-  message: string;
-  results: {
-    data: DropdownData;
+function normalizeDropdownData(data: Partial<DropdownData> | null | undefined): DropdownData {
+  return {
+    roles: data?.roles ?? [],
+    departments: data?.departments ?? [],
+    designations: data?.designations ?? [],
+    shifts: data?.shifts ?? [],
+    employee_types: data?.employee_types ?? [],
+    nationalities: data?.nationalities ?? [],
+    status_choices: data?.status_choices ?? [],
+    accommodation_choices: data?.accommodation_choices ?? [],
+    leave_types: data?.leave_types ?? [],
+    onboarding_document_types: data?.onboarding_document_types ?? [],
+    offboarding_document_types: data?.offboarding_document_types ?? [],
   };
 }
 
-export interface CreateEmployeePayload {
-  username: string;
-  email: string;
-  full_name: string;
-  phone_number: string;
-  role: number;
-  department: number;
-  designation: number;
-  employee_id: string;
-  status: string;
-  shift: number;
-  joined_date: string;
-  employee_type: number;
-  basic_salary: string;
-  accommodation: string;
-  date_of_birth: string;
-  nationality: number;
-  address: string;
-  bank_details: {
-    bank_name: string;
-    account_number: string;
-    ifsc: string;
-    branch: string;
+/**
+ * Some backends return the combined dropdown payload with `departments`,
+ * `designations`, or `shifts` empty. Backfill those from their dedicated
+ * master endpoints so the employee form selects always have options.
+ */
+async function backfillEmptyMasters(
+  data: DropdownData,
+  signal?: AbortSignal,
+): Promise<DropdownData> {
+  const needsDepartments = data.departments.length === 0;
+  const needsShifts = data.shifts.length === 0;
+  const needsDesignations = data.designations.length === 0;
+
+  if (!needsDepartments && !needsShifts && !needsDesignations) {
+    return data;
+  }
+
+  const [departments, shifts] = await Promise.all([
+    needsDepartments
+      ? departmentService.getDepartments(signal).catch(() => [])
+      : Promise.resolve(data.departments),
+    needsShifts
+      ? shiftService
+          .getShifts(signal)
+          .then((items) => items.map<DropdownItem>(({ id, name }) => ({ id, name })))
+          .catch(() => [])
+      : Promise.resolve(data.shifts),
+  ]);
+
+  const resolvedDepartments = (departments as DropdownItem[]).map<DropdownItem>(
+    ({ id, name }) => ({ id, name }),
+  );
+
+  let designations = data.designations;
+  if (needsDesignations && resolvedDepartments.length > 0) {
+    const perDepartment = await Promise.all(
+      resolvedDepartments.map((dept) =>
+        designationService
+          .getDesignations(dept.id)
+          .then((items) =>
+            items.map((item) => ({ id: item.id, name: item.name, department_id: item.department })),
+          )
+          .catch(() => []),
+      ),
+    );
+    designations = perDepartment.flat();
+  }
+
+  return {
+    ...data,
+    departments: resolvedDepartments,
+    shifts: shifts as DropdownItem[],
+    designations,
   };
 }
 
-export interface EmployeeListParams {
-  page?: number;
-  page_size?: number;
-  search?: string;
-  department?: number | string;
-  status?: string;
-  [key: string]: string | number | boolean | undefined | null;
+function dropdownDepartmentsToDepartments(items: DropdownItem[]): Department[] {
+  return items.map(({ id, name }) => ({ id, name, description: '' }))
 }
 
-export interface EmployeeListResponse {
-  message: string;
-  results: {
-    total_count: number;
-    total_pages: number;
-    current_page: number;
-    item_per_page: number;
-    data: Employee[];
-  };
+const EMPTY_EMPLOYEE_BANK_DETAILS: EmployeeBankDetails = {
+  bank_name: '',
+  account_number: '',
+  ifsc: '',
+  branch: '',
+}
+
+function mapEmployeeListWireItem(item: EmployeeListWireItem): Employee {
+  return formatEmployeeForDisplay({
+    id: item.id,
+    full_name: (item.full_name ?? item.name ?? '').trim(),
+    employee_id: item.employee_id ?? '',
+    user: item.user ?? { username: '', email: '' },
+    bank_details: EMPTY_EMPLOYEE_BANK_DETAILS,
+    phone_number: '',
+    role: 0,
+    department: '',
+    designation: '',
+    status: '',
+    shift: '',
+    employee_type: '',
+    nationality: '',
+    joined_date: '',
+    basic_salary: '',
+    accommodation: '',
+    date_of_birth: '',
+    address: '',
+  })
 }
 
 export const employeeService = {
@@ -76,7 +142,32 @@ export const employeeService = {
    */
   async getDropdowns(signal?: AbortSignal): Promise<DropdownData> {
     const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal });
-    return response.results.data;
+    const normalized = normalizeDropdownData(response.results?.data);
+    return backfillEmptyMasters(normalized, signal);
+  },
+
+  /**
+   * Departments from employee dropdowns — avoids master department permissions.
+   */
+  async getDepartmentsFromDropdowns(signal?: AbortSignal): Promise<Department[]> {
+    const dropdowns = await this.getDropdowns(signal)
+    return dropdownDepartmentsToDepartments(dropdowns.departments)
+  },
+
+  /**
+   * Shifts from employee dropdowns — avoids master shift permissions.
+   */
+  async getShiftsFromDropdowns(signal?: AbortSignal): Promise<DropdownItem[]> {
+    const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
+    return normalizeDropdownData(response.results?.data).shifts
+  },
+
+  /**
+   * Leave types from employee dropdowns — avoids master leave-type permissions.
+   */
+  async getLeaveTypesFromDropdowns(signal?: AbortSignal): Promise<DropdownItem[]> {
+    const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
+    return normalizeDropdownData(response.results?.data).leave_types
   },
 
   /**
@@ -94,7 +185,29 @@ export const employeeService = {
       signal,
     });
     return {
-      data: response.results?.data || [],
+      data: formatEmployeesForDisplay(response.results?.data || []),
+      total_count: response.results?.total_count || 0,
+      total_pages: response.results?.total_pages || 1,
+      current_page: response.results?.current_page || 1,
+    };
+  },
+
+  /**
+   * Permission-safe employee list for filter pickers outside the Employees tab.
+   */
+  async getEmployeesList(params: EmployeeListParams, signal?: AbortSignal): Promise<{
+    data: Employee[];
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+  }> {
+    const response = await api.get<EmployeeListPickerResponse>('/api/employee/employees-list/', {
+      params: cleanParams(params),
+      signal,
+    });
+    const rawItems = response.results?.data ?? []
+    return {
+      data: rawItems.map(mapEmployeeListWireItem),
       total_count: response.results?.total_count || 0,
       total_pages: response.results?.total_pages || 1,
       current_page: response.results?.current_page || 1,
@@ -106,7 +219,7 @@ export const employeeService = {
    */
   async getEmployee(id: number, signal?: AbortSignal): Promise<Employee> {
     const response = await api.get<{ results: { data: Employee } }>(`/api/employee/employees/${id}/`, { signal });
-    return response.results.data;
+    return formatEmployeeForDisplay(response.results.data);
   },
 
   /**

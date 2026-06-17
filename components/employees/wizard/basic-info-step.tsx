@@ -11,7 +11,13 @@ import {
 import { CommonFormFieldError } from '@/components/common'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
-import type { DropdownData } from '@/services/employee-service'
+import {
+  LIMIT_EMPLOYEE_ID,
+  LIMIT_FULL_NAME,
+  LIMIT_PHONE,
+  LIMIT_USERNAME,
+} from '@/validations/field-limits'
+import type { DropdownData } from '@/types/employee'
 
 interface BasicInfoStepProps {
   isEditMode?: boolean
@@ -49,6 +55,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             placeholder="Enter Full Name"
             className={uiInput}
             required
+            maxLength={LIMIT_FULL_NAME}
           />
           {errors.full_name?.message && <CommonFormFieldError message={errors.full_name.message} />}
         </div>
@@ -64,6 +71,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             required
             disabled={isEditMode}
             autoComplete="off"
+            maxLength={LIMIT_USERNAME}
           />
           {errors.username?.message && <CommonFormFieldError message={errors.username.message} />}
         </div>
@@ -96,6 +104,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             placeholder="e.g. 1234567890"
             className={uiInput}
             required
+            maxLength={LIMIT_PHONE}
           />
           {errors.phone_number?.message && <CommonFormFieldError message={errors.phone_number.message} />}
         </div>
@@ -110,6 +119,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             className={uiInput}
             required
             disabled={isEditMode}
+            maxLength={LIMIT_EMPLOYEE_ID}
           />
           {errors.employee_id?.message && <CommonFormFieldError message={errors.employee_id.message} />}
         </div>
@@ -121,7 +131,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             Role
           </Label>
           <Select
-            value={currentRole}
+            value={currentRole || undefined}
             onValueChange={(val) => setValue('role', val)}
           >
             <SelectTrigger className={uiSelect}>
@@ -142,8 +152,19 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             Department
           </Label>
           <Select
-            value={currentDepartment}
-            onValueChange={(val) => setValue('department', val)}
+            value={currentDepartment || undefined}
+            onValueChange={(val) => {
+              setValue('department', val)
+              const validDesignations = dropdowns?.designations.filter(
+                (item) => !item.department_id || String(item.department_id) === val
+              )
+              const designationStillValid = validDesignations?.some(
+                (item) => String(item.id) === currentDesignation
+              )
+              if (!designationStillValid && validDesignations?.[0]) {
+                setValue('designation', String(validDesignations[0].id))
+              }
+            }}
           >
             <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select Department" />
@@ -166,7 +187,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             Designation
           </Label>
           <Select
-            value={currentDesignation}
+            value={currentDesignation || undefined}
             onValueChange={(val) => setValue('designation', val)}
           >
             <SelectTrigger className={uiSelect}>
@@ -189,7 +210,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             Status
           </Label>
           <Select
-            value={currentStatus}
+            value={currentStatus || undefined}
             onValueChange={(val) => setValue('status', val)}
           >
             <SelectTrigger className={uiSelect}>
@@ -197,7 +218,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             </SelectTrigger>
             <SelectContent>
               {dropdowns?.status_choices.map((item) => (
-                <SelectItem key={item.id} value={String(item.id)}>
+                <SelectItem key={item.id} value={item.name}>
                   {item.name}
                 </SelectItem>
               ))}
@@ -212,7 +233,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
           Shift
         </Label>
         <Select
-          value={currentShift}
+          value={currentShift || undefined}
           onValueChange={(val) => setValue('shift', val)}
         >
           <SelectTrigger className={uiSelect}>
