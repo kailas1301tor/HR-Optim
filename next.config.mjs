@@ -10,7 +10,7 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: `${backendOrigin}/api/:path*/`,
+        destination: `https://roka-prod-backend.hroptim.com/api/:path*/`,
       },
     ]
   },
