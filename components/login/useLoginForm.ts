@@ -72,7 +72,6 @@ export function useLoginForm(): UseLoginFormReturn {
 
   const completeLogin = useCallback(
     async (session: Pick<PendingAuthSession, 'token' | 'username' | 'email' | 'userId' | 'refresh'>) => {
-      authService.storeTokensFromLogin(session.token, session.refresh)
       await authService.persistSession(session.token, session.username, session.email, session.userId)
       clearPendingAuth()
       setPendingAuthState(null)

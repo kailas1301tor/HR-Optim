@@ -1,24 +1,7 @@
-import { toast } from 'sonner'
+// lib/api.ts
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { AUTH_COOKIE_NAMES, clearAuthCookies, getClientCookie } from '@/lib/cookies'
-import { resolveRequestUrl } from '@/lib/env'
 import { parseAuthErrorPayload } from '@/lib/helpers/parse-auth-form-errors'
-import { attemptSilentReauth } from '@/lib/auth/silent-reauth'
-import { clearRefreshToken } from '@/lib/auth/refresh-token-storage'
-
-let isRedirectingToLogin = false
-
-async function handleUnauthorized(): Promise<void> {
-  if (typeof window === 'undefined' || isRedirectingToLogin) return
-
-  const refreshed = await attemptSilentReauth()
-  if (refreshed) return
-
-  isRedirectingToLogin = true
-  toast.error('Your session has expired. Please sign in again.')
-  clearAuthCookies()
-  clearRefreshToken()
-  window.location.href = '/login'
-}
 
 export class ApiError extends Error {
   status?: number
@@ -32,240 +15,103 @@ export class ApiError extends Error {
   }
 }
 
-interface RequestOptions extends RequestInit {
-  params?: Record<string, string | number | boolean>
-  /** Do not attach stored session token (e.g. login). */
+export interface ApiRequestConfig extends AxiosRequestConfig {
   skipAuthHeader?: boolean
-  /** Do not hard-redirect to /login on 401 (e.g. failed login attempt). */
   skipSessionRedirect?: boolean
-  /** Internal: prevents infinite retry after silent reauth. */
-  isRetryAfterRefresh?: boolean
 }
 
-function resolveErrorMessage(responseData: unknown, status: number, fallback: string): string {
-  const parsed = parseAuthErrorPayload(responseData)
-  if (parsed.length > 0) return parsed.join('. ')
+const axiosInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
 
-  const errBody = responseData as Record<string, unknown> | undefined
-  return (
-    (typeof errBody?.message === 'string' ? errBody.message : undefined) ??
-    (typeof errBody?.error === 'string' ? errBody.error : undefined) ??
-    (fallback || `Request failed with status ${status}`)
-  )
-}
-
-function buildRequestUrl(
-  endpoint: string,
-  params?: Record<string, string | number | boolean>,
-): string {
-  return resolveRequestUrl(endpoint, params)
-}
-
-function wrapNetworkError(error: unknown): Error {
-  if (error instanceof ApiError) return error
-  if (error instanceof Error && error.name === 'AbortError') return error
-  if (error instanceof TypeError) {
-    return new ApiError(
-      'Unable to reach the server. Please check your connection and try again.',
-      0,
-      error,
-    )
-  }
-  return error instanceof Error ? error : new ApiError('Request failed')
-}
-
-function checkOfflinePreflight(): void {
-  if (typeof window !== 'undefined' && !navigator.onLine) {
-    throw new ApiError(
-      'You are offline. Please check your internet connection and try again.',
-      0,
-    )
-  }
-}
-
-function buildAuthHeaders(
-  options: RequestOptions,
-  body?: Record<string, unknown> | object | FormData | string | null,
-): { headers: Headers; sessionToken: string | null } {
-  const headers = new Headers(options.headers || {})
-
-  if (!headers.has('Content-Type') && !(body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json')
-  }
-
-  const sessionToken = options.skipAuthHeader ? null : getClientCookie(AUTH_COOKIE_NAMES.session)
-  if (sessionToken && !headers.has('Authorization')) {
-    headers.set('Authorization', `Bearer ${sessionToken}`)
-  }
-
-  return { headers, sessionToken }
-}
-
-export interface BlobResponse {
-  blob: Blob
-  contentDisposition: string | null
-}
-
-async function requestBlob(
-  endpoint: string,
-  options: RequestOptions = {},
-): Promise<BlobResponse> {
-  checkOfflinePreflight()
-  const url = buildRequestUrl(endpoint, options.params)
-  const { headers, sessionToken } = buildAuthHeaders(options)
-
-  const response = await fetch(url, {
-    ...options,
-    method: 'GET',
-    headers,
-  })
-
-  if (response.status === 401) {
-    const hadActiveSession = Boolean(sessionToken)
-    const shouldRedirect = hadActiveSession && !options.skipSessionRedirect
-
-    if (shouldRedirect && !options.isRetryAfterRefresh) {
-      const refreshed = await attemptSilentReauth()
-      if (refreshed) {
-        return requestBlob(endpoint, { ...options, isRetryAfterRefresh: true })
+// Request Interceptor: Attach bearer token if present
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const apiConfig = config as ApiRequestConfig
+    if (typeof window !== 'undefined' && !apiConfig.skipAuthHeader) {
+      const token = getClientCookie(AUTH_COOKIE_NAMES.session)
+      if (token && config.headers && !config.headers['Authorization']) {
+        config.headers['Authorization'] = `Bearer ${token}`
       }
-      await handleUnauthorized()
     }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
 
-    let responseData: unknown
-    try {
-      responseData = await response.json()
-    } catch {
-      responseData = undefined
+// Response Interceptor: Unwrap data directly and handle 401 redirection
+axiosInstance.interceptors.response.use(
+  (response) => {
+    if (response.config.responseType === 'blob') {
+      return response
     }
+    return response.data
+  },
+  (error) => {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status
+      const data = error.response?.data
+      const apiConfig = error.config as ApiRequestConfig | undefined
 
-    throw new ApiError(
-      resolveErrorMessage(
-        responseData,
-        401,
-        hadActiveSession ? 'Session expired. Please sign in again.' : 'Unauthorized.',
-      ),
-      401,
-      responseData,
-    )
-  }
-
-  if (!response.ok) {
-    let responseData: unknown
-    const contentType = response.headers.get('Content-Type')
-    if (contentType?.includes('application/json')) {
-      responseData = await response.json()
-    } else {
-      responseData = await response.text()
-    }
-
-    throw new ApiError(
-      resolveErrorMessage(responseData, response.status, `Request failed with status ${response.status}`),
-      response.status,
-      responseData,
-    )
-  }
-
-  const blob = await response.blob()
-  return {
-    blob,
-    contentDisposition: response.headers.get('Content-Disposition'),
-  }
-}
-
-async function request<T>(
-  method: string,
-  endpoint: string,
-  body?: Record<string, unknown> | object | FormData | string | null,
-  options: RequestOptions = {}
-): Promise<T> {
-  checkOfflinePreflight()
-  const url = buildRequestUrl(endpoint, options.params)
-  const { headers, sessionToken } = buildAuthHeaders(options, body)
-
-  const config: RequestInit = {
-    ...options,
-    method,
-    headers,
-  }
-
-  if (body) {
-    config.body = body instanceof FormData ? body : JSON.stringify(body)
-  }
-
-  try {
-    const response = await fetch(url, config)
-
-    if (response.status === 204) {
-      return undefined as T
-    }
-
-    let responseData: unknown
-    const contentType = response.headers.get('Content-Type')
-    if (contentType && contentType.includes('application/json')) {
-      responseData = await response.json() as unknown
-    } else {
-      responseData = await response.text()
-    }
-
-    if (response.status === 401) {
-      const hadActiveSession = Boolean(sessionToken)
-      const shouldRedirect = hadActiveSession && !options.skipSessionRedirect
-
-      if (shouldRedirect && !options.isRetryAfterRefresh) {
-        const refreshed = await attemptSilentReauth()
-        if (refreshed) {
-          return request<T>(method, endpoint, body, { ...options, isRetryAfterRefresh: true })
+      if (status === 401 && !apiConfig?.skipSessionRedirect) {
+        if (typeof window !== 'undefined') {
+          clearAuthCookies()
+          window.location.href = '/login'
         }
-        await handleUnauthorized()
       }
 
-      throw new ApiError(
-        resolveErrorMessage(
-          responseData,
-          401,
-          hadActiveSession ? 'Session expired. Please sign in again.' : 'Invalid username or password.'
-        ),
-        401,
-        responseData
-      )
+      // Resolve user-friendly error message
+      let message = 'Request failed'
+      if (data && typeof data === 'object') {
+        const parsed = parseAuthErrorPayload(data)
+        if (parsed.length > 0) {
+          message = parsed.join('. ')
+        } else {
+          const errBody = data as Record<string, unknown>
+          message =
+            (typeof errBody.message === 'string' ? errBody.message : undefined) ??
+            (typeof errBody.error === 'string' ? errBody.error : undefined) ??
+            `Request failed with status ${status}`
+        }
+      } else {
+        message = error.message || message
+      }
+
+      return Promise.reject(new ApiError(message, status, data))
     }
 
-    if (!response.ok) {
-      throw new ApiError(
-        resolveErrorMessage(responseData, response.status, `Request failed with status ${response.status}`),
-        response.status,
-        responseData
-      )
-    }
-
-    return responseData as T
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw error
-    }
-    const wrapped = wrapNetworkError(error)
-    console.error(`🔴 API Request Error [${method} ${url}]:`, wrapped)
-    throw wrapped
+    return Promise.reject(error)
   }
+)
+
+export interface SimpleApiClient {
+  get<T = any>(url: string, config?: ApiRequestConfig): Promise<T>
+  delete<T = any>(url: string, config?: ApiRequestConfig): Promise<T>
+  post<T = any>(url: string, data?: any, config?: ApiRequestConfig): Promise<T>
+  put<T = any>(url: string, data?: any, config?: ApiRequestConfig): Promise<T>
+  patch<T = any>(url: string, data?: any, config?: ApiRequestConfig): Promise<T>
+  getBlob(url: string, config?: ApiRequestConfig): Promise<{ blob: Blob; contentDisposition: string | null }>
 }
 
-export const api = {
-  get: <T>(endpoint: string, options?: RequestOptions) =>
-    request<T>('GET', endpoint, undefined, options),
-
-  getBlob: (endpoint: string, options?: RequestOptions) =>
-    requestBlob(endpoint, options),
-
-  post: <T>(endpoint: string, body?: Record<string, unknown> | object | FormData | string | null, options?: RequestOptions) =>
-    request<T>('POST', endpoint, body, options),
-
-  put: <T>(endpoint: string, body?: Record<string, unknown> | object | FormData | string | null, options?: RequestOptions) =>
-    request<T>('PUT', endpoint, body, options),
-
-  patch: <T>(endpoint: string, body?: Record<string, unknown> | object | FormData | string | null, options?: RequestOptions) =>
-    request<T>('PATCH', endpoint, body, options),
-
-  delete: <T>(endpoint: string, options?: RequestOptions) =>
-    request<T>('DELETE', endpoint, undefined, options),
+export const api: SimpleApiClient = {
+  get: (url, config) => axiosInstance.get(url, config),
+  delete: (url, config) => axiosInstance.delete(url, config),
+  post: (url, data, config) => axiosInstance.post(url, data, config),
+  put: (url, data, config) => axiosInstance.put(url, data, config),
+  patch: (url, data, config) => axiosInstance.patch(url, data, config),
+  getBlob: async (url, config) => {
+    const response = (await axiosInstance.get<Blob>(url, {
+      ...config,
+      responseType: 'blob',
+    })) as unknown as AxiosResponse<Blob>
+    return {
+      blob: response.data,
+      contentDisposition: response.headers['content-disposition'] || null,
+    }
+  },
 }

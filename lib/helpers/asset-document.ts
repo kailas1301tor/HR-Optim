@@ -1,5 +1,3 @@
-// lib/helpers/asset-document.ts
-import { resolveBackendOrigin } from '@/lib/env'
 import type { AssetDocument } from '@/types/asset'
 
 function toNumber(value: unknown): number | undefined {
@@ -19,7 +17,7 @@ export function resolveAssetDocumentUrl(raw: string | null | undefined): string 
   if (!url) return ''
   if (/^https?:\/\//i.test(url)) return url
 
-  const origin = resolveBackendOrigin()
+  const origin = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/+$/, '')
   return url.startsWith('/') ? `${origin}${url}` : `${origin}/${url}`
 }
 

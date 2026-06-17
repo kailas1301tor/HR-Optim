@@ -6,7 +6,6 @@ import {
   getClientCookie,
   setAuthSessionCookies,
 } from '@/lib/cookies'
-import { clearRefreshToken, getRefreshToken, setRefreshToken } from '@/lib/auth/refresh-token-storage'
 import { clearPendingAuth } from '@/lib/helpers/pending-auth-storage'
 import type {
   CurrentUserProfile,
@@ -80,24 +79,7 @@ export const authService = {
     setAuthSessionCookies({ token, username, email, userId })
   },
 
-  persistSessionFromCookies(accessToken: string): void {
-    const username = getClientCookie(AUTH_COOKIE_NAMES.username) ?? ''
-    const email = getClientCookie(AUTH_COOKIE_NAMES.email) ?? ''
-    const rawUserId = getClientCookie(AUTH_COOKIE_NAMES.userId)
-    const parsedUserId = rawUserId ? Number(rawUserId) : undefined
-    setAuthSessionCookies({
-      token: accessToken,
-      username,
-      email,
-      userId: parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : undefined,
-    })
-  },
 
-  storeTokensFromLogin(access: string, refresh?: string): void {
-    if (refresh) {
-      setRefreshToken(refresh)
-    }
-  },
 
   /**
    * Renews access token via backend refresh endpoint.
@@ -124,27 +106,8 @@ export const authService = {
     return normalizeCurrentUserProfile(data)
   },
 
-  async refreshAccessToken(): Promise<RefreshTokenResult | null> {
-    const refresh = getRefreshToken()
-    if (!refresh) return null
-
-    try {
-      const response = await api.post<RefreshTokenResponse>(
-        REFRESH_ENDPOINT,
-        { refresh } satisfies RefreshTokenApiContract['body'],
-        { skipAuthHeader: true, skipSessionRedirect: true }
-      )
-      const data = response.results?.data
-      if (!data?.access) return null
-      return { access: data.access, refresh: data.refresh }
-    } catch {
-      return null
-    }
-  },
-
   async logout(): Promise<void> {
     clearAuthCookies()
-    clearRefreshToken()
     clearPendingAuth()
     window.location.href = '/login'
   },
