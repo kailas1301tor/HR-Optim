@@ -7,8 +7,6 @@ import { ShellTopBar } from '@/components/layout/shell-top-bar'
 import { CommandPalette } from '@/components/layout/command-palette'
 import { cn } from '@/lib/utils'
 import { PermissionsProvider } from '@/components/auth/permissions-provider'
-import { NetworkStatusProvider } from '@/components/auth/network-status-provider'
-import { OfflineBanner } from '@/components/layout/offline-banner'
 import { AppShellRouteGuard } from './app-shell-route-guard'
 import { useAppShell } from './useAppShell'
 
@@ -44,10 +42,8 @@ export function AppShell({ children }: AppShellProps) {
   }, [])
 
   return (
-    <NetworkStatusProvider>
-      <PermissionsProvider>
+    <PermissionsProvider>
       <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-        <OfflineBanner />
         <ShellTopBar
           collapsed={collapsed}
           setCollapsed={setCollapsed}
@@ -87,7 +83,6 @@ export function AppShell({ children }: AppShellProps) {
 
         <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
       </div>
-      </PermissionsProvider>
-    </NetworkStatusProvider>
+    </PermissionsProvider>
   )
 }
