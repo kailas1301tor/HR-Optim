@@ -252,7 +252,7 @@ export function AddAssetModal({
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs text-slate-300">Purchase Cost (AED)</Label>
+              <Label className="text-xs text-slate-300">Purchase Cost (₹)</Label>
               <Input
                 type="number"
                 step="0.01"

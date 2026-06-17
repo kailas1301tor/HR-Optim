@@ -1,9 +1,9 @@
 // lib/env.ts
 /** Stage default — used only when NEXT_PUBLIC_API_URL is unset in local development. */
-const STAGE_API_BASE_URL = 'https://roka-stage-backend.hroptim.com'
+const STAGE_API_BASE_URL = 'https://roka-prod-backend.hroptim.com'
 
 /** Same-origin prefix; Next.js rewrites this to the backend (avoids browser CORS). */
-export const CLIENT_API_PROXY_PREFIX = '/api/hrms'
+export const CLIENT_API_PROXY_PREFIX = '/api'
 
 function normalizeBaseUrl(url: string): string {
   return url.trim().replace(/\/+$/, '')

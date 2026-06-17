@@ -25,7 +25,7 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
   const formatCost = (costStr: string | null) => {
     if (!costStr) return 'N/A'
     const value = parseFloat(costStr)
-    return isNaN(value) ? 'N/A' : `AED ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+    return isNaN(value) ? 'N/A' : `₹ ${value.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
   }
 
   return (

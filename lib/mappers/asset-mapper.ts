@@ -286,7 +286,7 @@ export function computePageAssetStats(
     inServiceCount,
     utilizationRate,
     totalValue,
-    totalValueLabel: `AED ${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+    totalValueLabel: `₹${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
     isPageScoped,
   }
 }

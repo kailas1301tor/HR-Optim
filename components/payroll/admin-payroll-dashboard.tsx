@@ -200,7 +200,7 @@ export function AdminPayrollDashboard() {
             </div>
             <p className="text-xs text-muted-foreground mb-1">Total Payroll</p>
             <p className="text-2xl font-semibold text-cloud font-mono">
-              {isDashboardLoading ? '—' : `AED ${displayKpis.totalPayroll.toLocaleString()}`}
+              {isDashboardLoading ? '—' : `₹${displayKpis.totalPayroll.toLocaleString()}`}
             </p>
           </div>
           <div className="bg-card border border-border rounded-[20px] [corner-shape:squircle] p-5">
@@ -211,7 +211,7 @@ export function AdminPayrollDashboard() {
             </div>
             <p className="text-xs text-muted-foreground mb-1">Total Deductions</p>
             <p className="text-2xl font-semibold text-cloud font-mono">
-              {isDashboardLoading ? '—' : `AED ${displayKpis.totalDeductions.toLocaleString()}`}
+              {isDashboardLoading ? '—' : `₹${displayKpis.totalDeductions.toLocaleString()}`}
             </p>
           </div>
           <div className="bg-card border border-border rounded-[20px] [corner-shape:squircle] p-5">
@@ -222,7 +222,7 @@ export function AdminPayrollDashboard() {
             </div>
             <p className="text-xs text-muted-foreground mb-1">Net Payout</p>
             <p className="text-2xl font-semibold text-lime-400 font-mono">
-              {isDashboardLoading ? '—' : `AED ${displayKpis.netPayout.toLocaleString()}`}
+              {isDashboardLoading ? '—' : `₹${displayKpis.netPayout.toLocaleString()}`}
             </p>
           </div>
           <div className="bg-card border border-border rounded-[20px] [corner-shape:squircle] p-5">

@@ -152,7 +152,7 @@ export function PayrollAdjustmentDialog({
       </div>
       <div className="space-y-2">
         <Label htmlFor="adjustment-amount" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Amount (AED)
+          Amount (₹)
         </Label>
         <Input
           id="adjustment-amount"
