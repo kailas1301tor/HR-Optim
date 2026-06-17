@@ -1,6 +1,7 @@
-// lib/env.ts
+import backendConfig from './backend-config.json'
+
 /** Stage default — used only when NEXT_PUBLIC_API_URL is unset in local development. */
-const STAGE_API_BASE_URL = 'https://roka-prod-backend.hroptim.com'
+const STAGE_API_BASE_URL = backendConfig.defaultBackendUrl
 
 /** Same-origin prefix; Next.js rewrites this to the backend (avoids browser CORS). */
 export const CLIENT_API_PROXY_PREFIX = '/api'
