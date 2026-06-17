@@ -11,6 +11,12 @@ import {
 import { CommonFormFieldError } from '@/components/common'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
+import {
+  LIMIT_EMPLOYEE_ID,
+  LIMIT_FULL_NAME,
+  LIMIT_PHONE,
+  LIMIT_USERNAME,
+} from '@/validations/field-limits'
 import type { DropdownData } from '@/types/employee'
 
 interface BasicInfoStepProps {
@@ -49,6 +55,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             placeholder="Enter Full Name"
             className={uiInput}
             required
+            maxLength={LIMIT_FULL_NAME}
           />
           {errors.full_name?.message && <CommonFormFieldError message={errors.full_name.message} />}
         </div>
@@ -64,6 +71,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             required
             disabled={isEditMode}
             autoComplete="off"
+            maxLength={LIMIT_USERNAME}
           />
           {errors.username?.message && <CommonFormFieldError message={errors.username.message} />}
         </div>
@@ -96,6 +104,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             placeholder="e.g. 1234567890"
             className={uiInput}
             required
+            maxLength={LIMIT_PHONE}
           />
           {errors.phone_number?.message && <CommonFormFieldError message={errors.phone_number.message} />}
         </div>
@@ -110,6 +119,7 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
             className={uiInput}
             required
             disabled={isEditMode}
+            maxLength={LIMIT_EMPLOYEE_ID}
           />
           {errors.employee_id?.message && <CommonFormFieldError message={errors.employee_id.message} />}
         </div>

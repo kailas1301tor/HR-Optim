@@ -1,15 +1,16 @@
 // validations/asset-actions.schema.ts
 import { z } from 'zod'
 import { FILE_UPLOAD_ERROR_MESSAGE, isAllowedUploadFile } from '@/lib/helpers/file-upload-validation'
+import { LIMIT_COVERAGE, LIMIT_REMARKS, LIMIT_SHORT_NAME } from './field-limits'
 
 export const assignAssetSchema = z.object({
   assign_to_employee: z.coerce.number().positive({ message: 'Please select an employee' }),
-  remarks: z.string().max(500, { message: 'Remarks must not exceed 500 characters' }).optional().or(z.literal('')),
+  remarks: z.string().max(LIMIT_REMARKS, { message: `Remarks must not exceed ${LIMIT_REMARKS} characters` }).optional().or(z.literal('')),
 });
 
 export const transferAssetSchema = z.object({
   transfer_to_department: z.coerce.number().positive({ message: 'Please select a department' }),
-  remarks: z.string().max(500, { message: 'Remarks must not exceed 500 characters' }).optional().or(z.literal('')),
+  remarks: z.string().max(LIMIT_REMARKS, { message: `Remarks must not exceed ${LIMIT_REMARKS} characters` }).optional().or(z.literal('')),
 });
 
 export const maintenanceSchema = z.object({
@@ -44,11 +45,11 @@ export const disposeAssetSchema = z.object({
 
 export const addAMCSchema = z.object({
   service_provider: z.coerce.number().positive({ message: 'Please select a service provider' }),
-  contract_number: z.string().min(1, { message: 'Contract number is required' }).max(100),
+  contract_number: z.string().min(1, { message: 'Contract number is required' }).max(LIMIT_SHORT_NAME),
   start_date: z.string().min(1, { message: 'Start date is required' }),
   end_date: z.string().min(1, { message: 'End date is required' }),
   amc_cost: z.coerce.number().nonnegative({ message: 'AMC cost must be a non-negative number' }),
-  coverage_details: z.string().min(1, { message: 'Coverage details are required' }).max(1000),
+  coverage_details: z.string().min(1, { message: 'Coverage details are required' }).max(LIMIT_COVERAGE),
 }).refine(
   (data) => {
     const start = new Date(data.start_date);

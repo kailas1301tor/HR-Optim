@@ -1,6 +1,7 @@
 // lib/mappers/request-mapper.ts
 import { formatDistanceToNow } from 'date-fns'
 import { initialsFromName } from '@/lib/cookies'
+import { formatPersonName } from '@/lib/helpers/format-display-text'
 import { statusConfig } from '@/components/requests/requests-constants'
 import type {
   DocumentRequestRecord,
@@ -61,10 +62,11 @@ function buildTimeline(
 }
 
 function baseRequester(employeeName: string): Request['requester'] {
+  const name = formatPersonName(employeeName)
   return {
     id: employeeName,
-    name: employeeName,
-    initials: initialsFromName(employeeName),
+    name,
+    initials: initialsFromName(name),
     department: '',
   }
 }

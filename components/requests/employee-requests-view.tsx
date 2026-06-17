@@ -1,7 +1,7 @@
 // components/requests/employee-requests-view.tsx
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FileQuestion, Plus, ShieldAlert } from 'lucide-react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -17,10 +17,6 @@ import {
 } from '@/lib/mappers/request-mapper'
 import { mapDashboardAllRequest } from '@/lib/mappers/employee-self-service-mapper'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
-import {
-  invalidateClientFetch,
-  shouldFinalizeClientFetch,
-} from '@/lib/helpers/client-fetch-lifecycle'
 import { RequestCard } from './request-card'
 import { RequestsSkeleton } from './requests-skeleton'
 import { CommonEmptyState, CommonFilterChips, CommonMobileCardGrid, CommonErrorBanner } from '@/components/common'
@@ -38,7 +34,7 @@ const TAB_OPTIONS = [
   { value: 'document', label: 'Document' },
 ]
 
-export function EmployeeRequestsView() {
+export function EmployeeRequestsView({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -52,7 +48,6 @@ export function EmployeeRequestsView() {
   const [errorMessage, setErrorMessage] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(null)
-  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     if (!requestIdParam) return
@@ -73,7 +68,6 @@ export function EmployeeRequestsView() {
     }
 
     const profileId = employeeProfileId
-    const fetchId = ++fetchIdRef.current
     const controller = new AbortController()
 
     async function loadRequests() {
@@ -85,7 +79,6 @@ export function EmployeeRequestsView() {
 
         if (activeTab === 'all') {
           const allItems = await employeeSelfService.getAllRequests(scopedParams)
-          if (fetchId !== fetchIdRef.current) return
           const mapped = allItems.map(mapDashboardAllRequest)
           mapped.sort((a, b) => {
             const dateA = a?.submittedAt ? new Date(a.submittedAt).getTime() : 0
@@ -98,46 +91,39 @@ export function EmployeeRequestsView() {
 
         if (activeTab === 'leave') {
           const res = await employeeSelfService.getLeaveRequests(scopedParams)
-          if (fetchId !== fetchIdRef.current) return
           setRequests((Array.isArray(res) ? res : []).map(mapLeaveRequest))
           return
         }
 
         if (activeTab === 'salary-advance') {
           const res = await employeeSelfService.getSalaryAdvanceRequests(scopedParams)
-          if (fetchId !== fetchIdRef.current) return
           setRequests((Array.isArray(res) ? res : []).map(mapSalaryAdvanceRequest))
           return
         }
 
         if (activeTab === 'loan') {
           const res = await employeeSelfService.getLoanRequests(scopedParams)
-          if (fetchId !== fetchIdRef.current) return
           setRequests((Array.isArray(res) ? res : []).map(mapLoanRequest))
           return
         }
 
         if (activeTab === 'document') {
           const res = await employeeSelfService.getDocumentRequests(scopedParams)
-          if (fetchId !== fetchIdRef.current) return
           setRequests((Array.isArray(res) ? res : []).map(mapDocumentRequest))
         }
       } catch (error) {
-        if (controller.signal.aborted) return
-        if (fetchId !== fetchIdRef.current) return
+        if (error instanceof Error && error.name === 'AbortError') return
         setRequests([])
         setHasError(true)
         setErrorMessage(getApiErrorMessage(error, 'Failed to load requests. Please try again.'))
       } finally {
-        if (shouldFinalizeClientFetch({ signal: controller.signal, fetchId, fetchIdRef })) {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     }
 
-    void loadRequests()
+    loadRequests()
 
-    return () => invalidateClientFetch(fetchIdRef, controller)
+    return () => controller.abort()
   }, [activeTab, employeeProfileId, isAuthLoading, reloadToken])
 
   const handleRetry = () => setReloadToken((prev) => prev + 1)
@@ -163,15 +149,22 @@ export function EmployeeRequestsView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-cloud">My Requests</h1>
-          <p className="text-xs text-muted-foreground mt-1">Submit and track your personal requests</p>
-        </div>
+      <div
+        className={cn(
+          'flex flex-col sm:flex-row gap-4',
+          embedded ? 'sm:items-center sm:justify-end' : 'sm:items-center sm:justify-between',
+        )}
+      >
+        {!embedded ? (
+          <div>
+            <h1 className="text-2xl font-bold text-cloud">My Requests</h1>
+            <p className="text-xs text-muted-foreground mt-1">Submit and track your personal requests</p>
+          </div>
+        ) : null}
         <PrimaryButton asChild className="min-h-11 text-xs">
           <Link href={newRequestHref}>
             <Plus className="w-3.5 h-3.5" />
-            Create Request
+            New Request
           </Link>
         </PrimaryButton>
       </div>
@@ -212,7 +205,7 @@ export function EmployeeRequestsView() {
             <PrimaryButton asChild className="min-h-11 text-xs">
               <Link href={newRequestHref}>
                 <Plus className="w-3.5 h-3.5" />
-                Create Request
+                New Request
               </Link>
             </PrimaryButton>
           }

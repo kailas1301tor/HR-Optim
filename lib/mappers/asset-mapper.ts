@@ -1,5 +1,6 @@
 // lib/mappers/asset-mapper.ts
 import { isAssetInService } from '@/lib/helpers/asset-status'
+import { formatPersonName, formatTitleLabel } from '@/lib/helpers/format-display-text'
 import type { AssetDropdowns, Asset, CreateAssetPayload } from '@/types/asset'
 import type { AssetInput } from '@/validations/asset.schema'
 
@@ -139,7 +140,7 @@ function resolveAssignment(raw: Record<string, unknown>): {
   const assignedDepartmentId = toNumber(raw.assigned_department) ?? null
 
   const assigned =
-    toString(raw.assigned) ?? resolveLegacyAssigneeName(raw) ?? null
+    formatPersonName(toString(raw.assigned) ?? resolveLegacyAssigneeName(raw) ?? undefined) || null
 
   return {
     assigned,
@@ -156,16 +157,19 @@ export function mapAssetFromApi(raw: Record<string, unknown>): Asset {
 
   const assignment = resolveAssignment(raw)
 
+  const rawDepartment =
+    normalizeDepartmentName(resolveRefLabel(departmentRaw as ApiRef) ?? toString(departmentRaw)) ??
+    toString(departmentRaw)
+  const rawStatus = resolveRefLabel(statusRaw as ApiRef) ?? toString(statusRaw)
+
   return {
     id: toNumber(raw.id) ?? 0,
     name: toString(raw.name) ?? '',
     serial_number: toString(raw.serial_number) ?? null,
     asset_type: resolveRefLabel(assetTypeRaw as ApiRef) ?? toString(assetTypeRaw),
     asset_category: resolveRefLabel(categoryRaw as ApiRef) ?? toString(categoryRaw),
-    department:
-      normalizeDepartmentName(resolveRefLabel(departmentRaw as ApiRef) ?? toString(departmentRaw)) ??
-      toString(departmentRaw),
-    status: resolveRefLabel(statusRaw as ApiRef) ?? toString(statusRaw),
+    department: rawDepartment ? formatTitleLabel(rawDepartment) : rawDepartment,
+    status: rawStatus ? formatTitleLabel(rawStatus) : rawStatus,
     asset_type_id:
       toNumber(raw.asset_type_id) ?? resolveRefId(assetTypeRaw as ApiRef),
     asset_category_id:

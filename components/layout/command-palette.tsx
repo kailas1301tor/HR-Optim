@@ -7,10 +7,7 @@ import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { uiSquircleLg } from '@/lib/ui/design-system'
 import { usePermissions } from '@/components/auth/permissions-provider'
-import {
-  canViewEmployeesSection,
-  hasEmployeeFallback,
-} from '@/lib/permissions/module-permissions'
+import { canViewEmployeesSection } from '@/lib/permissions/module-permissions'
 import { useCommandPalette } from './useCommandPalette'
 import { EmployeesSearchGroup, AssetsSearchGroup, TicketsSearchGroup, AttendanceSearchGroup, RequestsSearchGroup } from './search-groups'
 import { pages, accountPages, quickActions } from './command-palette-constants'
@@ -33,18 +30,10 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const q = search.trim().toLowerCase()
 
   // Filter static pages, quick actions, account pages locally using Javascript
-  const canSearchEmployees = canViewEmployeesSection(permissions)
-  const searchPlaceholder = canSearchEmployees
-    ? 'Search employees, pages, or actions...'
-    : 'Search pages or actions...'
-
   const filteredPages = pages
     .filter((page) => {
       if (page.moduleKey === 'employees') {
-        return canSearchEmployees
-      }
-      if (hasEmployeeFallback(page.moduleKey)) {
-        return true
+        return canViewEmployeesSection(permissions)
       }
       return canView(page.moduleKey)
     })
@@ -118,7 +107,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                 <Command.Input
                   value={search}
                   onValueChange={setSearch}
-                  placeholder={searchPlaceholder}
+                  placeholder="Search employees, pages, or actions..."
                   className="flex-1 h-14 bg-transparent text-foreground text-base placeholder:text-muted-foreground focus:outline-none"
                 />
                 <kbd className="px-2 py-1 text-xs font-medium text-muted-foreground bg-midnight rounded">

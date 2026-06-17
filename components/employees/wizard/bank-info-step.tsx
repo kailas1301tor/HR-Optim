@@ -11,6 +11,11 @@ import { CommonFormFieldError } from '@/components/common'
 import { maskAccountNumber } from '@/lib/helpers/mask-sensitive'
 import { uiInput } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
+import {
+  LIMIT_ACCOUNT_NUMBER,
+  LIMIT_IFSC,
+  LIMIT_SHORT_NAME,
+} from '@/validations/field-limits'
 
 interface BankInfoStepProps {
   isEditMode?: boolean
@@ -45,6 +50,7 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
             placeholder="e.g. Global Bank, FAB"
             className={uiInput}
             required
+            maxLength={LIMIT_SHORT_NAME}
           />
           {errors.bank_name?.message && <CommonFormFieldError message={errors.bank_name.message} />}
         </div>
@@ -80,6 +86,7 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
                 placeholder="e.g. 1234567890"
                 className={uiInput}
                 required
+                maxLength={LIMIT_ACCOUNT_NUMBER}
               />
               {isEditMode && accountValue && (
                 <Button
@@ -110,6 +117,7 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
             placeholder="e.g. GLOB0001"
             className={uiInput}
             required
+            maxLength={LIMIT_IFSC}
           />
           {errors.ifsc?.message && <CommonFormFieldError message={errors.ifsc.message} />}
         </div>
@@ -123,6 +131,7 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
             placeholder="e.g. Downtown"
             className={uiInput}
             required
+            maxLength={LIMIT_SHORT_NAME}
           />
           {errors.branch?.message && <CommonFormFieldError message={errors.branch.message} />}
         </div>

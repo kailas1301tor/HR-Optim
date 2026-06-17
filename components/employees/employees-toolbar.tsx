@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { uiOutlineBtn, uiPopoverShell, uiSelect } from '@/lib/ui/design-system'
+import { formatTitleLabel } from '@/lib/helpers/format-display-text'
 import { cn } from '@/lib/utils'
 import type { DropdownData } from '@/types/employee'
 interface EmployeesToolbarProps {
@@ -57,7 +58,7 @@ export function EmployeesToolbar({
               <SelectItem value="all">All Departments</SelectItem>
               {dropdowns?.departments.map((item) => (
                 <SelectItem key={item.id} value={String(item.id)}>
-                  {item.name}
+                  {formatTitleLabel(item.name)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -73,7 +74,7 @@ export function EmployeesToolbar({
               <SelectItem value="all">All Statuses</SelectItem>
               {dropdowns?.status_choices.map((item) => (
                 <SelectItem key={item.id} value={item.name}>
-                  {item.name}
+                  {formatTitleLabel(item.name)}
                 </SelectItem>
               ))}
             </SelectContent>

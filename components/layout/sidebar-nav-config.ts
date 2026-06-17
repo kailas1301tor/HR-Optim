@@ -1,6 +1,6 @@
 // components/layout/sidebar-nav-config.ts
-import { HELP_SUPPORT_LABEL } from '@/lib/support'
 import type { ModuleKey } from '@/lib/permissions/module-permissions'
+import { HELP_SUPPORT_LABEL } from '@/lib/support'
 import type { LucideIcon } from 'lucide-react'
 import {
   LayoutDashboard,

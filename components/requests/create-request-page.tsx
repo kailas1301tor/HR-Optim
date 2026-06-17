@@ -74,6 +74,9 @@ function CreateRequestPageContent() {
     hasMetadataError,
     isCalendarLoading,
     hasCalendarError,
+    leaveBalances,
+    isBalancesLoading,
+    hasBalancesError,
     reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
@@ -183,8 +186,18 @@ function CreateRequestPageContent() {
                   className="mb-4"
                 />
               )}
+              {hasBalancesError && (
+                <CommonErrorBanner
+                  message="Leave balances could not be loaded. You cannot submit until balances are available."
+                  onRetry={reloadMetadata}
+                  className="mb-4"
+                />
+              )}
               <LeaveRequestForm
                 leaveTypes={leaveTypes}
+                leaveBalances={leaveBalances}
+                isBalancesLoading={isBalancesLoading}
+                hasBalancesError={hasBalancesError}
                 holidayEvents={holidayEvents}
                 existingLeaveDates={existingLeaveDates}
                 isCalendarLoading={isCalendarLoading}

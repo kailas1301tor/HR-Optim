@@ -1,6 +1,7 @@
 // services/search-service.ts
 import { api } from '@/lib/api'
-import type { GlobalSearchData } from '@/types/search'
+import { formatPersonName, formatTitleLabel } from '@/lib/helpers/format-display-text'
+import type { GlobalSearchData, SearchAttendance, SearchEmployee } from '@/types/search'
 
 interface GlobalSearchItem {
   module_type: string
@@ -21,6 +22,27 @@ interface SearchResponseShape {
   tickets?: unknown
   requests?: unknown
   attendance?: unknown
+}
+
+function formatSearchEmployee(item: SearchEmployee): SearchEmployee {
+  return {
+    ...item,
+    employee_name: formatPersonName(item.employee_name),
+    department: item.department ? formatTitleLabel(item.department) : item.department,
+    role: item.role ? formatTitleLabel(item.role) : item.role,
+  }
+}
+
+function formatSearchEmployees(items: unknown[]): SearchEmployee[] {
+  if (!Array.isArray(items)) return []
+  return items.map((item) => formatSearchEmployee(item as SearchEmployee))
+}
+
+function formatSearchAttendance(item: SearchAttendance): SearchAttendance {
+  return {
+    ...item,
+    employee_name: formatPersonName(item.employee_name),
+  }
 }
 
 export const searchService = {
@@ -56,17 +78,20 @@ export const searchService = {
         flatResults.forEach((item) => {
           const type = (item.module_type ?? '').toLowerCase()
           if (type === 'employees' || type === 'employee') {
-            employees.push({
-              employee_id: item.subtitle || `EMP-${item.id}`,
-              employee_name: item.title,
-              department: '',
-              role: '',
-            })
+            employees.push(
+              formatSearchEmployee({
+                employee_id: item.subtitle || `EMP-${item.id}`,
+                employee_name: item.title,
+                department: '',
+                role: '',
+              }),
+            )
           } else if (type === 'attendance') {
+            const rawName = item.title ? item.title.replace(/^Attendance:\s*/i, '') : ''
             attendance.push({
               id: `attendance-${item.id}`,
               employee_id: item.subtitle || `EMP-${item.id}`,
-              employee_name: item.title ? item.title.replace(/^Attendance:\s*/i, '') : '',
+              employee_name: formatPersonName(rawName),
               status: 'Present',
             })
           } else if (type === 'request' || type === 'requests') {
@@ -103,11 +128,13 @@ export const searchService = {
       // Grouped structure parsing fallback
       const data = response.results?.data ?? response.results ?? response
       return {
-        employees: Array.isArray(data.employees) ? data.employees : [],
+        employees: formatSearchEmployees(Array.isArray(data.employees) ? data.employees : []),
         assets: Array.isArray(data.assets) ? data.assets : [],
         tickets: Array.isArray(data.tickets) ? data.tickets : [],
         requests: Array.isArray(data.requests) ? data.requests : [],
-        attendance: Array.isArray(data.attendance) ? data.attendance : [],
+        attendance: Array.isArray(data.attendance)
+          ? (data.attendance as SearchAttendance[]).map(formatSearchAttendance)
+          : [],
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') throw error

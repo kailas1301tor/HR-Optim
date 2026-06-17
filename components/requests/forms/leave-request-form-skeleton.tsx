@@ -39,6 +39,7 @@ export function LeaveRequestFormSkeleton() {
           <Skeleton className={cn('h-10 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
         </div>
         <Skeleton className={cn('h-10 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-14 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
         <div className="grid grid-cols-2 gap-3">
           <Skeleton className={cn('h-10 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
           <Skeleton className={cn('h-10 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />

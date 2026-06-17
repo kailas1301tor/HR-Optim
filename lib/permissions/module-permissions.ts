@@ -1,5 +1,6 @@
 // lib/permissions/module-permissions.ts
 
+import { HELP_SUPPORT_LABEL } from '@/lib/support'
 export type ModuleKey =
   | 'dashboard'
   | 'employees'
@@ -65,7 +66,7 @@ export const MODULE_LABELS: Record<ModuleKey, string> = {
   documents: 'Documents',
   assets: 'Assets',
   requests: 'Requests',
-  tickets: 'Help & Support',
+  tickets: HELP_SUPPORT_LABEL,
   payroll: 'Payroll',
   reports: 'Reports',
   settings: 'Settings',

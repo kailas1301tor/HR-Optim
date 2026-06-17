@@ -12,7 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { cn } from '@/lib/utils'
-import { uiCard } from '@/lib/ui/design-system'
+import { reportsChartTooltipStyle, uiCard } from '@/lib/ui/design-system'
 import type { ReportsData } from '@/types/reports'
 import { ReportsGrowthBadge } from './reports-growth-badge'
 import { ReportsChartCard } from './reports-chart-card'
@@ -122,13 +122,7 @@ export function ReportsOverviewTab({ data, isLoading = false }: ReportsOverviewT
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
                 <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                  }}
-                />
+                <Tooltip contentStyle={reportsChartTooltipStyle} cursor={false} />
                 <Area type="monotone" dataKey="value" stroke="#7c3aed" fill="url(#hireGradient)" name="New Hires" />
               </AreaChart>
             </ResponsiveContainer>

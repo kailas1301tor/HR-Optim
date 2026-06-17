@@ -24,52 +24,6 @@ import type { CurrentUserProfile } from '@/types/auth'
 
 const profileCache = createModuleCache<CurrentUserProfile>()
 
-function permissionsFromProfile(profile: CurrentUserProfile): Set<string> {
-  return new Set(
-    profile.permissions.map((permission) => permission.codename).filter(Boolean),
-  )
-}
-
-function getInitialPermissionsState(): {
-  isLoading: boolean
-  hasError: boolean
-  permissions: Set<string>
-  employeeProfileId: number | null
-} {
-  const cached = profileCache.read()
-  if (!cached) {
-    return {
-      isLoading: true,
-      hasError: false,
-      permissions: new Set(),
-      employeeProfileId: null,
-    }
-  }
-
-  return {
-    isLoading: false,
-    hasError: false,
-    permissions: permissionsFromProfile(cached),
-    employeeProfileId: cached.employee_profile_id ?? null,
-  }
-}
-
-export interface CachedPermissionsSnapshot {
-  permissions: Set<string>
-  employeeProfileId: number | null
-}
-
-/** Synchronous read of cached profile permissions for gate routing before fetch completes. */
-export function getCachedPermissionsSnapshot(): CachedPermissionsSnapshot | null {
-  const cached = profileCache.read()
-  if (!cached) return null
-
-  return {
-    permissions: permissionsFromProfile(cached),
-    employeeProfileId: cached.employee_profile_id ?? null,
-  }
-}
-
 export function invalidatePermissions(): void {
   profileCache.invalidate()
 }
@@ -98,15 +52,11 @@ interface PermissionsProviderProps {
   children: ReactNode
 }
 
-const initialPermissionsState = getInitialPermissionsState()
-
 export function PermissionsProvider({ children }: PermissionsProviderProps) {
-  const [isLoading, setIsLoading] = useState(initialPermissionsState.isLoading)
-  const [hasError, setHasError] = useState(initialPermissionsState.hasError)
-  const [permissions, setPermissions] = useState<Set<string>>(initialPermissionsState.permissions)
-  const [employeeProfileId, setEmployeeProfileId] = useState<number | null>(
-    initialPermissionsState.employeeProfileId,
-  )
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const [permissions, setPermissions] = useState<Set<string>>(new Set())
+  const [employeeProfileId, setEmployeeProfileId] = useState<number | null>(null)
   const [reloadToken, setReloadToken] = useState(0)
 
   const reloadPermissions = useCallback(() => {
@@ -118,16 +68,17 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
     let active = true
 
     async function loadPermissions(): Promise<void> {
-      if (profileCache.read() === null) {
-        setIsLoading(true)
-      }
+      setIsLoading(true)
       setHasError(false)
 
       try {
         const profile = await profileCache.fetch(() => authService.getCurrentUserProfile())
         if (!active) return
 
-        setPermissions(permissionsFromProfile(profile))
+        const codenames = new Set(
+          profile.permissions.map((permission) => permission.codename).filter(Boolean),
+        )
+        setPermissions(codenames)
         setEmployeeProfileId(profile.employee_profile_id ?? null)
       } catch {
         if (!active) return

@@ -1,10 +1,8 @@
 // components/requests/admin-requests-list.tsx
 'use client'
 
-import { useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { FileQuestion, Plus } from 'lucide-react'
+import { FileQuestion } from 'lucide-react'
 import {
   CommonEmptyState,
   CommonErrorBanner,
@@ -13,7 +11,6 @@ import {
   CommonPagination,
 } from '@/components/common'
 import { Button } from '@/components/ui/button'
-import { PrimaryButton } from '@/components/ui/primary-button'
 import { uiOutlineBtn } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { RequestCard } from './request-card'
@@ -73,6 +70,8 @@ export function AdminRequestsList() {
     isRejectDialogOpen,
     isSubmitting,
     rejectReason,
+    rejectReasonError,
+    isRejectReasonValid,
     setRejectReason,
     handleApprove,
     handleOpenReject,
@@ -81,9 +80,6 @@ export function AdminRequestsList() {
     handleConfirmApprove,
     handleConfirmReject,
   } = useRequestActions(handleActionSuccess)
-
-  const newRequestHref =
-    typeFilter === 'all' ? '/requests/new' : `/requests/new?type=${typeFilter}`
 
   const statusLabel =
     statusFilter === 'all' ? 'any status' : statusConfig[statusFilter].label
@@ -103,7 +99,7 @@ export function AdminRequestsList() {
 
   return (
     <div className="space-y-6">
-      <RequestsPageHeader typeFilter={typeFilter} canManage={canManageRequests} />
+      <RequestsPageHeader />
 
       <RequestsStatsCards
         statusCounts={statusCounts}
@@ -176,33 +172,14 @@ export function AdminRequestsList() {
           title="No requests found"
           description={emptyDescription}
           actions={
-            canManageRequests ? (
-              <>
-                <PrimaryButton asChild className="min-h-11 text-xs">
-                  <Link href={newRequestHref}>
-                    <Plus className="w-3.5 h-3.5" />
-                    Create first request
-                  </Link>
-                </PrimaryButton>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClearFilters}
-                  className={cn(uiOutlineBtn, 'min-h-11 text-xs')}
-                >
-                  Clear Filters
-                </Button>
-              </>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClearFilters}
-                className={cn(uiOutlineBtn, 'min-h-11 text-xs')}
-              >
-                Clear Filters
-              </Button>
-            )
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClearFilters}
+              className={cn(uiOutlineBtn, 'min-h-11 text-xs')}
+            >
+              Clear Filters
+            </Button>
           }
         />
       )}
@@ -212,6 +189,8 @@ export function AdminRequestsList() {
         isRejectOpen={isRejectDialogOpen}
         rejectTarget={rejectTarget}
         rejectReason={rejectReason}
+        rejectReasonError={rejectReasonError}
+        isRejectReasonValid={isRejectReasonValid}
         isSubmitting={isSubmitting}
         onRejectReasonChange={setRejectReason}
         onApproveDialogChange={(open) => !open && handleCloseApprove()}

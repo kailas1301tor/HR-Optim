@@ -20,12 +20,9 @@ interface RequestsSkeletonProps {
 
 function RequestsPageHeaderSkeleton() {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/40">
-      <div className="space-y-2">
-        <Skeleton className={cn('h-8 w-32 rounded', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-4 w-72 rounded', uiSkeletonBlock)} />
-      </div>
-      <Skeleton className={cn('h-11 w-36 rounded-xl', uiSkeletonBlock)} />
+    <div className="pb-4 border-b border-border/40 space-y-2">
+      <Skeleton className={cn('h-8 w-32 rounded', uiSkeletonBlock)} />
+      <Skeleton className={cn('h-4 w-72 rounded', uiSkeletonBlock)} />
     </div>
   )
 }

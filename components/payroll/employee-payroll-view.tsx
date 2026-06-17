@@ -1,17 +1,13 @@
 // components/payroll/employee-payroll-view.tsx
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { DollarSign, FileText, Download, TrendingUp, ShieldAlert } from 'lucide-react'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { employeeSelfService } from '@/services/employee-self-service'
 import { mapBackendPayroll } from '@/lib/mappers/payroll-mapper'
 import { CommonEmptyState, CommonErrorBanner, MonthYearPicker } from '@/components/common'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
-import {
-  invalidateClientFetch,
-  shouldFinalizeClientFetch,
-} from '@/lib/helpers/client-fetch-lifecycle'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { uiCard, uiOutlineBtn } from '@/lib/ui/design-system'
@@ -24,7 +20,7 @@ function getCurrentMonthYear() {
   return { month: now.getMonth() + 1, year: now.getFullYear() }
 }
 
-export function EmployeePayrollView() {
+export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }) {
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
   const [{ month, year }, setMonthYear] = useState(getCurrentMonthYear)
   const [payrollHistory, setPayrollHistory] = useState<PayrollRecord[]>([])
@@ -32,7 +28,6 @@ export function EmployeePayrollView() {
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
-  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     if (isAuthLoading) return
@@ -42,7 +37,6 @@ export function EmployeePayrollView() {
     }
 
     const profileId = employeeProfileId
-    const fetchId = ++fetchIdRef.current
     const controller = new AbortController()
 
     async function loadPayroll() {
@@ -56,7 +50,6 @@ export function EmployeePayrollView() {
           year,
           signal: controller.signal,
         })
-        if (fetchId !== fetchIdRef.current) return
         const list = Array.isArray(raw) ? raw : []
         const mapped = list.map(mapBackendPayroll)
         mapped.sort((a, b) => {
@@ -66,21 +59,18 @@ export function EmployeePayrollView() {
         })
         setPayrollHistory(mapped)
       } catch (error) {
-        if (controller.signal.aborted) return
-        if (fetchId !== fetchIdRef.current) return
+        if (error instanceof Error && error.name === 'AbortError') return
         setPayrollHistory([])
         setHasError(true)
         setErrorMessage(getApiErrorMessage(error, 'Failed to load payroll. Please try again.'))
       } finally {
-        if (shouldFinalizeClientFetch({ signal: controller.signal, fetchId, fetchIdRef })) {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     }
 
-    void loadPayroll()
+    loadPayroll()
 
-    return () => invalidateClientFetch(fetchIdRef, controller)
+    return () => controller.abort()
   }, [employeeProfileId, isAuthLoading, month, year, reloadToken])
 
   const handleRetry = () => setReloadToken((prev) => prev + 1)
@@ -128,11 +118,20 @@ export function EmployeePayrollView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-cloud">My Payroll</h1>
-          <p className="text-xs text-muted-foreground mt-1">View your monthly salary statements and download payslips</p>
-        </div>
+      <div
+        className={cn(
+          'flex flex-col sm:flex-row sm:items-end gap-4',
+          embedded ? 'sm:justify-end' : 'sm:justify-between',
+        )}
+      >
+        {!embedded ? (
+          <div>
+            <h1 className="text-2xl font-bold text-cloud">My Payroll</h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              View your monthly salary statements and download payslips
+            </p>
+          </div>
+        ) : null}
         <MonthYearPicker
           month={month}
           year={year}

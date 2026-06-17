@@ -1,5 +1,6 @@
 // services/onboarding-offboarding-service.ts
 import { api } from '@/lib/api'
+import { formatEmployeesForDisplay } from '@/lib/mappers/employee-display-mapper'
 import { cleanParams } from '@/lib/types'
 import type { Employee } from '@/types/employee'
 
@@ -144,7 +145,7 @@ export const onboardingOffboardingService = {
       signal,
     })
     return {
-      data: response.results?.data ?? [],
+      data: formatEmployeesForDisplay(response.results?.data ?? []),
       total_count: response.results?.total_count ?? 0,
       total_pages: response.results?.total_pages ?? 1,
       current_page: response.results?.current_page ?? 1,
@@ -171,7 +172,7 @@ export const onboardingOffboardingService = {
       signal,
     })
     return {
-      data: response.results?.data ?? [],
+      data: formatEmployeesForDisplay(response.results?.data ?? []),
       total_count: response.results?.total_count ?? 0,
       total_pages: response.results?.total_pages ?? 1,
       current_page: response.results?.current_page ?? 1,

@@ -1,6 +1,7 @@
 // validations/document.schema.ts
 import { z } from 'zod'
 import { FILE_UPLOAD_ERROR_MESSAGE, isAllowedUploadFile } from '@/lib/helpers/file-upload-validation'
+import { LIMIT_DOCUMENT_NUMBER } from './field-limits'
 
 const uploadFileSchema = z
   .any()

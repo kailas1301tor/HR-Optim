@@ -9,6 +9,13 @@ import type {
   UpdateTicketInput,
 } from '@/types/ticket'
 
+/** Append each file under the same key for multipart array (Django: request.FILES.getlist('uploaded_attachments')). */
+function appendTicketAttachments(formData: FormData, files?: File[]): void {
+  files?.forEach((file) => {
+    formData.append('uploaded_attachments', file)
+  })
+}
+
 function buildTicketFormData(
   input: CreateTicketInput | UpdateTicketInput,
   id?: number,
@@ -18,9 +25,7 @@ function buildTicketFormData(
   if (input.title !== undefined) formData.append('title', input.title)
   if (input.description !== undefined) formData.append('description', input.description)
   if (input.priority !== undefined) formData.append('priority', input.priority)
-  input.files?.forEach((file) => {
-    formData.append('uploaded_attachments', file)
-  })
+  appendTicketAttachments(formData, input.files)
   return formData
 }
 

@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts'
 import { CommonStatCardDisplay } from '@/components/common'
+import { reportsChartTooltipStyle } from '@/lib/ui/design-system'
 import type { PayrollReportData } from '@/types/reports'
 import { ReportsGrowthBadge } from './reports-growth-badge'
 import { ReportsChartCard } from './reports-chart-card'
@@ -74,11 +75,8 @@ export function ReportsPayrollTab({ data, isLoading = false }: ReportsPayrollTab
               <XAxis dataKey="label" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`} />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '12px',
-                }}
+                contentStyle={reportsChartTooltipStyle}
+                cursor={false}
                 formatter={(value: number) => [formatCurrency(value), '']}
               />
               <Legend />

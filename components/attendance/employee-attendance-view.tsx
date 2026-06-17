@@ -1,11 +1,7 @@
 // components/attendance/employee-attendance-view.tsx
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import {
-  invalidateClientFetch,
-  shouldFinalizeClientFetch,
-} from '@/lib/helpers/client-fetch-lifecycle'
+import { useEffect, useState } from 'react'
 import {
   Calendar,
   CheckCircle2,
@@ -45,7 +41,7 @@ function getCurrentMonthYear() {
   return { month: now.getMonth() + 1, year: now.getFullYear() }
 }
 
-export function EmployeeAttendanceView() {
+export function EmployeeAttendanceView({ embedded = false }: { embedded?: boolean }) {
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
   const [{ month, year }, setMonthYear] = useState(getCurrentMonthYear)
   const [data, setData] = useState<EmployeeAttendanceData>(EMPTY_ATTENDANCE)
@@ -53,7 +49,6 @@ export function EmployeeAttendanceView() {
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
-  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     if (isAuthLoading) return
@@ -63,7 +58,6 @@ export function EmployeeAttendanceView() {
     }
 
     const profileId = employeeProfileId
-    const fetchId = ++fetchIdRef.current
     const controller = new AbortController()
 
     async function loadAttendance() {
@@ -77,24 +71,20 @@ export function EmployeeAttendanceView() {
           year,
           signal: controller.signal,
         })
-        if (fetchId !== fetchIdRef.current) return
         setData(result)
       } catch (error) {
-        if (controller.signal.aborted) return
-        if (fetchId !== fetchIdRef.current) return
+        if (error instanceof Error && error.name === 'AbortError') return
         setData(EMPTY_ATTENDANCE)
         setHasError(true)
         setErrorMessage(getApiErrorMessage(error, 'Failed to load attendance. Please try again.'))
       } finally {
-        if (shouldFinalizeClientFetch({ signal: controller.signal, fetchId, fetchIdRef })) {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     }
 
-    void loadAttendance()
+    loadAttendance()
 
-    return () => invalidateClientFetch(fetchIdRef, controller)
+    return () => controller.abort()
   }, [employeeProfileId, isAuthLoading, month, year, reloadToken])
 
   const handleRetry = () => setReloadToken((prev) => prev + 1)
@@ -121,11 +111,20 @@ export function EmployeeAttendanceView() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-cloud">My Attendance</h1>
-          <p className="text-xs text-muted-foreground mt-1">Review your monthly attendance summary and daily status</p>
-        </div>
+      <div
+        className={cn(
+          'flex flex-col sm:flex-row sm:items-end gap-4',
+          embedded ? 'sm:justify-end' : 'sm:justify-between',
+        )}
+      >
+        {!embedded ? (
+          <div>
+            <h1 className="text-2xl font-bold text-cloud">My Attendance</h1>
+            <p className="text-xs text-muted-foreground mt-1">
+              Review your monthly attendance summary and daily status
+            </p>
+          </div>
+        ) : null}
         <MonthYearPicker
           month={month}
           year={year}

@@ -9,6 +9,7 @@ import { departmentService } from '@/services/department-service'
 import { designationService } from '@/services/designation-service'
 import { subscribeSettingsDepartmentsInvalidation } from './invalidate-settings-departments'
 import type { Department, Designation } from '@/types/settings'
+import { designationSchema } from '@/validations/settings-master.schema'
 
 export interface UseDesignationSettingsReturn {
   selectedDeptId: string
@@ -183,16 +184,33 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
-    if (!formName.trim() || !formDepartmentId) return
+    const parsed = designationSchema.safeParse({
+      name: formName,
+      description: formDescription,
+      departmentId: formDepartmentId,
+    })
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Please fix the form errors')
+      return
+    }
 
-    const deptId = Number(formDepartmentId)
+    const deptId = Number(parsed.data.departmentId)
     setIsSubmitting(true)
     try {
       if (editId !== null) {
-        await designationService.updateDesignation(editId, deptId, formName.trim(), formDescription.trim())
+        await designationService.updateDesignation(
+          editId,
+          deptId,
+          parsed.data.name,
+          parsed.data.description ?? '',
+        )
         toast.success('Designation updated successfully')
       } else {
-        await designationService.createDesignation(deptId, formName.trim(), formDescription.trim())
+        await designationService.createDesignation(
+          deptId,
+          parsed.data.name,
+          parsed.data.description ?? '',
+        )
         toast.success('Designation created successfully')
       }
       setIsOpen(false)

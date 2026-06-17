@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { CommonEmptyState } from '@/components/common'
 import { Loader2, Search, UserCheck } from 'lucide-react'
 import { useAssignAssetDialog } from './useAssignAssetDialog'
+import { LIMIT_REMARKS } from '@/validations/field-limits'
 
 interface AssignAssetDialogProps {
   open: boolean
@@ -130,6 +131,7 @@ export function AssignAssetDialog({ open, onOpenChange, assetId, onSuccess }: As
               placeholder="Provide assignment context, physical state or return deadlines..."
               className="bg-midnight border-border min-h-[80px]"
               {...register('remarks')}
+              maxLength={LIMIT_REMARKS}
             />
             {errors.remarks && (
               <p className="text-[11px] text-destructive font-medium">{errors.remarks.message}</p>

@@ -1,6 +1,7 @@
 // lib/helpers/resolve-current-employee.ts
 import { loadCachedUserProfile } from '@/components/auth/permissions-provider'
 import { formatDisplayNameFromUsername } from '@/lib/cookies'
+import { formatPersonName } from '@/lib/helpers/format-display-text'
 import type { Employee } from '@/components/employees/employee-table'
 import type { CurrentUserProfile } from '@/types/auth'
 
@@ -8,7 +9,9 @@ function buildEmployeeFromProfile(profile: CurrentUserProfile): Employee | null 
   const employeeProfileId = profile.employee_profile_id
   if (!employeeProfileId) return null
 
-  const fullName = formatDisplayNameFromUsername(profile.username) || profile.email || 'User'
+  const fullName = formatPersonName(
+    formatDisplayNameFromUsername(profile.username) || profile.email || 'User',
+  )
 
   return {
     id: employeeProfileId,

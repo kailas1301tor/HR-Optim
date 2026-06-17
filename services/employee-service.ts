@@ -1,5 +1,9 @@
 // services/employee-service.ts
 import { api } from '@/lib/api'
+import {
+  formatEmployeeForDisplay,
+  formatEmployeesForDisplay,
+} from '@/lib/mappers/employee-display-mapper'
 import { cleanParams } from '@/lib/types'
 import { departmentService } from '@/services/department-service'
 import { designationService } from '@/services/designation-service'
@@ -110,7 +114,7 @@ const EMPTY_EMPLOYEE_BANK_DETAILS: EmployeeBankDetails = {
 }
 
 function mapEmployeeListWireItem(item: EmployeeListWireItem): Employee {
-  return {
+  return formatEmployeeForDisplay({
     id: item.id,
     full_name: (item.full_name ?? item.name ?? '').trim(),
     employee_id: item.employee_id ?? '',
@@ -129,7 +133,7 @@ function mapEmployeeListWireItem(item: EmployeeListWireItem): Employee {
     accommodation: '',
     date_of_birth: '',
     address: '',
-  }
+  })
 }
 
 export const employeeService = {
@@ -181,7 +185,7 @@ export const employeeService = {
       signal,
     });
     return {
-      data: response.results?.data || [],
+      data: formatEmployeesForDisplay(response.results?.data || []),
       total_count: response.results?.total_count || 0,
       total_pages: response.results?.total_pages || 1,
       current_page: response.results?.current_page || 1,
@@ -215,7 +219,7 @@ export const employeeService = {
    */
   async getEmployee(id: number, signal?: AbortSignal): Promise<Employee> {
     const response = await api.get<{ results: { data: Employee } }>(`/api/employee/employees/${id}/`, { signal });
-    return response.results.data;
+    return formatEmployeeForDisplay(response.results.data);
   },
 
   /**

@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { CommonStatCardDisplay } from '@/components/common'
+import { reportsChartTooltipStyle } from '@/lib/ui/design-system'
 import type { EmployeesReportData } from '@/types/reports'
 import { ReportsGrowthBadge } from './reports-growth-badge'
 import { ReportsChartCard } from './reports-chart-card'
@@ -68,13 +69,7 @@ export function ReportsEmployeesTab({ data, isLoading = false }: ReportsEmployee
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                  }}
-                />
+                <Tooltip contentStyle={reportsChartTooltipStyle} cursor={false} />
                 <Bar dataKey="value" fill="#7c3aed" radius={[6, 6, 0, 0]} name="New Hires" />
               </BarChart>
             </ResponsiveContainer>

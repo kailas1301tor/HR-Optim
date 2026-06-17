@@ -16,23 +16,25 @@ interface TicketsSkeletonProps {
 function HelpSupportSectionSkeleton() {
   return (
     <div className={cn(uiCard, 'overflow-hidden p-0')} aria-hidden>
-      <div className="border-b border-border/50 px-5 py-4 space-y-2">
-        <Skeleton className={cn('h-4 w-24 rounded', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-3 w-56 max-w-full rounded', uiSkeletonBlock)} />
+      <div className="border-b border-border/50 px-5 py-4 flex items-start gap-3">
+        <Skeleton className={cn('h-10 w-10 rounded-xl shrink-0', uiSkeletonBlock)} />
+        <div className="flex-1 min-w-0 space-y-2">
+          <Skeleton className={cn('h-4 w-32 rounded', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-3 w-56 max-w-full rounded', uiSkeletonBlock)} />
+        </div>
       </div>
 
-      {Array.from({ length: 3 }).map((_, index) => (
-        <div
-          key={index}
-          className="flex items-center gap-3 border-b border-border/50 px-5 py-3.5 last:border-b-0"
-        >
-          <Skeleton className={cn('h-9 w-9 rounded-xl shrink-0', uiSkeletonBlock)} />
-          <div className="flex-1 min-w-0 space-y-1.5">
-            <Skeleton className={cn('h-3 w-14 rounded', uiSkeletonBlock)} />
-            <Skeleton className={cn('h-4 w-40 rounded', uiSkeletonBlock)} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border/50">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div key={index} className="flex items-center gap-3 px-5 py-4">
+            <Skeleton className={cn('h-10 w-10 rounded-xl shrink-0', uiSkeletonBlock)} />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Skeleton className={cn('h-3 w-14 rounded', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-4 w-40 rounded', uiSkeletonBlock)} />
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }
@@ -122,7 +124,7 @@ export function TicketsSkeleton({
       {showHeader ? (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 border-b border-border/40">
           <div className="space-y-2">
-            <Skeleton className={cn('h-8 w-28 rounded', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-8 w-36 rounded', uiSkeletonBlock)} />
             <Skeleton className={cn('h-4 w-56 rounded', uiSkeletonBlock)} />
           </div>
           <Skeleton className={cn('h-11 w-32 rounded-xl', uiSkeletonBlock)} />

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import { BrandIcon, CommonFormFieldError } from '@/components/common'
+import { BrandLogo, CommonFormFieldError } from '@/components/common'
 import { uiDialog, uiInput } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { useSetPasswordDialog } from './useSetPasswordDialog'
@@ -39,7 +39,7 @@ export function SetPasswordDialog({ open, authToken, onSuccess }: SetPasswordDia
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader className="flex flex-col items-center text-center space-y-2">
-          <BrandIcon size="md" />
+          <BrandLogo variant="full" size="xl" />
           <DialogTitle className="text-xl font-bold tracking-tight text-cloud font-sans">
             Create Your Password
           </DialogTitle>

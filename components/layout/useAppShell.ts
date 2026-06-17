@@ -8,6 +8,7 @@ import {
   getClientCookie,
   initialsFromName,
 } from '@/lib/cookies'
+import { formatPersonName } from '@/lib/helpers/format-display-text'
 import { resolveCurrentEmployeeRecord } from '@/lib/helpers/resolve-current-employee'
 import { loadCachedUserProfile } from '@/components/auth/permissions-provider'
 import { canViewModule } from '@/lib/permissions/module-permissions'
@@ -57,7 +58,9 @@ export function useAppShell(): UseAppShellReturn {
         const profile = await loadCachedUserProfile()
         if (controller.signal.aborted) return
 
-        const profileName = formatDisplayNameFromUsername(profile.username) || profile.email || inferredName
+        const profileName = formatPersonName(
+          formatDisplayNameFromUsername(profile.username) || profile.email || inferredName,
+        )
         setUserProfile({
           fullName: profileName,
           email: profile.email || email,
@@ -72,9 +75,10 @@ export function useAppShell(): UseAppShellReturn {
         if (!profileSource || controller.signal.aborted) return
 
         setUserProfile({
-          fullName: profileSource.full_name,
+          fullName: formatPersonName(profileSource.full_name),
           email: profileSource.user.email,
-          roleName: profileSource.designation || profileSource.role_name || 'Employee',
+          roleName:
+            profileSource.designation || profileSource.role_name || DEFAULT_PROFILE.roleName,
           initials: initialsFromName(profileSource.full_name),
         })
       } catch (err: unknown) {

@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Edit3, Trash2, Tags } from 'lucide-react'
-import { CommonErrorState } from '@/components/common'
+import { CommonErrorState, CommonFormFieldError } from '@/components/common'
 import {
   SettingsMasterCard,
   SettingsFormDialog,
   SettingsDeleteDialog,
 } from '@/components/settings/shared'
 import { uiInput } from '@/lib/ui/design-system'
+import { LIMIT_SHORT_NAME } from '@/validations/field-limits'
 import type { SettingsMasterItem } from '@/types/settings'
 import { useGenericMasterCard } from './useGenericMasterCard'
 
@@ -48,6 +49,8 @@ export function GenericMasterCard({
     editItem,
     formValue,
     setFormValue,
+    formError,
+    isFormValid,
     isSubmitting,
     deleteTarget,
     setDeleteTarget,
@@ -115,6 +118,7 @@ export function GenericMasterCard({
             : `Enter a name for the new ${label.toLowerCase()}.`
         }
         isSubmitting={isSubmitting}
+        submitDisabled={!isFormValid}
         onSubmit={handleSubmit}
       >
         <div className="space-y-2">
@@ -129,7 +133,9 @@ export function GenericMasterCard({
             className={uiInput}
             required
             disabled={isSubmitting}
+            maxLength={LIMIT_SHORT_NAME}
           />
+          <CommonFormFieldError message={formError ?? undefined} />
         </div>
       </SettingsFormDialog>
 

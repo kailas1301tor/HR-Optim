@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { useAssetAmcTab } from './useAssetAmcTab'
+import { LIMIT_COVERAGE, LIMIT_SHORT_NAME } from '@/validations/field-limits'
 
 interface AssetAMCTabProps {
   assetId: number
@@ -202,6 +203,7 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
                 placeholder="AMC-XXXXX"
                 className="bg-midnight border-border"
                 {...register('contract_number')}
+                maxLength={LIMIT_SHORT_NAME}
               />
               {errors.contract_number && (
                 <p className="text-[11px] text-destructive font-medium">{errors.contract_number.message}</p>
@@ -260,6 +262,7 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
                 placeholder="Specify parts, timelines or support channels covered..."
                 className="bg-midnight border-border min-h-[80px]"
                 {...register('coverage_details')}
+                maxLength={LIMIT_COVERAGE}
               />
               {errors.coverage_details && (
                 <p className="text-[11px] text-destructive font-medium">{errors.coverage_details.message}</p>

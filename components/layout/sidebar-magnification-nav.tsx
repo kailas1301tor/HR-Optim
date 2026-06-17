@@ -7,7 +7,7 @@ import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { canViewEmployeesSection } from '@/lib/permissions/module-permissions'
-import { uiSkeletonBlock, uiSquircleNav } from '@/lib/ui/design-system'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { SIDEBAR_NAV_ITEMS, SIDEBAR_SECTIONS } from './sidebar-nav-config'
 import { MagnificationNavItem } from './magnification-nav-item'
 
@@ -37,8 +37,7 @@ function SidebarStaticNavItem({
       href={href}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 h-10 px-3 transition-all duration-150',
-        uiSquircleNav,
+        'flex items-center gap-3 h-10 px-3 rounded-[16px] [corner-shape:squircle] transition-all duration-150',
         isActive
           ? 'bg-gradient-to-r from-violet-core to-violet-deep text-white font-medium shadow-md shadow-violet-core/10'
           : 'text-slate-300 hover:bg-carbon hover:text-cloud'
@@ -92,7 +91,7 @@ export function SidebarMagnificationNav({
             {Array.from({ length: 2 }).map((_, index) => (
               <Skeleton
                 key={`${section}-${index}`}
-                className={cn('h-10 w-full', uiSquircleNav, uiSkeletonBlock)}
+                className={cn('h-10 w-full rounded-[16px] [corner-shape:squircle]', uiSkeletonBlock)}
               />
             ))}
           </div>

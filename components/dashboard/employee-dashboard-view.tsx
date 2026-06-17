@@ -14,7 +14,11 @@ import { EmployeePendingRequests } from './employee-pending-requests'
 import { DashboardSkeleton } from './dashboard-skeleton'
 import { useEmployeeDashboard } from './useEmployeeDashboard'
 
-export function EmployeeDashboardView() {
+interface EmployeeDashboardViewProps {
+  embedded?: boolean
+}
+
+export function EmployeeDashboardView({ embedded = false }: EmployeeDashboardViewProps) {
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
   const { data, isLoading, hasError, errorMessage, reload } = useEmployeeDashboard({
     employeeProfileId,
@@ -41,6 +45,15 @@ export function EmployeeDashboardView() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
+      {!embedded ? (
+        <div>
+          <h1 className="text-2xl font-bold text-cloud">Personal Dashboard</h1>
+          <p className="text-xs text-muted-foreground mt-1">
+            Overview of your documents, assets, attendance, and request statuses
+          </p>
+        </div>
+      ) : null}
+
       {hasError ? (
         <CommonErrorBanner
           message={errorMessage ?? 'Failed to load dashboard data'}

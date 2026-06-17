@@ -1,10 +1,8 @@
 // lib/permissions/use-module-gate.ts
 'use client'
 
-import { getCachedPermissionsSnapshot } from '@/components/auth/permissions-provider'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import {
-  canViewModule,
   hasEmployeeFallback,
   type ModuleAccessLevel,
   type ModuleKey,
@@ -14,7 +12,14 @@ export interface ModuleGateState {
   isLoading: boolean
   level: ModuleAccessLevel
   isRestricted: boolean
+  showAdminView: boolean
+  showPersonalView: boolean
+  isCombinedView: boolean
+  isPersonalOnly: boolean
+  isAdminOnly: boolean
+  /** @deprecated Use isPersonalOnly */
   isPersonalView: boolean
+  /** @deprecated Use isPersonalOnly */
   shouldRenderPersonalView: boolean
   canView: boolean
   canManage: boolean
@@ -22,30 +27,31 @@ export interface ModuleGateState {
   personalFetchEnabled: boolean
 }
 
-function likelyHasModuleAccess(moduleKey: ModuleKey): boolean {
-  const snapshot = getCachedPermissionsSnapshot()
-  if (!snapshot) return false
-  return canViewModule(snapshot.permissions, moduleKey)
-}
-
 export function useModuleGate(moduleKey: ModuleKey): ModuleGateState {
-  const { isLoading, accessLevel } = usePermissions()
+  const { isLoading, accessLevel, employeeProfileId } = usePermissions()
   const level = accessLevel(moduleKey)
-  const isPersonal = level === 'none' && hasEmployeeFallback(moduleKey)
-  const isPersonalView = !isLoading && isPersonal
-  const shouldRenderPersonalView =
-    isPersonalView ||
-    (isLoading && hasEmployeeFallback(moduleKey) && !likelyHasModuleAccess(moduleKey))
+  const hasFallback = hasEmployeeFallback(moduleKey)
+  const showAdminView = !isLoading && level !== 'none'
+  const showPersonalView =
+    !isLoading && hasFallback && employeeProfileId !== null
+  const isCombinedView = showAdminView && showPersonalView
+  const isPersonalOnly = showPersonalView && !showAdminView
+  const isAdminOnly = showAdminView && !showPersonalView
 
   return {
     isLoading,
     level,
-    isRestricted: !isLoading && level === 'none' && !hasEmployeeFallback(moduleKey),
-    isPersonalView,
-    shouldRenderPersonalView,
-    canView: !isLoading && (level !== 'none' || isPersonal),
+    isRestricted: !isLoading && level === 'none' && !hasFallback,
+    showAdminView,
+    showPersonalView,
+    isCombinedView,
+    isPersonalOnly,
+    isAdminOnly,
+    isPersonalView: isPersonalOnly,
+    shouldRenderPersonalView: isPersonalOnly,
+    canView: !isLoading && (level !== 'none' || showPersonalView),
     canManage: !isLoading && level === 'manage',
     fetchEnabled: !isLoading && level !== 'none',
-    personalFetchEnabled: !isLoading && isPersonal,
+    personalFetchEnabled: showPersonalView,
   }
 }

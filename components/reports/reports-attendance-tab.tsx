@@ -12,6 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { CommonStatCardDisplay } from '@/components/common'
+import { reportsChartTooltipStyle } from '@/lib/ui/design-system'
 import type { AttendanceReportData } from '@/types/reports'
 import { ReportsGrowthBadge } from './reports-growth-badge'
 import { ReportsChartCard } from './reports-chart-card'
@@ -66,13 +67,7 @@ export function ReportsAttendanceTab({ data, isLoading = false }: ReportsAttenda
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
               <XAxis dataKey="label" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
               <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '12px',
-                }}
-              />
+              <Tooltip contentStyle={reportsChartTooltipStyle} cursor={false} />
               <Line
                 type="monotone"
                 dataKey="present"

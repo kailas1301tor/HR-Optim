@@ -1,7 +1,7 @@
 // components/tickets/create-ticket-dialog.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,6 +15,8 @@ import {
 import { SettingsFormDialog } from '@/components/settings/shared/settings-form-dialog'
 import { CommonFormFieldError } from '@/components/common'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
+import { LIMIT_DESCRIPTION, LIMIT_SHORT_NAME } from '@/validations/field-limits'
+import { createTicketSchema } from '@/validations/ticket.schema'
 import { TicketAttachmentsField } from './ticket-attachments-field'
 import { TICKET_PRIORITIES } from './ticket-constants'
 import type { CreateTicketInput, TicketPriority } from '@/types/ticket'
@@ -38,7 +40,13 @@ export function CreateTicketDialog({
   const [description, setDescription] = useState('')
   const [priority, setPriority] = useState<TicketPriority>('Medium')
   const [files, setFiles] = useState<File[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [titleError, setTitleError] = useState<string | null>(null)
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
+
+  const isFormValid = useMemo(
+    () => createTicketSchema.safeParse({ title, description, priority }).success,
+    [title, description, priority],
+  )
 
   useEffect(() => {
     if (!open) {
@@ -46,21 +54,28 @@ export function CreateTicketDialog({
       setDescription('')
       setPriority('Medium')
       setFiles([])
-      setError(null)
+      setTitleError(null)
+      setDescriptionError(null)
     }
   }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) {
-      setError('Title is required')
+    const parsed = createTicketSchema.safeParse({ title, description, priority })
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors
+      setTitleError(fieldErrors.title?.[0] ?? null)
+      setDescriptionError(fieldErrors.description?.[0] ?? null)
       return
     }
-    setError(null)
+
+    setTitleError(null)
+    setDescriptionError(null)
+
     await onSubmit({
-      title: title.trim(),
-      description: description.trim(),
-      priority,
+      title: parsed.data.title,
+      description: parsed.data.description,
+      priority: parsed.data.priority,
       files,
     })
   }
@@ -73,6 +88,7 @@ export function CreateTicketDialog({
       description="Describe the issue and attach files if needed."
       submitLabel="Submit Ticket"
       isSubmitting={isSubmitting}
+      submitDisabled={!isFormValid}
       size="lg"
       onSubmit={handleSubmit}
     >
@@ -85,12 +101,17 @@ export function CreateTicketDialog({
             id="ticket-title"
             className={uiInput}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              if (titleError) setTitleError(null)
+            }}
             placeholder="Brief summary"
             disabled={isSubmitting}
             required
+            maxLength={LIMIT_SHORT_NAME}
+            aria-invalid={titleError ? true : undefined}
           />
-          <CommonFormFieldError message={error ?? undefined} />
+          <CommonFormFieldError message={titleError ?? undefined} />
         </div>
 
         <div className="space-y-2">
@@ -101,11 +122,18 @@ export function CreateTicketDialog({
             id="ticket-description"
             className={uiInput}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              if (descriptionError) setDescriptionError(null)
+            }}
             placeholder="Describe the issue in detail"
             rows={4}
             disabled={isSubmitting}
+            required
+            maxLength={LIMIT_DESCRIPTION}
+            aria-invalid={descriptionError ? true : undefined}
           />
+          <CommonFormFieldError message={descriptionError ?? undefined} />
         </div>
 
         <div className="space-y-2">

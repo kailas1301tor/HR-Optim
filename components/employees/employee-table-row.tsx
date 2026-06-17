@@ -51,6 +51,7 @@ export function EmployeeTableRow({
     : 'EM'
 
   const statusVariant = getEmployeeStatusBadgeVariant(employee.status)
+  const isActive = employee.status?.toLowerCase() === 'active'
 
   return (
     <motion.tr
@@ -78,7 +79,7 @@ export function EmployeeTableRow({
         <span
           className={cn(
             departmentConfig[employee.department]?.className ||
-              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-[20px] [corner-shape:squircle] text-xs font-medium'
+              'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2.5 py-0.5 rounded-[16px] [corner-shape:squircle] text-xs font-medium'
           )}
         >
           {employee.department}
@@ -99,14 +100,20 @@ export function EmployeeTableRow({
           isTogglingStatus ? (
             <Skeleton className={cn('h-5 w-9 rounded-full', uiSkeletonBlock)} />
           ) : (
-            <Switch
-              checked={employee.status?.toLowerCase() === 'active'}
-              onCheckedChange={(checked) => onToggleStatus(employee, checked)}
-            />
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={isActive}
+                onCheckedChange={(checked) => onToggleStatus(employee, checked)}
+                aria-label={`Set ${employee.full_name} active`}
+              />
+              <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                {isActive ? 'Yes' : 'No'}
+              </span>
+            </div>
           )
         ) : (
           <span className="text-xs text-muted-foreground">
-            {employee.status?.toLowerCase() === 'active' ? 'Yes' : 'No'}
+            {isActive ? 'Yes' : 'No'}
           </span>
         )}
       </td>

@@ -1,4 +1,5 @@
 // lib/mappers/employee-self-service-mapper.ts
+import { formatPersonName, formatTitleLabel } from '@/lib/helpers/format-display-text'
 import { normalizeAttendanceStatus } from '@/lib/mappers/attendance-mapper'
 import type {
   BackendEmployeeAttendanceData,
@@ -81,12 +82,13 @@ export function mapDashboardEmployeeDocument(doc: BackendDashboardEmployeeDocume
   return {
     id: doc.id,
     employee: doc.employee ?? '',
-    employee_name: typeof doc.employee === 'string' ? doc.employee : undefined,
+    employee_name:
+      typeof doc.employee === 'string' ? formatPersonName(doc.employee) : undefined,
     document_type: documentType,
-    document_type_name: documentTypeName,
+    document_type_name: documentTypeName ? formatTitleLabel(documentTypeName) : documentTypeName,
     document_number: doc.document_number ?? '',
     expiry_date: doc.expiry_date ?? '',
-    status: doc.status ?? 'Unknown',
+    status: formatTitleLabel(doc.status ?? 'Unknown'),
     file_url: doc.file_url ?? doc.file ?? '',
     file: doc.file,
     created_at: doc.created_at,
@@ -104,8 +106,8 @@ export function mapDashboardAllRequest(item: DashboardAllRequestItem): Request {
     backendId: item.id,
     displayId: `REQ-${item.id}`,
     type,
-    title: item.request_type,
-    description: item.request_type,
+    title: formatTitleLabel(item.request_type),
+    description: formatTitleLabel(item.request_type),
     requester: {
       id: 'self',
       name: 'You',

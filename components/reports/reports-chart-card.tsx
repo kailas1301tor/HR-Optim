@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { CommonEmptyState } from '@/components/common'
-import { uiCard, uiSkeletonBlock, uiSquircleLg } from '@/lib/ui/design-system'
+import { reportsChartShell, uiCard, uiSkeletonBlock, uiSquircleLg } from '@/lib/ui/design-system'
 import { BarChart3 } from 'lucide-react'
 
 interface ReportsChartCardProps {
@@ -41,7 +41,7 @@ export function ReportsChartCard({
       ) : isEmpty ? (
         <CommonEmptyState icon={BarChart3} title={emptyTitle} description={emptyDescription} />
       ) : (
-        children
+        <div className={reportsChartShell}>{children}</div>
       )}
     </div>
   )

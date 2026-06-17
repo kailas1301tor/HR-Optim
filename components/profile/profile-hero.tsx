@@ -3,7 +3,8 @@
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { CommonStatusBadge } from '@/components/common'
-import { initialsFromName } from '@/lib/cookies'
+import { formatDisplayNameFromUsername, initialsFromName } from '@/lib/cookies'
+import { formatPersonName } from '@/lib/helpers/format-display-text'
 import { uiSquircleMd } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import type { CurrentUserProfile } from '@/types/auth'
@@ -15,7 +16,10 @@ interface ProfileHeroProps {
 }
 
 export function ProfileHero({ profile, employee }: ProfileHeroProps): React.JSX.Element {
-  const displayName = employee?.full_name || profile.username || 'User'
+  const displayName =
+    employee?.full_name ||
+    formatPersonName(formatDisplayNameFromUsername(profile.username)) ||
+    'User'
   const initials = initialsFromName(displayName)
   const jobTitle = employee?.designation || 'System User'
   const departmentName = employee?.department || 'Operations'

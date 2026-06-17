@@ -15,6 +15,7 @@ import {
 import { Loader2, RefreshCw } from 'lucide-react'
 import { type Department } from '@/types/settings'
 import { useTransferAssetDialog } from './useTransferAssetDialog'
+import { LIMIT_REMARKS } from '@/validations/field-limits'
 
 interface TransferAssetDialogProps {
   open: boolean
@@ -84,6 +85,7 @@ export function TransferAssetDialog({ open, onOpenChange, assetId, onSuccess }: 
               placeholder="Explain the reason for transfer, new custodian, or physical location updates..."
               className="bg-midnight border-border min-h-[80px]"
               {...register('remarks')}
+              maxLength={LIMIT_REMARKS}
             />
             {errors.remarks && (
               <p className="text-[11px] text-destructive font-medium">{errors.remarks.message}</p>

@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts'
 import { CommonStatCardDisplay } from '@/components/common'
+import { reportsChartTooltipStyle } from '@/lib/ui/design-system'
 import type { AssetsReportData } from '@/types/reports'
 import { ReportsChartCard } from './reports-chart-card'
 import { ReportsPieChart } from './reports-pie-chart'
@@ -77,13 +78,7 @@ export function ReportsAssetsTab({ data, isLoading = false }: ReportsAssetsTabPr
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                 <XAxis type="number" tick={{ fontSize: 11 }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={100} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '12px',
-                  }}
-                />
+                <Tooltip contentStyle={reportsChartTooltipStyle} cursor={false} />
                 <Bar dataKey="value" radius={[0, 6, 6, 0]} name="Count">
                   {categoryDistribution.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />

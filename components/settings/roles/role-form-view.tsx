@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { Shield, Search, Loader2, ArrowLeft, CheckSquare, Square, Lock } from 'lucide-react'
 import { CommonEmptyState } from '@/components/common'
+import { LIMIT_SHORT_NAME } from '@/validations/field-limits'
 import { ExplorerSkeleton } from './roles-skeletons'
 import type { BackendPermission } from '@/services/permission-service'
 
@@ -94,6 +95,7 @@ export function RoleFormView({
             className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm h-11"
             required
             disabled={isSaving}
+            maxLength={LIMIT_SHORT_NAME}
           />
         </div>
 

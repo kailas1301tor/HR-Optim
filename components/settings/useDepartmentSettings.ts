@@ -10,6 +10,7 @@ import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
 import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeDropdowns'
 import { loadMasterList } from '@/lib/helpers/load-master-list'
 import { invalidateSettingsDepartments } from './invalidate-settings-departments'
+import { masterNameWithDescriptionSchema } from '@/validations/settings-master.schema'
 
 export interface UseDepartmentSettingsReturn {
   selectedDeptId: string
@@ -121,15 +122,29 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formName.trim()) return
+    const parsed = masterNameWithDescriptionSchema.safeParse({
+      name: formName,
+      description: formDescription,
+    })
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Please fix the form errors')
+      return
+    }
 
     setIsSubmitting(true)
     try {
       if (editId !== null) {
-        await departmentService.updateDepartment(editId, formName.trim().toUpperCase(), formDescription.trim())
+        await departmentService.updateDepartment(
+          editId,
+          parsed.data.name.toUpperCase(),
+          parsed.data.description ?? '',
+        )
         toast.success('Department updated successfully')
       } else {
-        await departmentService.createDepartment(formName.trim().toUpperCase(), formDescription.trim())
+        await departmentService.createDepartment(
+          parsed.data.name.toUpperCase(),
+          parsed.data.description ?? '',
+        )
         toast.success('Department created successfully')
       }
       setIsOpen(false)

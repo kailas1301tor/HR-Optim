@@ -12,6 +12,7 @@ import { CommonFormFieldError } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import type { EmployeeInput } from '@/validations/employee.schema'
+import { LIMIT_ADDRESS } from '@/validations/field-limits'
 import type { DropdownData } from '@/types/employee'
 
 interface PersonalInfoStepProps {
@@ -82,6 +83,7 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
           placeholder="e.g. 123 Main St, Uptown"
           className={uiInput}
           required
+          maxLength={LIMIT_ADDRESS}
         />
         {errors.address?.message && <CommonFormFieldError message={errors.address.message} />}
       </div>

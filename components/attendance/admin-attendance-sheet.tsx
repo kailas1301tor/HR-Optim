@@ -63,10 +63,12 @@ export function AdminAttendanceSheet() {
   return (
     <div className="space-y-6">
       <AttendanceDateNav
+        selectedDate={selectedDate}
         formattedDate={formatDate(selectedDate)}
         onPrevious={() => navigateDate(-1)}
         onNext={() => navigateDate(1)}
         onToday={() => setSelectedDate(new Date())}
+        onDateSelect={setSelectedDate}
       />
 
       {shiftsError && (

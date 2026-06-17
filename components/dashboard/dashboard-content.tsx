@@ -1,7 +1,7 @@
 // components/dashboard/dashboard-content.tsx
 'use client'
 
-import { CommonErrorBanner, ModuleRestrictedState } from '@/components/common'
+import { CommonErrorBanner, ModuleRestrictedState, SelfServiceModuleTabs } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { useModuleGate } from '@/lib/permissions/use-module-gate'
@@ -15,24 +15,12 @@ import { useDashboard } from './useDashboard'
 import { EmployeeDashboardView } from './employee-dashboard-view'
 import { DashboardSkeleton } from './dashboard-skeleton'
 
-export function DashboardContent() {
-  const dashboardGate = useModuleGate('dashboard')
+function AdminDashboardSections() {
   const { canManage, isLoading: isPermissionsLoading } = usePermissions()
+  const dashboardGate = useModuleGate('dashboard')
   const { data, isLoading, hasError, errorMessage, reload } = useDashboard({
     enabled: dashboardGate.fetchEnabled,
   })
-
-  if (dashboardGate.shouldRenderPersonalView) {
-    return <EmployeeDashboardView />
-  }
-
-  if (dashboardGate.isLoading) {
-    return <DashboardSkeleton />
-  }
-
-  if (dashboardGate.isRestricted) {
-    return <ModuleRestrictedState moduleKey="dashboard" />
-  }
 
   const isAdminDataLoading = isInitialDataLoading(isLoading, data.kpis.length, hasError)
 
@@ -60,5 +48,26 @@ export function DashboardContent() {
         {showPendingApprovals ? <PendingApprovals /> : null}
       </div>
     </div>
+  )
+}
+
+export function DashboardContent() {
+  const dashboardGate = useModuleGate('dashboard')
+
+  if (dashboardGate.isLoading) {
+    return <DashboardSkeleton />
+  }
+
+  if (dashboardGate.isRestricted) {
+    return <ModuleRestrictedState moduleKey="dashboard" />
+  }
+
+  return (
+    <SelfServiceModuleTabs
+      showAdminView={dashboardGate.showAdminView}
+      showPersonalView={dashboardGate.showPersonalView}
+      teamContent={<AdminDashboardSections />}
+      mineContent={<EmployeeDashboardView embedded={dashboardGate.isCombinedView} />}
+    />
   )
 }

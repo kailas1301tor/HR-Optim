@@ -2,9 +2,10 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Mail, Phone } from 'lucide-react'
+import { LifeBuoy, Mail, Phone } from 'lucide-react'
 import { CommonCard } from '@/components/common'
 import {
+  HELP_SUPPORT_LABEL,
   SUPPORT_EMAIL,
   SUPPORT_MAILTO_HREF,
   SUPPORT_PHONE,
@@ -36,6 +37,7 @@ interface ContactRowProps {
   hint?: string
   hintClassName?: string
   external?: boolean
+  className?: string
 }
 
 function ContactRow({
@@ -48,37 +50,37 @@ function ContactRow({
   hint,
   hintClassName,
   external = false,
+  className,
 }: ContactRowProps) {
   return (
-    <li className="border-b border-border/50 last:border-b-0">
-      <a
-        href={href}
-        aria-label={ariaLabel}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    <a
+      href={href}
+      aria-label={ariaLabel}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className={cn(
+        'flex items-center gap-3 px-5 py-4 transition-colors',
+        'hover:bg-muted/50',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-core/50',
+        className,
+      )}
+    >
+      <div
         className={cn(
-          'flex items-center gap-3 px-5 py-3.5 transition-colors',
-          'hover:bg-midnight/40',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-core/50',
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+          'bg-muted/60 text-muted-foreground',
+          iconClassName,
         )}
       >
-        <div
-          className={cn(
-            'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl',
-            'bg-muted/60 text-muted-foreground',
-            iconClassName,
-          )}
-        >
-          {icon}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground">{label}</p>
-          <p className="text-sm font-medium text-cloud truncate">{value}</p>
-          {hint ? (
-            <p className={cn('mt-0.5 text-xs', hintClassName)}>{hint}</p>
-          ) : null}
-        </div>
-      </a>
-    </li>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm font-medium text-foreground truncate">{value}</p>
+        {hint ? (
+          <p className={cn('mt-0.5 text-xs', hintClassName)}>{hint}</p>
+        ) : null}
+      </div>
+    </a>
   )
 }
 
@@ -86,16 +88,24 @@ export function HelpSupportSection() {
   return (
     <section aria-labelledby="help-contact-heading">
       <CommonCard className="overflow-hidden p-0">
-        <div className="border-b border-border/50 px-5 py-4">
-          <h2 id="help-contact-heading" className="text-sm font-semibold text-cloud">
-            Contact us
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Reach our team by email, phone, or WhatsApp
-          </p>
+        <div className="border-b border-border/50 px-5 py-4 flex items-start gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-core/10 text-violet-glow ring-1 ring-violet-core/20"
+            aria-hidden
+          >
+            <LifeBuoy className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <h2 id="help-contact-heading" className="text-sm font-semibold text-foreground">
+              {HELP_SUPPORT_LABEL}
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Reach our team by email, phone, or WhatsApp
+            </p>
+          </div>
         </div>
 
-        <ul>
+        <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border/50">
           <ContactRow
             icon={<Mail className="h-4 w-4" aria-hidden />}
             label="Email"
@@ -121,7 +131,7 @@ export function HelpSupportSection() {
             ariaLabel={`Chat on WhatsApp with support at ${SUPPORT_PHONE}`}
             external
           />
-        </ul>
+        </div>
       </CommonCard>
     </section>
   )

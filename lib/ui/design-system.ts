@@ -65,6 +65,10 @@ export const uiShellHeader =
 
 export const uiShellHeaderInset = 'px-4 sm:px-6'
 
+/** Brand mark image shell — subtle ring, no heavy black pill in light mode */
+export const uiBrandMark =
+  `relative shrink-0 overflow-hidden ring-1 ring-border/70 shadow-sm ${uiSquircleNav}`
+
 export const uiEmptyStateShell =
   `flex flex-col items-center justify-center text-center p-12 bg-card border border-border/60 py-16 shadow-lg ${uiSquircleLg}`
 
@@ -90,6 +94,18 @@ export const uiTableShell =
   `bg-card border border-border/80 shadow-lg overflow-hidden ${uiSquircleLg}`
 
 export const uiSectionHeader = 'pb-2 border-b border-border/40'
+
+/** Recharts wrapper — theme-aware axis/grid/legend; suppresses blocky tooltip band overlays. */
+export const reportsChartShell =
+  '[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border/50 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-transparent [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border/40 [&_.recharts-line.recharts-tooltip-cursor]:stroke-border/40 [&_.recharts-legend-item-text]:fill-muted-foreground'
+
+/** Theme-aware inline styles for Recharts default Tooltip panels. */
+export const reportsChartTooltipStyle = {
+  backgroundColor: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: '12px',
+  color: 'var(--foreground)',
+} as const
 
 export const uiTabChipBase = uiFilterChipBase
 export const uiTabChipActive = uiFilterChipActive

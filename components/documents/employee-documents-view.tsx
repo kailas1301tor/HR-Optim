@@ -1,7 +1,7 @@
 // components/documents/employee-documents-view.tsx
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { FileQuestion, Search, ShieldAlert } from 'lucide-react'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { employeeSelfService } from '@/services/employee-self-service'
@@ -9,16 +9,24 @@ import { DocumentCard } from './document-card'
 import { DocumentCardSkeleton } from './document-card-skeleton'
 import { CommonEmptyState, CommonErrorState } from '@/components/common'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
-import {
-  invalidateClientFetch,
-  shouldFinalizeClientFetch,
-} from '@/lib/helpers/client-fetch-lifecycle'
 import { Input } from '@/components/ui/input'
 import { uiCard, uiInput } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import type { EmployeeDocument } from '@/types/document'
 
-export function EmployeeDocumentsView() {
+function EmployeeDocumentsPageHeader({ embedded }: { embedded: boolean }) {
+  if (embedded) return null
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-cloud">My Documents</h1>
+      <p className="text-xs text-muted-foreground mt-1">
+        View and download your personal verified documents
+      </p>
+    </div>
+  )
+}
+
+export function EmployeeDocumentsView({ embedded = false }: { embedded?: boolean }) {
   const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
   const [documents, setDocuments] = useState<EmployeeDocument[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -26,7 +34,6 @@ export function EmployeeDocumentsView() {
   const [errorMessage, setErrorMessage] = useState('')
   const [reloadToken, setReloadToken] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
-  const fetchIdRef = useRef(0)
 
   useEffect(() => {
     if (isAuthLoading) return
@@ -35,7 +42,6 @@ export function EmployeeDocumentsView() {
       return
     }
     const profileId = employeeProfileId
-    const fetchId = ++fetchIdRef.current
     const controller = new AbortController()
 
     async function loadDocuments() {
@@ -47,25 +53,21 @@ export function EmployeeDocumentsView() {
           employeeId: profileId,
           signal: controller.signal,
         })
-        if (fetchId !== fetchIdRef.current) return
         setDocuments(Array.isArray(data) ? data : [])
       } catch (error) {
-        if (controller.signal.aborted) return
-        if (fetchId !== fetchIdRef.current) return
+        if (error instanceof Error && error.name === 'AbortError') return
         console.error('🔴 Error loading self-service documents:', error)
         setDocuments([])
         setHasError(true)
         setErrorMessage(getApiErrorMessage(error, 'Failed to load your documents. Please try again.'))
       } finally {
-        if (shouldFinalizeClientFetch({ signal: controller.signal, fetchId, fetchIdRef })) {
-          setIsLoading(false)
-        }
+        setIsLoading(false)
       }
     }
 
-    void loadDocuments()
+    loadDocuments()
 
-    return () => invalidateClientFetch(fetchIdRef, controller)
+    return () => controller.abort()
   }, [employeeProfileId, isAuthLoading, reloadToken])
 
   const handleRetry = () => setReloadToken((prev) => prev + 1)
@@ -83,10 +85,7 @@ export function EmployeeDocumentsView() {
   if (isAuthLoading || isLoading) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-cloud">My Documents</h1>
-          <p className="text-xs text-muted-foreground mt-1">View and download your personal verified documents</p>
-        </div>
+        <EmployeeDocumentsPageHeader embedded={embedded} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, idx) => (
             <DocumentCardSkeleton key={idx} />
@@ -111,10 +110,7 @@ export function EmployeeDocumentsView() {
   if (hasError) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-cloud">My Documents</h1>
-          <p className="text-xs text-muted-foreground mt-1">View and download your personal verified documents</p>
-        </div>
+        <EmployeeDocumentsPageHeader embedded={embedded} />
         <CommonErrorState
           title="Unable to load documents"
           message={errorMessage}
@@ -126,10 +122,7 @@ export function EmployeeDocumentsView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-cloud">My Documents</h1>
-        <p className="text-xs text-muted-foreground mt-1">View and download your personal verified documents</p>
-      </div>
+      <EmployeeDocumentsPageHeader embedded={embedded} />
 
       <div className="relative w-full max-w-md">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />

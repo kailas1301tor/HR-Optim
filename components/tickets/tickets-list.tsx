@@ -12,8 +12,9 @@ import {
   CommonStatusBadge,
 } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import { uiCard, uiTableShell } from '@/lib/ui/design-system'
+import { uiCard, uiSectionHeader, uiTableShell } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
+import { HELP_SUPPORT_LABEL } from '@/lib/support'
 import { CreateTicketDialog } from './create-ticket-dialog'
 import { HelpSupportSection } from './help-support-section'
 import { TicketDeleteDialog, TicketDetailDialog } from './ticket-detail-dialog'
@@ -28,7 +29,6 @@ import { usePermissions } from '@/components/auth/permissions-provider'
 import { isInitialDataLoading } from '@/lib/helpers/is-initial-data-loading'
 import { TicketsContentSkeleton, TicketsSkeleton } from './tickets-skeleton'
 import type { TicketPriorityFilter } from './useTicketsList'
-import { HELP_SUPPORT_LABEL } from '@/lib/support'
 
 const PRIORITY_FILTERS = [
   { value: 'all', label: 'All' },
@@ -84,7 +84,7 @@ export function TicketsList() {
     <div className="space-y-6">
       <CommonPageHeader
         title={HELP_SUPPORT_LABEL}
-        subtitle="Contact support or raise and track tickets"
+        subtitle="Contact our team or raise a support ticket"
         action={
           canManageTickets ? (
           <PrimaryButton className="gap-2" onClick={() => setIsCreateOpen(true)}>
@@ -97,7 +97,12 @@ export function TicketsList() {
 
       <HelpSupportSection />
 
-      <h2 className="text-sm font-semibold text-cloud">Your tickets</h2>
+      <div className={uiSectionHeader}>
+        <h2 className="text-lg font-semibold text-foreground">Your tickets</h2>
+        <p className="text-xs text-muted-foreground mt-1">
+          Track requests you&apos;ve raised with support
+        </p>
+      </div>
 
       <CommonListToolbar
         searchQuery={searchQuery}

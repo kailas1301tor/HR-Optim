@@ -161,6 +161,11 @@ export const EMPTY_LEAVE_CALENDAR: LeaveCalendarViewModel = {
   existingLeaveDates: [],
 }
 
+export interface LeaveBalanceRecord {
+  leave_type: string
+  balance: number
+}
+
 export interface LeaveCalculatePayload {
   from_date: string
   to_date: string

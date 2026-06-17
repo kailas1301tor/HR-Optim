@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { CommonErrorBanner } from '@/components/common'
 import type { Asset, AssetDropdowns } from '@/types/asset'
+import { LIMIT_SHORT_NAME } from '@/validations/field-limits'
 import type { Department } from '@/services/department-service'
 import { useAddAssetModal } from './useAddAssetModal'
 
@@ -103,6 +104,7 @@ export function AddAssetModal({
                 {...register('name')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
               {errors.name && <p className="text-[11px] text-destructive">{errors.name.message}</p>}
             </div>
@@ -114,6 +116,7 @@ export function AddAssetModal({
                 {...register('serial_number')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
               {errors.serial_number && <p className="text-[11px] text-destructive">{errors.serial_number.message}</p>}
             </div>
@@ -233,6 +236,7 @@ export function AddAssetModal({
                 {...register('location')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
             </div>
 
@@ -243,6 +247,7 @@ export function AddAssetModal({
                 {...register('sub_location')}
                 className="bg-midnight border-border"
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
             </div>
 

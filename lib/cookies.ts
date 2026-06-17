@@ -1,5 +1,7 @@
 // lib/cookies.ts
 
+import { formatPersonName } from '@/lib/helpers/format-display-text'
+
 export const AUTH_COOKIE_NAMES = {
   session: 'auth_session',
   username: 'auth_username',
@@ -71,9 +73,7 @@ export function getClientCookie(name: string): string | null {
 export function formatDisplayNameFromUsername(username: string): string {
   const nameParts = username.split(/[._@]/).filter(Boolean)
   if (nameParts.length === 0) return 'User'
-  return nameParts
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
+  return formatPersonName(nameParts.join(' '))
 }
 
 export function initialsFromName(fullName: string): string {

@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { roleService, type BackendRole } from '@/services/role-service'
 import { type BackendPermission } from '@/services/permission-service'
 import { toast } from 'sonner'
+import { roleNameSchema } from '@/validations/settings-master.schema'
 
 export interface UseRoleFormProps {
   action: string
@@ -171,16 +172,20 @@ export function useRoleForm({
 
   const handleSaveRole = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault()
-    if (!roleFormName.trim()) return
+    const parsed = roleNameSchema.safeParse(roleFormName)
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? 'Role name is required')
+      return
+    }
 
     setIsSaving(true)
     try {
       if (roleEditId !== null) {
-        const updatedRole = await roleService.updateRole(roleEditId, roleFormName.trim(), selectedPermissionIds)
+        const updatedRole = await roleService.updateRole(roleEditId, parsed.data, selectedPermissionIds)
         await roleService.assignPermissionsToGroup(roleEditId, selectedPermissionIds)
         toast.success(`Role "${updatedRole.name}" updated successfully`)
       } else {
-        const newRole = await roleService.createRole(roleFormName.trim(), selectedPermissionIds)
+        const newRole = await roleService.createRole(parsed.data, selectedPermissionIds)
         await roleService.assignPermissionsToGroup(newRole.id, selectedPermissionIds)
         toast.success(`Role "${newRole.name}" created successfully`)
       }

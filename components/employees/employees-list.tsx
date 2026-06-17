@@ -13,7 +13,6 @@ import {
   CommonFilterChips,
   CommonMobileCardGrid,
   CommonPagination,
-  ModuleRestrictedState,
   TableSkeleton,
 } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
@@ -175,15 +174,7 @@ export function EmployeesList() {
 
   const showEmpty = !isTableLoading && !hasError && employeeList.length === 0
 
-  if (isPermissionsLoading) {
-    return <TableSkeleton showFilterChips filterChipCount={3} />
-  }
-
-  if (!canAccessEmployeesSection) {
-    return <ModuleRestrictedState moduleKey="employees" />
-  }
-
-  if (isInitialDataLoading(isTableLoading, employeeList.length, hasError)) {
+  if (isPermissionsLoading || isInitialDataLoading(isTableLoading, employeeList.length, hasError)) {
     return <TableSkeleton showFilterChips filterChipCount={3} />
   }
 

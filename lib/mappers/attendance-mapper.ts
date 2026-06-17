@@ -1,5 +1,6 @@
 // lib/mappers/attendance-mapper.ts
 import { initialsFromName } from '@/lib/cookies'
+import { formatPersonName, formatTitleLabel } from '@/lib/helpers/format-display-text'
 import type {
   AttendanceRecord,
   AttendanceStatus,
@@ -59,19 +60,20 @@ export function normalizeAttendanceStatus(status: string): AttendanceStatus {
 }
 
 export function mapBackendAttendanceRecord(record: BackendAttendanceRecord): AttendanceRecord {
+  const employeeName = formatPersonName(record.employee_name)
   return {
     id: record.employee_id,
     employeeId: record.employee_id,
-    employeeName: record.employee_name,
-    initials: initialsFromName(record.employee_name),
-    department: record.department,
-    shiftName: record.shift,
+    employeeName,
+    initials: initialsFromName(employeeName),
+    department: formatTitleLabel(record.department),
+    shiftName: formatTitleLabel(record.shift),
     date: record.date || '',
     timeIn: formatTimeValue(record.time_in),
     timeOut: formatTimeValue(record.time_out),
     status: normalizeAttendanceStatus(record.status),
     workHours: formatWorkHours(record.work_hours),
-    role: record.role,
+    role: formatTitleLabel(record.role),
     email: record.email,
     phoneNumber: record.phone_number,
   }

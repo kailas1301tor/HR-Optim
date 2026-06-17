@@ -2,10 +2,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  invalidateClientFetch,
-  shouldFinalizeClientFetch,
-} from '@/lib/helpers/client-fetch-lifecycle'
 import { employeeSelfService } from '@/services/employee-self-service'
 import type { EmployeeDashboardData } from '@/types/dashboard'
 
@@ -71,14 +67,14 @@ export function useEmployeeDashboard(options: {
         setHasError(true)
         setErrorMessage(error instanceof Error ? error.message : 'Failed to load dashboard')
       } finally {
-        if (shouldFinalizeClientFetch({ signal: controller.signal, fetchId, fetchIdRef })) {
+        if (fetchId === fetchIdRef.current) {
           setIsLoading(false)
         }
       }
     }
 
     void load()
-    return () => invalidateClientFetch(fetchIdRef, controller)
+    return () => controller.abort()
   }, [enabled, employeeProfileId, reloadToken])
 
   return { data, isLoading, hasError, errorMessage, reload }

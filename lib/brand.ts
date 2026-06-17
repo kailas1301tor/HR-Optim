@@ -8,16 +8,30 @@ export const PRODUCT_NAME =
 
 export const COMPANY_NAME = 'HROPTIM'
 
-/** Shown under the product name in the shell and on the login page. */
+/** Shown under the product name in metadata and legacy contexts. */
 export const PRODUCT_TAGLINE = `${PRODUCT_NAME} by ${COMPANY_NAME}`
+
+/** Shown under the wordmark logo in shell and login (logo already includes product name). */
+export const COMPANY_TAGLINE = `by ${COMPANY_NAME}`
 
 export const PRODUCT_DESCRIPTION =
   `${PRODUCT_NAME} by ${COMPANY_NAME} — enterprise human resource and asset management.`
 
+export function pageTitle(page: string): string {
+  return `${page} | ${PRODUCT_NAME}`
+}
+
+/** App icon used in favicon contexts. */
 export const APP_ICON_PATH = '/brand/roka-app-icon.png'
 
 export const APP_ICON_ALT = `${PRODUCT_NAME} app icon`
 
-export function pageTitle(page: string): string {
-  return `${page} | ${PRODUCT_NAME}`
-}
+/** Full horizontal wordmark logo (icon + ROKA text). Legacy asset — prefer composited BrandLogo. */
+export const APP_LOGO_PATH = '/brand/roka-logo.png'
+
+export const APP_LOGO_ALT = 'ROKA'
+
+/** Squircle app icon — high-contrast mark for shell, favicon, and composited wordmark. */
+export const APP_MARK_PATH = '/brand/roka-app-icon.png'
+
+export const APP_MARK_ALT = `${PRODUCT_NAME} mark`

@@ -10,13 +10,14 @@ import type { LeaveType } from '@/services/leave-type-service'
 import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { useCurrentEmployee } from '@/hooks/use-current-employee'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
-import { EMPTY_LEAVE_CALENDAR, type LeaveCalendarViewModel } from '@/types/request'
+import { EMPTY_LEAVE_CALENDAR, type LeaveBalanceRecord, type LeaveCalendarViewModel } from '@/types/request'
 import type {
   LeaveRequestInput,
   SalaryAdvanceRequestInput,
   LoanRequestInput,
   DocumentRequestInput,
 } from '@/validations/request.schema'
+import { findBalanceForLeaveType } from '@/lib/helpers/leave-balance'
 import type { RequestType } from './requests-constants'
 
 export type CreateRequestType = RequestType
@@ -34,10 +35,13 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
   const [sessionChoices, setSessionChoices] = useState<RequestChoiceItem[]>([])
   const [documentTypeChoices, setDocumentTypeChoices] = useState<RequestChoiceItem[]>([])
   const [leaveCalendar, setLeaveCalendar] = useState<LeaveCalendarViewModel>(EMPTY_LEAVE_CALENDAR)
+  const [leaveBalances, setLeaveBalances] = useState<LeaveBalanceRecord[]>([])
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
   const [hasMetadataError, setHasMetadataError] = useState(false)
   const [isCalendarLoading, setIsCalendarLoading] = useState(false)
   const [hasCalendarError, setHasCalendarError] = useState(false)
+  const [isBalancesLoading, setIsBalancesLoading] = useState(false)
+  const [hasBalancesError, setHasBalancesError] = useState(false)
   const [metadataReloadToken, setMetadataReloadToken] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -51,6 +55,7 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
 
   const metadataFetchIdRef = useRef(0)
   const calendarFetchIdRef = useRef(0)
+  const balancesFetchIdRef = useRef(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -122,6 +127,41 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     return () => controller.abort()
   }, [employee?.id, metadataReloadToken])
 
+  useEffect(() => {
+    const employeeId = employee?.id
+    if (!employeeId) {
+      setLeaveBalances([])
+      setIsBalancesLoading(false)
+      setHasBalancesError(false)
+      return
+    }
+
+    const controller = new AbortController()
+    const fetchId = ++balancesFetchIdRef.current
+
+    const loadBalances = async (): Promise<void> => {
+      setIsBalancesLoading(true)
+      setHasBalancesError(false)
+      try {
+        const balances = await employeeRequestService.getLeaveBalances(employeeId, controller.signal)
+        if (controller.signal.aborted || fetchId !== balancesFetchIdRef.current) return
+        setLeaveBalances(balances)
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        if (fetchId !== balancesFetchIdRef.current) return
+        setHasBalancesError(true)
+        setLeaveBalances([])
+      } finally {
+        if (fetchId === balancesFetchIdRef.current) {
+          setIsBalancesLoading(false)
+        }
+      }
+    }
+
+    void loadBalances()
+    return () => controller.abort()
+  }, [employee?.id, metadataReloadToken])
+
   const handleSuccess = useCallback((): void => {
     router.push('/requests?status=pending')
   }, [router])
@@ -148,6 +188,31 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
       const employeeId = requireEmployeeId()
       if (!employeeId) return
 
+      if (hasBalancesError || isBalancesLoading) {
+        toast.error('Leave balances are not available. Please try again.')
+        return
+      }
+
+      const selectedLeaveType = leaveTypes.find((type) => type.id === data.leave_type)
+      if (!selectedLeaveType) {
+        toast.error('Please select a valid leave type')
+        return
+      }
+
+      const balance = findBalanceForLeaveType(selectedLeaveType.name, leaveBalances)
+      if (balance === null) {
+        toast.error('No leave balance found for the selected leave type')
+        return
+      }
+      if (balance <= 0) {
+        toast.error('No leave balance available for this leave type')
+        return
+      }
+      if (data.number_of_days > balance) {
+        toast.error('Requested days exceed your available leave balance')
+        return
+      }
+
       setIsSubmitting(true)
       try {
         await employeeRequestService.createLeaveRequest({
@@ -168,7 +233,7 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
         setIsSubmitting(false)
       }
     },
-    [requireEmployeeId, handleSuccess]
+    [requireEmployeeId, handleSuccess, hasBalancesError, isBalancesLoading, leaveTypes, leaveBalances]
   )
 
   const handleSubmitSalaryAdvance = useCallback(
@@ -254,6 +319,9 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     leaveTypes,
     holidayEvents: leaveCalendar.holidayEvents,
     existingLeaveDates: leaveCalendar.existingLeaveDates,
+    leaveBalances,
+    isBalancesLoading,
+    hasBalancesError,
     sessionChoices,
     documentTypeChoices,
     isLoadingMetadata,

@@ -15,7 +15,7 @@ interface SelfServicePageHeaderProps {
 export function SelfServicePageHeader({ moduleKey, title, subtitle }: SelfServicePageHeaderProps) {
   const gate = useModuleGate(moduleKey)
 
-  if (gate.shouldRenderPersonalView) {
+  if (!gate.showAdminView) {
     return null
   }
 

@@ -15,6 +15,7 @@ import { uiInput, uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import type { Employee } from '@/types/employee'
 import { employeeDocumentUploadSchema, type EmployeeDocumentUploadInput } from '@/validations/document.schema'
+import { LIMIT_DOCUMENT_NUMBER } from '@/validations/field-limits'
 import { DocumentFileDropzone } from './document-file-dropzone'
 
 interface EmployeeDocumentFormProps {
@@ -115,6 +116,7 @@ export function EmployeeDocumentForm({
           placeholder="e.g. Passport/ID number"
           className={cn(uiInput, 'text-xs min-h-11')}
           {...register('document_number')}
+          maxLength={LIMIT_DOCUMENT_NUMBER}
         />
         <CommonFormFieldError message={errors.document_number?.message} />
       </div>
