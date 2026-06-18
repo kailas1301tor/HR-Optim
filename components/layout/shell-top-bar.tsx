@@ -4,7 +4,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
-  Building2,
   Bell,
   User,
   LogOut,
@@ -13,7 +12,7 @@ import {
   ChevronLeft,
   Settings,
 } from 'lucide-react'
-import { PRODUCT_NAME, PRODUCT_TAGLINE } from '@/lib/brand'
+import { BrandLogo } from '@/components/common'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,7 +28,7 @@ import {
   SHELL_SIDEBAR_WIDTH_COLLAPSED,
   SHELL_SIDEBAR_WIDTH_EXPANDED,
   uiSquircleNav,
-  uiSquircleXs,
+  uiSquircleSm,
 } from '@/lib/ui/design-system'
 import { useSidebar } from './useSidebar'
 import type { UserProfile } from './app-shell'
@@ -51,7 +50,14 @@ export function ShellTopBar({
   userProfile,
   isMobile,
 }: ShellTopBarProps) {
-  const { handleLogout, handleGoToProfile, handleGoToSettings, breadcrumbs, pathname } = useSidebar()
+  const {
+    handleLogout,
+    handleGoToProfile,
+    handleGoToSettings,
+    handleGoToNotifications,
+    breadcrumbs,
+    pathname,
+  } = useSidebar()
 
   const brandWidth = isMobile
     ? undefined
@@ -72,9 +78,12 @@ export function ShellTopBar({
       {/* Brand zone — width locked to sidebar column on desktop */}
       <div
         className={cn(
-          'shrink-0 flex items-center gap-2 border-r border-border transition-[width] duration-300 ease-in-out',
-          isMobile ? 'px-3' : cn(uiShellHeaderInset, 'pr-3'),
-          collapsed && !isMobile && 'justify-center !px-0'
+          'shrink-0 flex items-center border-r border-border transition-[width] duration-300 ease-in-out',
+          isMobile
+            ? 'gap-2 px-3'
+            : collapsed
+              ? 'justify-center px-0'
+              : 'gap-0 pl-3.5 pr-1',
         )}
         style={brandWidth !== undefined ? { width: brandWidth } : undefined}
       >
@@ -92,34 +101,28 @@ export function ShellTopBar({
           </button>
         )}
 
-        <div
+        <Link
+          href="/"
           className={cn(
-            'flex items-center gap-2.5 min-w-0 flex-1',
-            collapsed && !isMobile && 'justify-center flex-none'
+            'flex items-center min-w-0 py-1',
+            !collapsed && !isMobile && 'min-w-0 flex-1 pr-1',
+            collapsed && !isMobile && 'justify-center px-2',
           )}
+          aria-label="Go to dashboard"
         >
-          <div
-            className={cn(
-              'w-8 h-8 bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center shrink-0',
-              uiSquircleXs
-            )}
-          >
-            <Building2 className="w-4 h-4 text-white" />
-          </div>
-          {(!collapsed || isMobile) && (
-            <div className="min-w-0 leading-tight">
-              <p className="text-sm font-semibold text-cloud truncate leading-none">{PRODUCT_NAME}</p>
-              <p className="text-[11px] text-muted-foreground truncate mt-0.5">{PRODUCT_TAGLINE}</p>
-            </div>
+          {collapsed && !isMobile ? (
+            <BrandLogo variant="mark" size="md" />
+          ) : (
+            <BrandLogo variant="full" size="md" showTagline className="w-full" />
           )}
-        </div>
+        </Link>
 
         {!isMobile && !collapsed && (
           <button
             type="button"
             onClick={() => setCollapsed(true)}
             className={cn(
-              'shrink-0 ml-auto p-1.5 hover:bg-carbon text-slate-500 hover:text-slate-300 transition-colors cursor-pointer',
+              'shrink-0 p-1 hover:bg-carbon text-slate-500 hover:text-slate-300 transition-colors cursor-pointer',
               uiSquircleNav
             )}
             aria-label="Collapse sidebar"
@@ -166,7 +169,10 @@ export function ShellTopBar({
           <button
             type="button"
             onClick={onSearchOpen}
-            className="flex items-center gap-2 h-9 px-3 sm:px-4 bg-carbon/80 border border-border rounded-full text-xs sm:text-sm text-muted-foreground hover:text-cloud hover:border-violet-core/40 transition-all cursor-pointer"
+            className={cn(
+              'flex items-center gap-2 h-9 px-3 sm:px-4 bg-carbon/80 border border-border text-xs sm:text-sm text-muted-foreground hover:text-cloud hover:border-violet-core/40 transition-all cursor-pointer',
+              uiSquircleSm
+            )}
           >
             <Search className="w-4 h-4 text-slate-400 shrink-0" />
             <span className="hidden sm:inline">Search...</span>
@@ -177,6 +183,7 @@ export function ShellTopBar({
 
           <button
             type="button"
+            onClick={handleGoToNotifications}
             className={cn('relative p-2 hover:bg-carbon transition-colors cursor-pointer', uiSquircleNav)}
             aria-label="Notifications"
           >

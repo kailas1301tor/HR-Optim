@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
+import { AUTH_COOKIE_NAMES, clearAuthCookies, getClientCookie } from '@/lib/cookies'
 import { resolveRequestUrl } from '@/lib/env'
 import { parseAuthErrorPayload } from '@/lib/helpers/parse-auth-form-errors'
 import { attemptSilentReauth } from '@/lib/auth/silent-reauth'
@@ -15,11 +15,7 @@ async function handleUnauthorized(): Promise<void> {
 
   isRedirectingToLogin = true
   toast.error('Your session has expired. Please sign in again.')
-  try {
-    await fetch('/api/auth/session', { method: 'DELETE' })
-  } catch {
-    // Best-effort session clear before redirect
-  }
+  clearAuthCookies()
   clearRefreshToken()
   window.location.href = '/login'
 }
@@ -78,6 +74,15 @@ function wrapNetworkError(error: unknown): Error {
   return error instanceof Error ? error : new ApiError('Request failed')
 }
 
+function checkOfflinePreflight(): void {
+  if (typeof window !== 'undefined' && !navigator.onLine) {
+    throw new ApiError(
+      'You are offline. Please check your internet connection and try again.',
+      0,
+    )
+  }
+}
+
 function buildAuthHeaders(
   options: RequestOptions,
   body?: Record<string, unknown> | object | FormData | string | null,
@@ -105,6 +110,7 @@ async function requestBlob(
   endpoint: string,
   options: RequestOptions = {},
 ): Promise<BlobResponse> {
+  checkOfflinePreflight()
   const url = buildRequestUrl(endpoint, options.params)
   const { headers, sessionToken } = buildAuthHeaders(options)
 
@@ -173,6 +179,7 @@ async function request<T>(
   body?: Record<string, unknown> | object | FormData | string | null,
   options: RequestOptions = {}
 ): Promise<T> {
+  checkOfflinePreflight()
   const url = buildRequestUrl(endpoint, options.params)
   const { headers, sessionToken } = buildAuthHeaders(options, body)
 

@@ -1,10 +1,10 @@
 import { AppShell } from '@/components/layout/app-shell'
-import { ReportsDashboard } from '@/components/reports/reports-dashboard'
+import { ReportsList } from '@/components/reports/reports-list'
 
 export default function ReportsPage() {
   return (
     <AppShell>
-      <ReportsDashboard />
+      <ReportsList />
     </AppShell>
   )
 }

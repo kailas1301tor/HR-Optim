@@ -1,12 +1,13 @@
 // components/requests/useRequestActions.ts
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import {
   employeeRequestService,
   type RequestActionType,
 } from '@/services/employee-request-service'
+import { rejectReasonSchema } from '@/validations/request-action.schema'
 import type { Request } from './requests-constants'
 
 export interface UseRequestActionsReturn {
@@ -15,6 +16,8 @@ export interface UseRequestActionsReturn {
   isRejectDialogOpen: boolean
   isSubmitting: boolean
   rejectReason: string
+  rejectReasonError: string | null
+  isRejectReasonValid: boolean
   setRejectReason: (reason: string) => void
   handleApprove: (request: Request) => void
   handleOpenReject: (request: Request) => void
@@ -29,19 +32,32 @@ export function useRequestActions(onSuccess: () => void): UseRequestActionsRetur
   const [rejectTarget, setRejectTarget] = useState<Request | null>(null)
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [rejectReason, setRejectReason] = useState('')
+  const [rejectReason, setRejectReasonState] = useState('')
+  const [rejectReasonError, setRejectReasonError] = useState<string | null>(null)
+
+  const isRejectReasonValid = useMemo(
+    () => rejectReasonSchema.safeParse({ reason: rejectReason }).success,
+    [rejectReason],
+  )
+
+  const setRejectReason = useCallback((reason: string): void => {
+    setRejectReasonState(reason)
+    if (rejectReasonError) setRejectReasonError(null)
+  }, [rejectReasonError])
 
   const handleApprove = useCallback((request: Request) => {
     setApproveTarget(request)
     setRejectTarget(null)
-    setRejectReason('')
+    setRejectReasonState('')
+    setRejectReasonError(null)
     setIsRejectDialogOpen(false)
   }, [])
 
   const handleOpenReject = useCallback((request: Request) => {
     setRejectTarget(request)
     setApproveTarget(null)
-    setRejectReason('')
+    setRejectReasonState('')
+    setRejectReasonError(null)
     setIsRejectDialogOpen(true)
   }, [])
 
@@ -51,7 +67,8 @@ export function useRequestActions(onSuccess: () => void): UseRequestActionsRetur
 
   const handleCloseReject = useCallback(() => {
     setIsRejectDialogOpen(false)
-    setRejectReason('')
+    setRejectReasonState('')
+    setRejectReasonError(null)
     setRejectTarget(null)
   }, [])
 
@@ -77,18 +94,20 @@ export function useRequestActions(onSuccess: () => void): UseRequestActionsRetur
 
   const handleConfirmReject = useCallback(async () => {
     if (!rejectTarget) return
-    const reason = rejectReason.trim()
-    if (!reason) {
-      toast.error('Please provide a rejection reason')
+
+    const parsed = rejectReasonSchema.safeParse({ reason: rejectReason })
+    if (!parsed.success) {
+      setRejectReasonError(parsed.error.flatten().fieldErrors.reason?.[0] ?? 'Invalid rejection reason')
       return
     }
 
+    setRejectReasonError(null)
     setIsSubmitting(true)
     try {
       await employeeRequestService.rejectRequest(
         rejectTarget.type as RequestActionType,
         rejectTarget.backendId,
-        reason
+        parsed.data.reason
       )
       toast.success('Request rejected')
       handleCloseReject()
@@ -107,6 +126,8 @@ export function useRequestActions(onSuccess: () => void): UseRequestActionsRetur
     isRejectDialogOpen,
     isSubmitting,
     rejectReason,
+    rejectReasonError,
+    isRejectReasonValid,
     setRejectReason,
     handleApprove,
     handleOpenReject,

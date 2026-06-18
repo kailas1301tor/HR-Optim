@@ -1,17 +1,20 @@
+// app/attendance/page.tsx
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
-import { CommonPageHeader, CommonPageSkeleton } from '@/components/common'
+import { SelfServicePageHeader } from '@/components/common'
+import { AttendanceSkeleton } from '@/components/attendance/attendance-skeleton'
 import { AttendanceSheet } from '@/components/attendance/attendance-sheet'
 
 export default function AttendancePage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <CommonPageHeader
+        <SelfServicePageHeader
+          moduleKey="attendance"
           title="Attendance"
           subtitle="Track and manage daily employee attendance"
         />
-        <Suspense fallback={<CommonPageSkeleton />}>
+        <Suspense fallback={<AttendanceSkeleton variant="employee" showHeader={true} showStats={true} />}>
           <AttendanceSheet />
         </Suspense>
       </div>

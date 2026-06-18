@@ -1,17 +1,20 @@
+// app/payroll/page.tsx
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
-import { CommonPageHeader, CommonPageSkeleton } from '@/components/common'
+import { SelfServicePageHeader } from '@/components/common'
 import { PayrollDashboard } from '@/components/payroll/payroll-dashboard'
+import { PayrollSkeleton } from '@/components/payroll/payroll-skeleton'
 
 export default function PayrollPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <CommonPageHeader
+        <SelfServicePageHeader
+          moduleKey="payroll"
           title="Payroll"
           subtitle="Manage employee salaries and WPS processing"
         />
-        <Suspense fallback={<CommonPageSkeleton />}>
+        <Suspense fallback={<PayrollSkeleton variant="employee" showHeader={false} />}>
           <PayrollDashboard />
         </Suspense>
       </div>

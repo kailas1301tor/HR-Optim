@@ -12,6 +12,9 @@ export interface DropdownData {
   nationalities: DropdownItem[]
   status_choices: DropdownItem[]
   accommodation_choices: DropdownItem[]
+  leave_types: DropdownItem[]
+  onboarding_document_types: DropdownItem[]
+  offboarding_document_types: DropdownItem[]
 }
 
 export interface DropdownResponse {
@@ -56,6 +59,15 @@ export interface EmployeeListParams {
   [key: string]: string | number | boolean | undefined | null
 }
 
+/** Slim picker row from `/api/employee/employees-list/`. */
+export interface EmployeeListWireItem {
+  id: number
+  name?: string
+  full_name?: string
+  employee_id?: string
+  user?: EmployeeUser
+}
+
 export interface EmployeeListResponse {
   message: string
   results: {
@@ -64,6 +76,17 @@ export interface EmployeeListResponse {
     current_page: number
     item_per_page: number
     data: Employee[]
+  }
+}
+
+export interface EmployeeListPickerResponse {
+  message: string
+  results: {
+    total_count: number
+    total_pages: number
+    current_page: number
+    item_per_page: number
+    data: EmployeeListWireItem[]
   }
 }
 

@@ -4,15 +4,18 @@
 import { Download, FileText } from 'lucide-react'
 import { CommonListToolbar } from '@/components/common'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
+import { uiInput, uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { payrollStatusFilterConfig } from './payroll-constants'
 import type { Employee } from '@/types/employee'
@@ -24,7 +27,24 @@ const STATUS_FILTER_OPTIONS: { value: PayrollStatusFilter; label: string }[] = [
   { value: 'finalized', label: payrollStatusFilterConfig.finalized.label },
 ]
 
-const payrollFilterSelectClass = 'w-full sm:w-44 text-xs min-h-11 h-11'
+const payrollFilterSelectClass = 'w-full text-xs min-h-11 h-11'
+const payrollEmployeeItemClass =
+  'text-slate-200 focus:bg-violet-core/20 focus:text-white data-[highlighted]:bg-violet-core/20 data-[highlighted]:text-white'
+
+function getEmployeeFilterLabel(employee: Employee): string {
+  const name = employee.full_name?.trim()
+  if (name) {
+    return employee.employee_id ? `${name} (${employee.employee_id})` : name
+  }
+
+  const email = employee.user?.email?.trim()
+  if (email) return email
+
+  const username = employee.user?.username?.trim()
+  if (username) return username
+
+  return employee.employee_id ? `Employee (${employee.employee_id})` : 'Employee'
+}
 const payrollStatusSelectClass = 'w-full sm:w-40 text-xs min-h-11 h-11'
 const payrollActionBtnClass =
   'gap-2 text-xs min-h-11 h-11 flex-1 min-w-[calc(50%-0.25rem)] sm:flex-none sm:min-w-0 justify-center'
@@ -35,6 +55,9 @@ interface PayrollToolbarProps {
   employeeFilter: number | null
   employees: Employee[]
   isEmployeesLoading: boolean
+  employeesHasError?: boolean
+  employeeSearchQuery: string
+  onEmployeeSearchChange: (query: string) => void
   onEmployeeChange: (employeeId: number | null) => void
   statusFilter: PayrollStatusFilter
   onStatusChange: (status: PayrollStatusFilter) => void
@@ -55,6 +78,9 @@ export function PayrollToolbar({
   employeeFilter,
   employees,
   isEmployeesLoading,
+  employeesHasError = false,
+  employeeSearchQuery,
+  onEmployeeSearchChange,
   onEmployeeChange,
   statusFilter,
   onStatusChange,
@@ -76,26 +102,70 @@ export function PayrollToolbar({
       searchAriaLabel="Search payroll list"
       filters={
         <>
-          <Select
-            value={employeeFilter !== null ? String(employeeFilter) : 'all'}
-            onValueChange={(val) => onEmployeeChange(val === 'all' ? null : Number(val))}
-            disabled={isEmployeesLoading}
-          >
-            <SelectTrigger
-              className={cn(payrollFilterSelectClass, uiSelect)}
-              aria-label="Filter by employee"
+          <div className="flex w-full flex-col gap-2 sm:w-52">
+            <Input
+              value={employeeSearchQuery}
+              onChange={(e) => onEmployeeSearchChange(e.target.value)}
+              placeholder="Search employees..."
+              aria-label="Search employees for filter"
+              className={cn('h-9 text-xs', uiInput)}
+              disabled={isEmployeesLoading}
+            />
+            <Select
+              value={employeeFilter !== null ? String(employeeFilter) : 'all'}
+              onValueChange={(val) => onEmployeeChange(val === 'all' ? null : Number(val))}
+              disabled={isEmployeesLoading}
             >
-              <SelectValue placeholder={isEmployeesLoading ? 'Loading...' : 'All employees'} />
-            </SelectTrigger>
-            <SelectContent className="bg-popover border border-border text-xs">
-              <SelectItem value="all">All employees</SelectItem>
-              {employees.map((employee) => (
-                <SelectItem key={employee.id} value={String(employee.id)}>
-                  {employee.full_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                className={cn(payrollFilterSelectClass, uiSelect)}
+                aria-label="Filter by employee"
+              >
+                <SelectValue placeholder={isEmployeesLoading ? 'Loading...' : 'All employees'} />
+              </SelectTrigger>
+              <SelectContent
+                position="popper"
+                sideOffset={4}
+                className="max-h-60 w-[var(--radix-select-trigger-width)] bg-slate-900 border-slate-700 text-slate-200 shadow-xl"
+              >
+                <SelectGroup>
+                  <SelectItem value="all" className={payrollEmployeeItemClass}>
+                    All employees
+                  </SelectItem>
+                </SelectGroup>
+                {isEmployeesLoading ? (
+                  <SelectGroup>
+                    <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
+                      Loading employees...
+                    </SelectLabel>
+                  </SelectGroup>
+                ) : employeesHasError ? (
+                  <SelectGroup>
+                    <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
+                      Could not load employees
+                    </SelectLabel>
+                  </SelectGroup>
+                ) : employees.length === 0 ? (
+                  <SelectGroup>
+                    <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
+                      No employees found
+                    </SelectLabel>
+                  </SelectGroup>
+                ) : (
+                  <SelectGroup>
+                    {employees.map((employee) => (
+                      <SelectItem
+                        key={employee.id}
+                        value={String(employee.id)}
+                        className={payrollEmployeeItemClass}
+                      >
+                        <span className="truncate">{getEmployeeFilterLabel(employee)}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
           <Select value={statusFilter} onValueChange={(val) => onStatusChange(val as PayrollStatusFilter)}>
             <SelectTrigger
               className={cn(payrollStatusSelectClass, uiSelect)}

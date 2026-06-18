@@ -3,6 +3,11 @@ import { useState, useCallback } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { authService } from '@/services/auth-service'
 import { invalidatePermissions } from '@/components/auth/permissions-provider'
+import { HELP_SUPPORT_LABEL } from '@/lib/support'
+
+const BREADCRUMB_LABELS: Record<string, string> = {
+  tickets: HELP_SUPPORT_LABEL,
+}
 
 export interface BreadcrumbItem {
   label: string
@@ -39,7 +44,7 @@ export function useSidebar(): UseSidebarReturn {
   }, [router])
 
   const handleGoToNotifications = useCallback((): void => {
-    router.push('/settings?tab=system')
+    router.push('/notifications')
   }, [router])
 
   const getBreadcrumbs = useCallback((): BreadcrumbItem[] => {
@@ -47,7 +52,7 @@ export function useSidebar(): UseSidebarReturn {
     if (paths.length === 0) return [{ label: 'Dashboard', href: '/' }]
     
     return paths.map((path, index) => ({
-      label: path.charAt(0).toUpperCase() + path.slice(1),
+      label: BREADCRUMB_LABELS[path] ?? path.charAt(0).toUpperCase() + path.slice(1),
       href: '/' + paths.slice(0, index + 1).join('/'),
     }))
   }, [pathname])

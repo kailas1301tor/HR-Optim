@@ -2,6 +2,7 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,6 +14,8 @@ import { uiSectionHeader } from '@/lib/ui/design-system'
 
 export type { WorkflowTemplate } from '@/types/settings'
 import type { WorkflowTemplate } from '@/types/settings'
+import { LIMIT_DESCRIPTION, LIMIT_SHORT_NAME, LIMIT_WORKFLOW_STEP } from '@/validations/field-limits'
+import { workflowNameSchema, workflowStepSchema } from '@/validations/settings-master.schema'
 
 interface WorkflowTemplatesProps {
   workflowTemplates: WorkflowTemplate[]
@@ -51,10 +54,14 @@ export function WorkflowTemplates({
 
   const handleSaveWorkflow = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!workflowName.trim()) return
+    const parsedName = workflowNameSchema.safeParse(workflowName)
+    if (!parsedName.success) {
+      toast.error(parsedName.error.issues[0]?.message ?? 'Workflow name is required')
+      return
+    }
 
     const newTemplate: WorkflowTemplate = {
-      name: workflowName.trim().toUpperCase(),
+      name: parsedName.data.toUpperCase(),
       steps: workflowSteps,
     }
 
@@ -69,8 +76,12 @@ export function WorkflowTemplates({
   }
 
   const handleAddStep = () => {
-    if (!newStepText.trim()) return
-    setWorkflowSteps([...workflowSteps, newStepText.trim()])
+    const parsedStep = workflowStepSchema.safeParse(newStepText)
+    if (!parsedStep.success) {
+      toast.error(parsedStep.error.issues[0]?.message ?? 'Invalid step')
+      return
+    }
+    setWorkflowSteps([...workflowSteps, parsedStep.data])
     setNewStepText('')
   }
 
@@ -146,14 +157,14 @@ export function WorkflowTemplates({
           <form onSubmit={handleSaveWorkflow} className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label htmlFor="workflow-name" className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Template Name</Label>
-              <Input id="workflow-name" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} placeholder="e.g. ONBOARDING" className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm" required />
+              <Input id="workflow-name" value={workflowName} onChange={(e) => setWorkflowName(e.target.value)} placeholder="e.g. ONBOARDING" className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm" required maxLength={LIMIT_SHORT_NAME} />
             </div>
 
             {/* Steps Section */}
             <div className="space-y-2 pt-2">
               <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Checklist Steps</Label>
               <div className="flex gap-2">
-                <Input value={newStepText} onChange={(e) => setNewStepText(e.target.value)} placeholder="e.g. IT Setup" className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm flex-1" />
+                <Input value={newStepText} onChange={(e) => setNewStepText(e.target.value)} placeholder="e.g. IT Setup" className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm flex-1" maxLength={LIMIT_WORKFLOW_STEP} />
                 <Button type="button" onClick={handleAddStep} className="bg-violet-core hover:bg-violet-deep text-white rounded-[20px] [corner-shape:squircle] h-10 px-4 cursor-pointer">Add</Button>
               </div>
 

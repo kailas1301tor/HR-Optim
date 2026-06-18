@@ -20,7 +20,8 @@ export interface UseDashboardReturn {
   reload: () => void
 }
 
-export function useDashboard(): UseDashboardReturn {
+export function useDashboard(options?: { enabled?: boolean }): UseDashboardReturn {
+  const enabled = options?.enabled ?? true
   const [data, setData] = useState<MainDashboardData>(EMPTY_DASHBOARD)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -33,6 +34,14 @@ export function useDashboard(): UseDashboardReturn {
   }, [])
 
   useEffect(() => {
+    if (!enabled) {
+      setIsLoading(true)
+      setHasError(false)
+      setErrorMessage(null)
+      setData(EMPTY_DASHBOARD)
+      return
+    }
+
     const controller = new AbortController()
     const fetchId = ++fetchIdRef.current
 
@@ -60,7 +69,7 @@ export function useDashboard(): UseDashboardReturn {
 
     void load()
     return () => controller.abort()
-  }, [reloadToken])
+  }, [enabled, reloadToken])
 
   return { data, isLoading, hasError, errorMessage, reload }
 }

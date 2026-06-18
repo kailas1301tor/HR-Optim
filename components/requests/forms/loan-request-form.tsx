@@ -12,6 +12,7 @@ import { PrimaryButton } from '@/components/ui/primary-button'
 import { cn } from '@/lib/utils'
 import { uiInput, uiOutlineBtn } from '@/lib/ui/design-system'
 import { loanRequestSchema, type LoanRequestInput } from '@/validations/request.schema'
+import { LIMIT_REASON } from '@/validations/field-limits'
 
 interface LoanRequestFormProps {
   isSubmitting: boolean
@@ -57,7 +58,7 @@ export function LoanRequestForm({
           <Input
             type="number"
             min="1"
-            max="120"
+            max="60"
             {...register('tenure')}
             placeholder="12"
             className={cn(uiInput, 'text-xs h-10')}
@@ -74,6 +75,7 @@ export function LoanRequestForm({
           placeholder="Reason for loan request..."
           className={cn(uiInput, 'text-xs min-h-[100px] resize-none')}
           aria-label="Loan reason"
+          maxLength={LIMIT_REASON}
         />
         {errors.reason?.message && <CommonFormFieldError message={errors.reason.message} />}
       </div>

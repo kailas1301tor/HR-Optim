@@ -1,10 +1,11 @@
 // validations/pay-rule.schema.ts
 import { z } from 'zod'
 import { FIXED_CALCULATE_TYPE } from '@/types/settings'
+import { LIMIT_SHORT_NAME, requiredTrimmedString } from './field-limits'
 
 export const payRuleSchema = z
   .object({
-    name: z.string().trim().min(1, 'Rule name is required'),
+    name: requiredTrimmedString('Rule name', LIMIT_SHORT_NAME),
     category: z.string().trim().min(1, 'Category is required'),
     trigger_basis: z.string().trim().min(1, 'Trigger basis is required'),
     calculate_type: z.string().trim().min(1, 'Calculation type is required'),

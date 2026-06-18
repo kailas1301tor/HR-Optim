@@ -10,14 +10,6 @@ export interface PendingAuthSession {
   expiresAt: number
 }
 
-/** Payload sent to POST /api/auth/session */
-export interface PersistSessionInput {
-  token: string
-  username: string
-  email: string
-  userId?: number
-}
-
 /** Result from a successful token refresh (future backend API). */
 export interface RefreshTokenResult {
   access: string
@@ -64,16 +56,32 @@ export interface UserPermission {
   codename: string
 }
 
+export interface ProfileField<T> {
+  value: T
+  is_editable: boolean
+}
+
+export interface CurrentUserProfileWire {
+  id: ProfileField<number>
+  username: ProfileField<string>
+  email: ProfileField<string>
+  permissions: ProfileField<UserPermission[]>
+  employee_profile_id?: ProfileField<number | null>
+  phone_number?: ProfileField<string>
+  address?: ProfileField<string>
+}
+
 export interface CurrentUserProfile {
   id: number
   username: string
   email: string
   permissions: UserPermission[]
+  employee_profile_id?: number | null
 }
 
 export interface CurrentUserProfileResponse {
   message: string
   results: {
-    data: CurrentUserProfile
+    data: CurrentUserProfileWire
   }
 }

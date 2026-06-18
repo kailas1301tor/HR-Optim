@@ -26,7 +26,8 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2, MapPin } from 'lucide-react'
-import { CommonEmptyState, CommonErrorState } from '@/components/common'
+import { CommonEmptyState, CommonErrorState, CommonFormFieldError } from '@/components/common'
+import { LIMIT_ADDRESS, LIMIT_SHORT_NAME } from '@/validations/field-limits'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
@@ -42,6 +43,9 @@ export function BranchSettingsCard() {
     editId,
     formName,
     formAddress,
+    nameError,
+    addressError,
+    isFormValid,
     isSubmitting,
     deleteId,
     isDeleting,
@@ -155,7 +159,9 @@ export function BranchSettingsCard() {
                 className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
                 required
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
+              <CommonFormFieldError message={nameError ?? undefined} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="branch-address" className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">
@@ -168,7 +174,9 @@ export function BranchSettingsCard() {
                 placeholder="e.g. 123 Main St, Cityville"
                 className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm min-h-20"
                 disabled={isSubmitting}
+                maxLength={LIMIT_ADDRESS}
               />
+              <CommonFormFieldError message={addressError ?? undefined} />
             </div>
             <DialogFooter className="pt-4 border-t border-border/40">
               <DialogClose asChild>
@@ -179,7 +187,7 @@ export function BranchSettingsCard() {
               <Button
                 type="submit"
                 className="h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-[20px] [corner-shape:squircle] px-5 cursor-pointer flex items-center gap-2"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isFormValid}
               >
                 {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
                 Save

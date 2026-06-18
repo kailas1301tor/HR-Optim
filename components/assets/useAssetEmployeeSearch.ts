@@ -34,7 +34,7 @@ export function useAssetEmployeeSearch(open: boolean): UseAssetEmployeeSearchRet
     async function loadEmployees(): Promise<void> {
       setIsLoading(true)
       try {
-        const response = await employeeService.getEmployees(
+        const response = await employeeService.getEmployeesList(
           { search: searchQuery || undefined, page_size: 50 },
           controller.signal
         )

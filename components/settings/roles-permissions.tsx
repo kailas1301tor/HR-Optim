@@ -46,6 +46,7 @@ export function RolesPermissions() {
     setFormSearchQuery,
     isSaving,
     isLoadingDetails,
+    isFormReady,
     filteredFormPermissions,
     handleTogglePermissionId,
     handleToggleAllPermissions,
@@ -64,7 +65,7 @@ export function RolesPermissions() {
   }
 
   if (action === 'add' || action === 'edit') {
-    if ((isLoading || isLoadingDetails) && roles.length === 0 && action === 'edit') {
+    if (!isFormReady || isLoadingDetails || (isLoading && roles.length === 0 && action === 'edit')) {
       return (
         <div className="p-6">
           <RoleCardSkeleton />

@@ -27,30 +27,31 @@ export function useRoleActions(): UseRoleActionsReturn {
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
+  const searchParamsString = searchParams.toString()
   const action = searchParams.get('action') || ''
   const roleIdParam = searchParams.get('role_id') || ''
   const roleEditId = roleIdParam ? parseInt(roleIdParam, 10) : null
 
   const handleOpenAddRole = useCallback((): void => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParamsString)
     params.set('action', 'add')
     params.delete('role_id')
     router.replace(`${pathname}?${params.toString()}`)
-  }, [router, pathname, searchParams])
+  }, [router, pathname, searchParamsString])
 
   const handleOpenEditRole = useCallback((role: BackendRole): void => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParamsString)
     params.set('action', 'edit')
     params.set('role_id', String(role.id))
     router.replace(`${pathname}?${params.toString()}`)
-  }, [router, pathname, searchParams])
+  }, [router, pathname, searchParamsString])
 
   const handleCancelForm = useCallback((): void => {
-    const params = new URLSearchParams(searchParams.toString())
+    const params = new URLSearchParams(searchParamsString)
     params.delete('action')
     params.delete('role_id')
     router.replace(`${pathname}?${params.toString()}`)
-  }, [router, pathname, searchParams])
+  }, [router, pathname, searchParamsString])
 
   const handleDeleteRole = useCallback(async (
     role: BackendRole,

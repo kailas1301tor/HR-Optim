@@ -17,9 +17,11 @@ import { usePermissions } from '@/components/auth/permissions-provider'
 import { usePendingApprovals } from './usePendingApprovals'
 
 export function PendingApprovals() {
-  const { items, pendingCount, isLoading, hasError, reload } = usePendingApprovals()
   const { canManage } = usePermissions()
   const canManageRequests = canManage('requests')
+  const { items, pendingCount, isLoading, hasError, reload } = usePendingApprovals({
+    enabled: canManageRequests,
+  })
 
   const {
     approveTarget,
@@ -27,6 +29,8 @@ export function PendingApprovals() {
     isRejectDialogOpen,
     isSubmitting,
     rejectReason,
+    rejectReasonError,
+    isRejectReasonValid,
     setRejectReason,
     handleApprove,
     handleOpenReject,
@@ -146,6 +150,8 @@ export function PendingApprovals() {
         isRejectOpen={isRejectDialogOpen}
         rejectTarget={rejectTarget}
         rejectReason={rejectReason}
+        rejectReasonError={rejectReasonError}
+        isRejectReasonValid={isRejectReasonValid}
         isSubmitting={isSubmitting}
         onRejectReasonChange={setRejectReason}
         onApproveDialogChange={(open) => !open && handleCloseApprove()}

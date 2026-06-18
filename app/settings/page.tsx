@@ -2,14 +2,18 @@
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
 import { SettingsPanel } from '@/components/settings/settings-panel'
-import { CommonPageSkeleton } from '@/components/common'
+import { SettingsPageHeader } from '@/components/settings/settings-page-header'
+import { SettingsSkeleton } from '@/components/settings/settings-skeleton'
 
-export default function SettingsPage() {
+export default function SettingsPage(): React.JSX.Element {
   return (
     <AppShell>
-      <Suspense fallback={<CommonPageSkeleton />}>
-        <SettingsPanel />
-      </Suspense>
+      <div className="space-y-6">
+        <SettingsPageHeader />
+        <Suspense fallback={<SettingsSkeleton showHeader={false} />}>
+          <SettingsPanel />
+        </Suspense>
+      </div>
     </AppShell>
   )
 }

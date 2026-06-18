@@ -2,75 +2,65 @@
 'use client'
 
 import Link from 'next/link'
-import { ChevronRight, Lock, Settings } from 'lucide-react'
-import { uiSectionHeader, uiSquircleMd } from '@/lib/ui/design-system'
-import { cn } from '@/lib/utils'
+import { ChevronRight, Lock, BellRing } from 'lucide-react'
 
-export function ProfileQuickActions() {
+export function ProfileQuickActions(): React.JSX.Element {
   return (
-    <div className="space-y-4">
-      <div className={uiSectionHeader}>
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Quick Actions</h2>
-          <p className="text-xs text-muted-foreground mt-1">Manage your account preferences</p>
-        </div>
+    <section className="space-y-4">
+      <div className="border-b border-border/40 pb-2">
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+          Quick Actions
+        </h3>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="space-y-2">
         <Link
           href="/settings?tab=security"
-          className={cn(
-            'group flex items-center gap-3.5 p-4 transition-colors hover:bg-muted/40',
-            uiSquircleMd,
-            'border border-border/60 bg-card',
-          )}
+          className="group flex min-h-12 items-center justify-between rounded-xl border border-transparent p-2.5 transition-all duration-200 hover:border-border/30 hover:bg-muted/10"
         >
-          <div
-            className={cn(
-              'w-10 h-10 flex items-center justify-center shrink-0 text-violet-glow',
-              uiSquircleMd,
-              'bg-violet-core/10 border border-violet-core/20',
-            )}
-          >
-            <Lock className="w-4.5 h-4.5" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">Change Password</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Update your sign-in credentials</p>
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/20 text-muted-foreground transition-all duration-200 group-hover:border-violet-core/30 group-hover:bg-violet-core/10 group-hover:text-violet-glow">
+              <Lock className="h-4.5 w-4.5" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-slate-200 transition-colors group-hover:text-foreground">
+                Change Password
+              </p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                Update your sign-in credentials
+              </p>
+            </div>
           </div>
           <ChevronRight
-            className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5"
+            className="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-violet-glow"
             aria-hidden
           />
         </Link>
 
         <Link
           href="/settings?tab=system"
-          className={cn(
-            'group flex items-center gap-3.5 p-4 transition-colors hover:bg-muted/40',
-            uiSquircleMd,
-            'border border-border/60 bg-card',
-          )}
+          className="group flex min-h-12 items-center justify-between rounded-xl border border-transparent p-2.5 transition-all duration-200 hover:border-border/30 hover:bg-muted/10"
         >
-          <div
-            className={cn(
-              'w-10 h-10 flex items-center justify-center shrink-0 text-violet-glow',
-              uiSquircleMd,
-              'bg-violet-core/10 border border-violet-core/20',
-            )}
-          >
-            <Settings className="w-4.5 h-4.5" aria-hidden />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">Notifications</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Configure email and alert preferences</p>
+          <div className="flex min-w-0 items-center gap-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/20 text-muted-foreground transition-all duration-200 group-hover:border-violet-core/30 group-hover:bg-violet-core/10 group-hover:text-violet-glow">
+              <BellRing className="h-4.5 w-4.5" aria-hidden />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-slate-200 transition-colors group-hover:text-foreground">
+                Notifications
+              </p>
+              <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                Configure email and alert preferences
+              </p>
+            </div>
           </div>
           <ChevronRight
-            className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5"
+            className="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 group-hover:translate-x-1 group-hover:text-violet-glow"
             aria-hidden
           />
         </Link>
       </div>
-    </div>
+    </section>
   )
 }
+

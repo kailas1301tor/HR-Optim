@@ -1,7 +1,7 @@
 // services/employee-request-service.ts
 import { api } from '@/lib/api'
 import { cleanParams } from '@/lib/types'
-import type { ApiListResponse, ApiSingleResponse } from '@/lib/types'
+import type { ApiListResponse, ApiSimpleListResponse, ApiSingleResponse } from '@/lib/types'
 import { mapLeaveCalendarFromApi } from '@/lib/mappers/leave-calendar-mapper'
 import type {
   CreateDocumentPayload,
@@ -9,6 +9,7 @@ import type {
   CreateLoanPayload,
   CreateSalaryAdvancePayload,
   DocumentRequestRecord,
+  LeaveBalanceRecord,
   LeaveCalculatePayload,
   LeaveCalendarViewModel,
   LeaveRequestRecord,
@@ -157,6 +158,20 @@ export const employeeRequestService = {
       signal,
     })
     return mapLeaveCalendarFromApi(response)
+  },
+
+  async getLeaveBalances(employeeId: number, signal?: AbortSignal): Promise<LeaveBalanceRecord[]> {
+    const response = await api.get<ApiSimpleListResponse<{ leave_type: string; balance: number | string }>>(
+      '/api/employee/leave-balances/',
+      { params: { employee_id: employeeId }, signal }
+    )
+    return (response.results?.data ?? []).map((record) => {
+      const parsed = typeof record.balance === 'string' ? parseFloat(record.balance) : record.balance
+      return {
+        leave_type: record.leave_type,
+        balance: Number.isFinite(parsed) ? parsed : 0,
+      }
+    })
   },
 
   async approveRequest(

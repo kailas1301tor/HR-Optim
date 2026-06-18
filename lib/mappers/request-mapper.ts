@@ -1,6 +1,7 @@
 // lib/mappers/request-mapper.ts
 import { formatDistanceToNow } from 'date-fns'
 import { initialsFromName } from '@/lib/cookies'
+import { formatPersonName } from '@/lib/helpers/format-display-text'
 import { statusConfig } from '@/components/requests/requests-constants'
 import type {
   DocumentRequestRecord,
@@ -61,10 +62,11 @@ function buildTimeline(
 }
 
 function baseRequester(employeeName: string): Request['requester'] {
+  const name = formatPersonName(employeeName)
   return {
     id: employeeName,
-    name: employeeName,
-    initials: initialsFromName(employeeName),
+    name,
+    initials: initialsFromName(name),
     department: '',
   }
 }
@@ -105,7 +107,7 @@ export function mapSalaryAdvanceRequest(record: SalaryAdvanceRequestRecord): Req
     displayId: formatDisplayId(record.id),
     type: 'salary-advance',
     title: 'Salary Advance Request',
-    description: `AED ${record.request_amount} over ${record.tenure} months — ${record.reason}`,
+    description: `₹${record.request_amount} over ${record.tenure} months — ${record.reason}`,
     requester: baseRequester(record.employee),
     submittedAt: formatSubmittedAt(record.created_at),
     status,
@@ -121,7 +123,7 @@ export function mapLoanRequest(record: LoanRequestRecord): Request {
     displayId: formatDisplayId(record.id),
     type: 'loan',
     title: 'Loan Application',
-    description: `AED ${record.request_amount} over ${record.tenure} months — ${record.reason}`,
+    description: `₹${record.request_amount} over ${record.tenure} months — ${record.reason}`,
     requester: baseRequester(record.employee),
     submittedAt: formatSubmittedAt(record.created_at),
     status,

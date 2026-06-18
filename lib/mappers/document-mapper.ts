@@ -1,4 +1,5 @@
 // lib/mappers/document-mapper.ts
+import { formatPersonName, formatTitleLabel } from '@/lib/helpers/format-display-text'
 import type {
   CompanyDocument,
   DocumentTab,
@@ -62,10 +63,10 @@ export function getDocumentSubtitle(
   type: DocumentTab
 ): string {
   if (type === 'employee' && isEmployeeDocument(doc)) {
-    return String(doc.employee_name || doc.employee)
+    return formatPersonName(String(doc.employee_name || doc.employee))
   }
   if (!isEmployeeDocument(doc)) {
-    return String(doc.branch_name || doc.branch)
+    return formatTitleLabel(String(doc.branch_name || doc.branch))
   }
   return ''
 }

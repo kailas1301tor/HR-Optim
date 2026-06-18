@@ -26,15 +26,27 @@ export function AttendanceCard({ record, index }: AttendanceCardProps) {
       aria-label={`${record.employeeName} attendance — ${status.label}`}
     >
       <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <Avatar className="w-10 h-10 shrink-0">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
+          <Avatar className="w-10 h-10 shrink-0 mt-0.5">
             <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-xs">
               {record.initials}
             </AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-cloud truncate">{record.employeeName}</p>
-            <p className="text-xs text-muted-foreground truncate">{record.department}</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-semibold text-cloud truncate max-w-[130px]">{record.employeeName}</span>
+              <span className="px-1.5 py-0.5 rounded bg-violet-core/10 border border-violet-core/20 font-mono text-[9px] text-violet-glow font-semibold shrink-0">
+                {record.employeeId}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">
+              {record.department} {record.role ? `• ${record.role}` : ''}
+            </p>
+            {(record.email || record.phoneNumber) && (
+              <p className="text-[10px] text-muted-foreground/80 truncate mt-0.5">
+                {record.email} {record.email && record.phoneNumber ? '•' : ''} {record.phoneNumber}
+              </p>
+            )}
           </div>
         </div>
         <span

@@ -1,7 +1,7 @@
 // components/payroll/payroll-adjustment-dialog.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -13,7 +13,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { SettingsFormDialog } from '@/components/settings/shared'
+import { CommonFormFieldError } from '@/components/common'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
+import { LIMIT_REASON, LIMIT_SHORT_NAME } from '@/validations/field-limits'
+import { payrollAdjustmentSchema } from '@/validations/payroll.schema'
 import type { PayrollAdjustmentType, PayrollRecord } from '@/types/payroll'
 
 const ADJUSTMENT_TYPES: PayrollAdjustmentType[] = ['Allowance', 'Deduction']
@@ -42,6 +45,19 @@ export function PayrollAdjustmentDialog({
   const [description, setDescription] = useState('')
   const [amount, setAmount] = useState('')
   const [reason, setReason] = useState('')
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
+  const [amountError, setAmountError] = useState<string | null>(null)
+  const [reasonError, setReasonError] = useState<string | null>(null)
+
+  const formValues = useMemo(
+    () => ({ adjustment_type: adjustmentType, description, amount, reason }),
+    [adjustmentType, description, amount, reason],
+  )
+
+  const isFormValid = useMemo(
+    () => payrollAdjustmentSchema.safeParse(formValues).success,
+    [formValues],
+  )
 
   useEffect(() => {
     if (!open) {
@@ -49,17 +65,32 @@ export function PayrollAdjustmentDialog({
       setDescription('')
       setAmount('')
       setReason('')
+      setDescriptionError(null)
+      setAmountError(null)
+      setReasonError(null)
     }
   }, [open])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!description.trim() || !amount.trim() || !reason.trim()) return
+    const parsed = payrollAdjustmentSchema.safeParse(formValues)
+    if (!parsed.success) {
+      const fieldErrors = parsed.error.flatten().fieldErrors
+      setDescriptionError(fieldErrors.description?.[0] ?? null)
+      setAmountError(fieldErrors.amount?.[0] ?? null)
+      setReasonError(fieldErrors.reason?.[0] ?? null)
+      return
+    }
+
+    setDescriptionError(null)
+    setAmountError(null)
+    setReasonError(null)
+
     await onSubmit({
-      adjustment_type: adjustmentType,
-      description,
-      amount,
-      reason,
+      adjustment_type: parsed.data.adjustment_type,
+      description: parsed.data.description,
+      amount: parsed.data.amount,
+      reason: parsed.data.reason,
     })
   }
 
@@ -75,6 +106,7 @@ export function PayrollAdjustmentDialog({
       }
       submitLabel="Add Adjustment"
       isSubmitting={isSubmitting}
+      submitDisabled={!isFormValid}
       size="lg"
       onSubmit={handleSubmit}
     >
@@ -106,16 +138,21 @@ export function PayrollAdjustmentDialog({
         <Input
           id="adjustment-description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => {
+            setDescription(e.target.value)
+            if (descriptionError) setDescriptionError(null)
+          }}
           placeholder="e.g. Custom Bonus"
           className={uiInput}
           required
           disabled={isSubmitting}
+          maxLength={LIMIT_SHORT_NAME}
         />
+        <CommonFormFieldError message={descriptionError ?? undefined} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="adjustment-amount" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Amount (AED)
+          Amount (₹)
         </Label>
         <Input
           id="adjustment-amount"
@@ -123,12 +160,16 @@ export function PayrollAdjustmentDialog({
           step="0.01"
           min="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => {
+            setAmount(e.target.value)
+            if (amountError) setAmountError(null)
+          }}
           placeholder="500.00"
           className={uiInput}
           required
           disabled={isSubmitting}
         />
+        <CommonFormFieldError message={amountError ?? undefined} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="adjustment-reason" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -137,13 +178,18 @@ export function PayrollAdjustmentDialog({
         <Textarea
           id="adjustment-reason"
           value={reason}
-          onChange={(e) => setReason(e.target.value)}
+          onChange={(e) => {
+            setReason(e.target.value)
+            if (reasonError) setReasonError(null)
+          }}
           placeholder="Outstanding performance"
           className={uiInput}
           rows={3}
           required
           disabled={isSubmitting}
+          maxLength={LIMIT_REASON}
         />
+        <CommonFormFieldError message={reasonError ?? undefined} />
       </div>
     </SettingsFormDialog>
   )

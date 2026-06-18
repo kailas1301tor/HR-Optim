@@ -31,6 +31,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { CommonEmptyState, CommonErrorState } from '@/components/common'
+import { LIMIT_DESCRIPTION, LIMIT_SHORT_NAME } from '@/validations/field-limits'
 import { useDesignationSettings } from './useDesignationSettings'
 
 export function DesignationSettingsCard() {
@@ -221,6 +222,7 @@ export function DesignationSettingsCard() {
                 className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm"
                 required
                 disabled={isSubmitting}
+                maxLength={LIMIT_SHORT_NAME}
               />
             </div>
             <div className="space-y-2">
@@ -234,6 +236,7 @@ export function DesignationSettingsCard() {
                 placeholder="e.g. Develops software applications"
                 className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-sm min-h-20"
                 disabled={isSubmitting}
+                maxLength={LIMIT_DESCRIPTION}
               />
             </div>
             <DialogFooter className="pt-4 border-t border-border/40">

@@ -100,7 +100,7 @@ export function MaintenanceDialog({ open, onOpenChange, assetId, dropdowns, onSu
 
           {/* Estimated Cost */}
           <div className="space-y-1.5">
-            <Label htmlFor="estimated_cost" className="text-xs text-slate-400">Estimated Cost (AED)</Label>
+            <Label htmlFor="estimated_cost" className="text-xs text-slate-400">Estimated Cost (₹)</Label>
             <Input
               id="estimated_cost"
               type="number"

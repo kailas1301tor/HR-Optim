@@ -5,7 +5,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { uiCard, uiSkeletonBlock, uiSquircleMd, uiSquircleSm } from '@/lib/ui/design-system'
 
-export function RequestCardSkeleton() {
+interface RequestCardSkeletonProps {
+  showActions?: boolean
+}
+
+export function RequestCardSkeleton({ showActions = false }: RequestCardSkeletonProps) {
   return (
     <div className={cn(uiCard, 'overflow-hidden p-4 border-l-2 border-l-border/60')}>
       <div className="flex flex-col gap-2">
@@ -19,6 +23,7 @@ export function RequestCardSkeleton() {
           </div>
           <Skeleton className={cn('h-5 w-14 rounded-full', uiSkeletonBlock)} />
         </div>
+
         <div className={cn('overflow-hidden ring-1 ring-border/35', uiSquircleMd)}>
           <div className="flex items-center gap-2 px-2.5 py-1.5">
             <Skeleton className={cn('h-7 w-7 shrink-0 rounded-full', uiSkeletonBlock)} />
@@ -30,6 +35,7 @@ export function RequestCardSkeleton() {
           <div className="h-px bg-border/50" />
           <Skeleton className={cn('mx-2.5 my-1.5 h-6 w-[calc(100%-1.25rem)] rounded', uiSkeletonBlock)} />
         </div>
+
         <div className="space-y-1.5">
           <Skeleton className={cn('h-2.5 w-24 rounded', uiSkeletonBlock)} />
           <div className="grid grid-cols-2 gap-1.5">
@@ -37,6 +43,13 @@ export function RequestCardSkeleton() {
             <Skeleton className={cn('min-h-11', uiSquircleSm, uiSkeletonBlock)} />
           </div>
         </div>
+
+        {showActions ? (
+          <div className="flex items-center gap-2 pt-1">
+            <Skeleton className={cn('h-9 flex-1 rounded-xl', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-9 flex-1 rounded-xl', uiSkeletonBlock)} />
+          </div>
+        ) : null}
       </div>
     </div>
   )

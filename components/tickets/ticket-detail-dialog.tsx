@@ -1,10 +1,10 @@
 // components/tickets/ticket-detail-dialog.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SettingsDeleteDialog } from '@/components/settings/shared/settings-delete-dialog'
 import { SettingsFormDialog } from '@/components/settings/shared/settings-form-dialog'
-import { CommonStatusBadge } from '@/components/common'
+import { CommonFormFieldError, CommonStatusBadge } from '@/components/common'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -15,6 +15,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
+import { LIMIT_DESCRIPTION } from '@/validations/field-limits'
+import { updateTicketSchema } from '@/validations/ticket.schema'
 import { TicketAttachmentsField } from './ticket-attachments-field'
 import { TicketExistingAttachments } from './ticket-existing-attachments'
 import {
@@ -47,12 +49,19 @@ export function TicketDetailDialog({
   const [priority, setPriority] = useState<TicketPriority>('Medium')
   const [description, setDescription] = useState('')
   const [files, setFiles] = useState<File[]>([])
+  const [descriptionError, setDescriptionError] = useState<string | null>(null)
+
+  const isFormValid = useMemo(
+    () => updateTicketSchema.safeParse({ description, priority }).success,
+    [description, priority],
+  )
 
   useEffect(() => {
     if (ticket) {
       setPriority(ticket.priority)
       setDescription(ticket.description)
       setFiles([])
+      setDescriptionError(null)
     }
   }, [ticket])
 
@@ -64,9 +73,15 @@ export function TicketDetailDialog({
       onOpenChange(false)
       return
     }
+    const parsed = updateTicketSchema.safeParse({ description, priority })
+    if (!parsed.success) {
+      setDescriptionError(parsed.error.flatten().fieldErrors.description?.[0] ?? null)
+      return
+    }
+    setDescriptionError(null)
     await onUpdate(ticket.id, {
-      priority,
-      description: description.trim(),
+      priority: parsed.data.priority ?? priority,
+      description: parsed.data.description,
       files: files.length > 0 ? files : undefined,
     })
   }
@@ -84,6 +99,7 @@ export function TicketDetailDialog({
       submitLabel="Save Changes"
       readOnly={!canManage}
       isSubmitting={isSubmitting}
+      submitDisabled={canManage && !isFormValid}
       size="lg"
       onSubmit={handleSubmit}
     >
@@ -129,10 +145,17 @@ export function TicketDetailDialog({
             id="detail-description"
             className={uiInput}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              if (descriptionError) setDescriptionError(null)
+            }}
             rows={4}
             disabled={isSubmitting || !canManage}
+            required={canManage}
+            maxLength={LIMIT_DESCRIPTION}
+            aria-invalid={descriptionError ? true : undefined}
           />
+          <CommonFormFieldError message={descriptionError ?? undefined} />
         </div>
 
         <TicketExistingAttachments attachments={ticket.attachments} />

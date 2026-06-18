@@ -1,16 +1,27 @@
 // validations/employee.schema.ts
 import { z } from 'zod'
+import {
+  LIMIT_ACCOUNT_NUMBER,
+  LIMIT_ADDRESS,
+  LIMIT_EMPLOYEE_ID,
+  LIMIT_FULL_NAME,
+  LIMIT_IFSC,
+  LIMIT_PHONE,
+  LIMIT_SHORT_NAME,
+  LIMIT_USERNAME,
+  requiredTrimmedString,
+} from './field-limits'
 
 export const employeeSchema = z.object({
   id: z.string().optional(),
-  username: z.string().min(1, 'Username is required').max(150).trim(),
+  username: requiredTrimmedString('Username', LIMIT_USERNAME),
   email: z.string().min(1, 'Email is required').trim().email('Invalid email address'),
-  full_name: z.string().min(1, 'Full name is required').max(100),
-  phone_number: z.string().min(1, 'Phone number is required'),
+  full_name: requiredTrimmedString('Full name', LIMIT_FULL_NAME),
+  phone_number: requiredTrimmedString('Phone number', LIMIT_PHONE),
   role: z.string().min(1, 'Role is required'),
   department: z.string().min(1, 'Department is required'),
   designation: z.string().min(1, 'Designation is required'),
-  employee_id: z.string().min(1, 'Employee ID is required'),
+  employee_id: requiredTrimmedString('Employee ID', LIMIT_EMPLOYEE_ID),
   status: z.string().min(1, 'Status is required'),
   shift: z.string().min(1, 'Shift is required'),
   joined_date: z.string().min(1, 'Joined date is required'),
@@ -19,13 +30,12 @@ export const employeeSchema = z.object({
   accommodation: z.string().min(1, 'Accommodation is required'),
   date_of_birth: z.string().min(1, 'Date of birth is required'),
   nationality: z.string().min(1, 'Nationality is required'),
-  address: z.string().min(1, 'Address is required'),
-  
-  // Bank details fields (flat inside form context, structured in API payload)
-  bank_name: z.string().min(1, 'Bank name is required'),
-  account_number: z.string().min(1, 'Account number is required'),
-  ifsc: z.string().min(1, 'IFSC code is required'),
-  branch: z.string().min(1, 'Branch is required'),
+  address: requiredTrimmedString('Address', LIMIT_ADDRESS),
+
+  bank_name: requiredTrimmedString('Bank name', LIMIT_SHORT_NAME),
+  account_number: requiredTrimmedString('Account number', LIMIT_ACCOUNT_NUMBER),
+  ifsc: requiredTrimmedString('IFSC code', LIMIT_IFSC),
+  branch: requiredTrimmedString('Branch', LIMIT_SHORT_NAME),
 })
 
 export type EmployeeInput = z.infer<typeof employeeSchema>

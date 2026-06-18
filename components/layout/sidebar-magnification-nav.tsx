@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePermissions } from '@/components/auth/permissions-provider'
+import { canViewEmployeesSection } from '@/lib/permissions/module-permissions'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { SIDEBAR_NAV_ITEMS, SIDEBAR_SECTIONS } from './sidebar-nav-config'
 import { MagnificationNavItem } from './magnification-nav-item'
@@ -67,9 +68,17 @@ export function SidebarMagnificationNav({
   const mouseY = useMotionValue(Infinity)
   const showSectionHeaders = !collapsed || isMobile
   const showLabels = !collapsed || isMobile
-  const { isLoading, canView } = usePermissions()
+  const { isLoading, canView, permissions } = usePermissions()
 
-  const visibleItems = SIDEBAR_NAV_ITEMS.filter((item) => canView(item.moduleKey))
+  const visibleItems = SIDEBAR_NAV_ITEMS.filter((item) => {
+    if (item.alwaysVisible) return true
+    if (item.hasEmployeeFallback) return true
+    if (item.moduleKey === 'employees') {
+      return canViewEmployeesSection(permissions)
+    }
+    if (item.moduleKey) return canView(item.moduleKey)
+    return false
+  })
 
   if (isLoading) {
     return (

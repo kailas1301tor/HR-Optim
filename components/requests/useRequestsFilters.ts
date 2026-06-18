@@ -37,10 +37,11 @@ export function useRequestsFilters(): UseRequestsFiltersReturn {
   const searchParams = useSearchParams()
 
   const rawStatus = searchParams.get('status')
+  const hasRequestId = searchParams.has('requestId')
   const statusFilter: RequestStatusFilter =
     rawStatus === 'all' || rawStatus === 'pending' || rawStatus === 'approved' || rawStatus === 'rejected'
       ? rawStatus
-      : 'pending'
+      : (hasRequestId ? 'all' : 'pending')
   const rawType = searchParams.get('type')
   const typeFilter: RequestTypeFilter =
     rawType && REQUEST_TYPES.includes(rawType as RequestType)

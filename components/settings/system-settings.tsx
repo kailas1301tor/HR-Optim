@@ -9,22 +9,24 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Bell, Palette } from 'lucide-react'
-import type { NotificationPreferences } from '@/types/settings'
+import { CommonErrorBanner } from '@/components/common'
 import { useSystemSettings } from './useSystemSettings'
+import { useNotificationSettings } from './useNotificationSettings'
 
-interface SystemSettingsProps {
-  notifications: NotificationPreferences
-  setNotifications: (notifs: NotificationPreferences) => void
-}
-
-export function SystemSettings({ notifications, setNotifications }: SystemSettingsProps) {
+export function SystemSettings() {
+  const { lang, theme, setTheme, mounted } = useSystemSettings()
   const {
-    lang,
-    theme,
-    setTheme,
-    mounted,
-    handleToggleNotification,
-  } = useSystemSettings({ notifications, setNotifications })
+    status: notificationStatus,
+    settings,
+    updatingKey,
+    handleToggle,
+    handleRetry,
+  } = useNotificationSettings()
+
+  const isNotificationLoading = notificationStatus === 'loading'
+  const isNotificationError = notificationStatus === 'error'
+  const showNotificationToggles = notificationStatus === 'success' && settings !== null
+  const showNotificationSkeleton = isNotificationLoading || isNotificationError
 
   return (
     <div className="space-y-6 outline-none">
@@ -34,70 +36,60 @@ export function SystemSettings({ notifications, setNotifications }: SystemSettin
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Notification Preferences */}
         <Card className="bg-card/40 backdrop-blur border border-border/80 shadow-lg">
           <CardHeader>
             <CardTitle className="text-base text-cloud font-semibold flex items-center gap-2">
               <Bell className="h-4.5 w-4.5 text-violet-glow" />
               Notification Channels
             </CardTitle>
-            <CardDescription className="text-xs">Configure where and when you receive automated emails and push alerts.</CardDescription>
+            <CardDescription className="text-xs">
+              Choose how you receive alerts and transactional updates.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            {isNotificationError ? (
+              <CommonErrorBanner
+                message="Could not load notification settings. Please try again."
+                onRetry={handleRetry}
+              />
+            ) : null}
+
+            <div className="flex items-center justify-between gap-4">
               <div>
                 <Label className="text-xs font-semibold text-slate-200">Email Notifications</Label>
                 <p className="text-[10px] text-slate-400">Receive transactional emails and daily task summaries</p>
               </div>
-              <Switch
-                checked={notifications.emailAlerts}
-                onCheckedChange={(checked) => handleToggleNotification('emailAlerts', checked)}
-              />
+              {showNotificationSkeleton ? (
+                <Skeleton className={cn('h-5 w-9 rounded-full', uiSkeletonBlock)} />
+              ) : showNotificationToggles ? (
+                <Switch
+                  checked={settings.email_notification_enabled}
+                  disabled={updatingKey === 'email_notification_enabled'}
+                  onCheckedChange={(checked) => handleToggle('email_notification_enabled', checked)}
+                  aria-label="Toggle email notifications"
+                />
+              ) : null}
             </div>
-            <div className="flex items-center justify-between">
+
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <Label className="text-xs font-semibold text-slate-200">Document Expiry Alerts</Label>
-                <p className="text-[10px] text-slate-400">Alert managers 30 days before document or visa expiration</p>
+                <Label className="text-xs font-semibold text-slate-200">In-app Notifications</Label>
+                <p className="text-[10px] text-slate-400">Show alerts inside the HRMS application</p>
               </div>
-              <Switch
-                checked={notifications.documentExpiry}
-                onCheckedChange={(checked) => handleToggleNotification('documentExpiry', checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-xs font-semibold text-slate-200">Leave Requests Updates</Label>
-                <p className="text-[10px] text-slate-400">Notify when leave applications are submitted or approved</p>
-              </div>
-              <Switch
-                checked={notifications.leaveRequests}
-                onCheckedChange={(checked) => handleToggleNotification('leaveRequests', checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-xs font-semibold text-slate-200">Payroll Processing Notices</Label>
-                <p className="text-[10px] text-slate-400">Notify upon payroll draft generation or final releases</p>
-              </div>
-              <Switch
-                checked={notifications.payrollUpdates}
-                onCheckedChange={(checked) => handleToggleNotification('payrollUpdates', checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-xs font-semibold text-slate-200">System Activity Logs</Label>
-                <p className="text-[10px] text-slate-400">Audit system events, backups, and security triggers</p>
-              </div>
-              <Switch
-                checked={notifications.systemUpdates}
-                onCheckedChange={(checked) => handleToggleNotification('systemUpdates', checked)}
-              />
+              {showNotificationSkeleton ? (
+                <Skeleton className={cn('h-5 w-9 rounded-full', uiSkeletonBlock)} />
+              ) : showNotificationToggles ? (
+                <Switch
+                  checked={settings.inapp_notification_enabled}
+                  disabled={updatingKey === 'inapp_notification_enabled'}
+                  onCheckedChange={(checked) => handleToggle('inapp_notification_enabled', checked)}
+                  aria-label="Toggle in-app notifications"
+                />
+              ) : null}
             </div>
           </CardContent>
         </Card>
 
-        {/* Configurations */}
         <div className="space-y-6">
           <Card className="bg-card/40 backdrop-blur border border-border/80 shadow-lg">
             <CardHeader>

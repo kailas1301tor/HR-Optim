@@ -10,6 +10,7 @@ import {
   CommonErrorState,
   CommonFilterChips,
   CommonPageHeader,
+  ModuleRestrictedState,
 } from '@/components/common'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -21,7 +22,8 @@ import { LeaveRequestForm } from './forms/leave-request-form'
 import { SalaryAdvanceRequestForm } from './forms/salary-advance-request-form'
 import { LoanRequestForm } from './forms/loan-request-form'
 import { DocumentRequestForm } from './forms/document-request-form'
-import { usePermissions } from '@/components/auth/permissions-provider'
+import { useModuleGate } from '@/lib/permissions/use-module-gate'
+import { CreateRequestPageSkeleton } from './create-request-page-skeleton'
 
 const REQUEST_TYPE_OPTIONS: CreateRequestType[] = [
   'leave',
@@ -38,10 +40,22 @@ function parseTypeParam(value: string | null): CreateRequestType {
 }
 
 export function CreateRequestPage() {
+  const requestsGate = useModuleGate('requests')
+
+  if (requestsGate.isLoading) {
+    return <CreateRequestPageSkeleton />
+  }
+
+  if (requestsGate.isRestricted) {
+    return <ModuleRestrictedState moduleKey="requests" />
+  }
+
+  return <CreateRequestPageContent />
+}
+
+function CreateRequestPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
-  const canManageRequests = canManage('requests')
   const typeParam = parseTypeParam(searchParams.get('type'))
 
   const {
@@ -60,6 +74,9 @@ export function CreateRequestPage() {
     hasMetadataError,
     isCalendarLoading,
     hasCalendarError,
+    leaveBalances,
+    isBalancesLoading,
+    hasBalancesError,
     reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
@@ -107,15 +124,6 @@ export function CreateRequestPage() {
   }, [employee, employeeError, isEmployeeLoading])
 
   const isFormLoading = isLoadingMetadata || isEmployeeLoading
-
-  if (!isPermissionsLoading && !canManageRequests) {
-    return (
-      <CommonErrorState
-        title="Access denied"
-        message="You do not have permission to create requests."
-      />
-    )
-  }
 
   return (
     <div className="space-y-6">
@@ -178,8 +186,18 @@ export function CreateRequestPage() {
                   className="mb-4"
                 />
               )}
+              {hasBalancesError && (
+                <CommonErrorBanner
+                  message="Leave balances could not be loaded. You cannot submit until balances are available."
+                  onRetry={reloadMetadata}
+                  className="mb-4"
+                />
+              )}
               <LeaveRequestForm
                 leaveTypes={leaveTypes}
+                leaveBalances={leaveBalances}
+                isBalancesLoading={isBalancesLoading}
+                hasBalancesError={hasBalancesError}
                 holidayEvents={holidayEvents}
                 existingLeaveDates={existingLeaveDates}
                 isCalendarLoading={isCalendarLoading}

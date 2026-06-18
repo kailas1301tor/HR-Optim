@@ -51,9 +51,21 @@ export function AttendanceTable({ records }: AttendanceTableProps) {
                         {record.initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-medium text-cloud">{record.employeeName}</p>
-                      <p className="text-xs text-muted-foreground">{record.department}</p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-cloud">{record.employeeName}</span>
+                        <span className="px-1.5 py-0.5 rounded bg-violet-core/10 border border-violet-core/20 font-mono text-[10px] text-violet-glow font-semibold shrink-0">
+                          {record.employeeId}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {record.department} {record.role ? `• ${record.role}` : ''}
+                      </p>
+                      {(record.email || record.phoneNumber) && (
+                        <p className="text-[10px] text-muted-foreground/80 mt-0.5 truncate max-w-[250px]">
+                          {record.email} {record.email && record.phoneNumber ? '•' : ''} {record.phoneNumber}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </td>

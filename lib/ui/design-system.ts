@@ -1,11 +1,14 @@
 // lib/ui/design-system.ts
 
 /** iOS-style continuous corners (`corner-shape: squircle` where supported). */
-export const uiSquircleLg = 'rounded-[32px] [corner-shape:squircle]'
-export const uiSquircleMd = 'rounded-[24px] [corner-shape:squircle]'
-export const uiSquircleSm = 'rounded-[20px] [corner-shape:squircle]'
-export const uiSquircleXs = 'rounded-[18px] [corner-shape:squircle]'
-export const uiSquircleNav = 'rounded-[16px] [corner-shape:squircle]'
+export const uiSquircleLg = 'rounded-[36px] [corner-shape:squircle]'
+export const uiSquircleMd = 'rounded-[28px] [corner-shape:squircle]'
+export const uiSquircleSm = 'rounded-[24px] [corner-shape:squircle]'
+export const uiSquircleXs = 'rounded-[20px] [corner-shape:squircle]'
+export const uiSquircleNav = 'rounded-[20px] [corner-shape:squircle]'
+
+/** Dropdowns, popovers, and select menus */
+export const uiPopoverShell = uiSquircleMd
 
 export const uiCard =
   `bg-card border border-border/80 shadow-lg transition-all duration-200 ${uiSquircleLg}`
@@ -62,6 +65,10 @@ export const uiShellHeader =
 
 export const uiShellHeaderInset = 'px-4 sm:px-6'
 
+/** Brand mark image shell — subtle ring, no heavy black pill in light mode */
+export const uiBrandMark =
+  `relative shrink-0 overflow-hidden ring-1 ring-border/70 shadow-sm ${uiSquircleNav}`
+
 export const uiEmptyStateShell =
   `flex flex-col items-center justify-center text-center p-12 bg-card border border-border/60 py-16 shadow-lg ${uiSquircleLg}`
 
@@ -75,7 +82,7 @@ export const uiErrorStateShell =
   `flex flex-col items-center justify-center text-center p-10 bg-card border border-red-500/20 shadow-lg ${uiSquircleLg}`
 
 export const uiFilterChipBase =
-  `shrink-0 py-2 px-3.5 text-xs font-medium border transition-all duration-200 cursor-pointer ${uiSquircleSm}`
+  `shrink-0 py-2 px-3.5 text-xs font-medium border transition-all duration-200 cursor-pointer rounded-full`
 
 export const uiFilterChipActive =
   'bg-violet-core/15 text-violet-glow border-violet-core/30 shadow-[0_0_12px_rgba(139,92,246,0.12)]'
@@ -88,6 +95,18 @@ export const uiTableShell =
 
 export const uiSectionHeader = 'pb-2 border-b border-border/40'
 
+/** Recharts wrapper — theme-aware axis/grid/legend; suppresses blocky tooltip band overlays. */
+export const reportsChartShell =
+  '[&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line]:stroke-border/50 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-transparent [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border/40 [&_.recharts-line.recharts-tooltip-cursor]:stroke-border/40 [&_.recharts-legend-item-text]:fill-muted-foreground'
+
+/** Theme-aware inline styles for Recharts default Tooltip panels. */
+export const reportsChartTooltipStyle = {
+  backgroundColor: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: '12px',
+  color: 'var(--foreground)',
+} as const
+
 export const uiTabChipBase = uiFilterChipBase
 export const uiTabChipActive = uiFilterChipActive
 export const uiTabChipInactive = uiFilterChipInactive
@@ -98,37 +117,37 @@ export const uiTabChipActiveTrigger =
 
 export const statusBadgeClasses = {
   pending:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
   approved:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   rejected:
-    'bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
+    'rounded-full bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
   active:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   inactive:
-    'bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
+    'rounded-full bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
   draft:
-    'bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
+    'rounded-full bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
   valid:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   expiring:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
   expired:
-    'bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
+    'rounded-full bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
   in_use:
-    'bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
+    'rounded-full bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
   available:
-    'bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
+    'rounded-full bg-lime-500/15 text-lime-800 border border-lime-500/30 dark:bg-lime-400/15 dark:text-lime-300 dark:border-lime-400/20',
   disposed:
-    'bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
+    'rounded-full bg-red-500/15 text-red-800 border border-red-500/30 dark:text-red-300 dark:border-red-500/20',
   maintenance:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
   on_leave:
-    'bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
+    'rounded-full bg-slate-500/15 text-slate-700 border border-slate-500/30 dark:text-slate-400 dark:border-slate-500/20',
   onboarding:
-    'bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
+    'rounded-full bg-violet-core/15 text-violet-core border border-violet-core/30 dark:text-violet-glow dark:border-violet-core/20',
   offboarding:
-    'bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
+    'rounded-full bg-amber-500/15 text-amber-800 border border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20',
 } as const
 
 export type StatusBadgeVariant = keyof typeof statusBadgeClasses

@@ -147,7 +147,7 @@ export function useUploadDocumentModal(
       setEmployeesLoading(true)
       setMetadataError(false)
       try {
-        const response = await employeeService.getEmployees(
+        const response = await employeeService.getEmployeesList(
           { search: employeeSearch.trim() || undefined, page_size: 50 },
           controller.signal,
         )

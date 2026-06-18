@@ -29,7 +29,6 @@ pnpm-debug.log*
 # local env files
 .env
 .env*.local
-
 # cursor mcp config (contains secrets)
 .cursor/mcp.json
 

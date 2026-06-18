@@ -37,7 +37,7 @@ export function useRequestEmployeeSearch(): UseRequestEmployeeSearchReturn {
       setIsEmployeesLoading(true)
       setEmployeesHasError(false)
       try {
-        const response = await employeeService.getEmployees(
+        const response = await employeeService.getEmployeesList(
           { search: employeeSearchQuery || undefined, page_size: 50 },
           controller.signal
         )

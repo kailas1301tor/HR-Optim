@@ -18,6 +18,7 @@ interface EmployeesTableProps {
   onDelete: (id: number) => void
   onPageChange: (page: number) => void
   canManage?: boolean
+  togglingStatusEmployeeId?: number | null
 }
 
 const TABLE_COLUMNS = [
@@ -39,6 +40,7 @@ export function EmployeesTable({
   onDelete,
   onPageChange,
   canManage = false,
+  togglingStatusEmployeeId = null,
 }: EmployeesTableProps) {
   return (
     <div className={cn(uiTableShell, 'hidden lg:block')}>
@@ -83,6 +85,7 @@ export function EmployeesTable({
                   key={employee.id}
                   employee={employee}
                   index={index}
+                  isTogglingStatus={togglingStatusEmployeeId === employee.id}
                   onSelect={() => onSelect(employee)}
                   onToggleStatus={onToggleStatus}
                   onEdit={onEdit}

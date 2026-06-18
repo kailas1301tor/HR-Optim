@@ -6,6 +6,7 @@ import {
   Clock,
   FileWarning,
   Package,
+  ClipboardList,
   TrendingUp,
   TrendingDown,
 } from 'lucide-react'
@@ -55,6 +56,8 @@ const KPI_ICONS: Record<string, React.ElementType> = {
   'Present Today': Clock,
   'Documents Expiring': FileWarning,
   'Assets Tracked': Package,
+  'Assets Assigned': Package,
+  'Pending Requests': ClipboardList,
 }
 
 function KPICard({ title, value, change, changeLabel, icon: Icon, color }: KPICardProps) {
@@ -118,12 +121,10 @@ export function KPIGrid({ kpis, isLoading = false }: KPIGridProps) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {kpis.map((kpi, index) => (
+      {kpis.map((kpi) => (
         <motion.div
           key={kpi.title}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
+          initial={false}
         >
           <KPICard {...kpi} icon={KPI_ICONS[kpi.title] ?? Users} />
         </motion.div>

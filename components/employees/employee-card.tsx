@@ -40,7 +40,7 @@ export function EmployeeCard({ employee, index, onSelect, onEdit, onDelete, canM
   const statusVariant = getEmployeeStatusBadgeVariant(employee.status)
   const deptClass =
     departmentConfig[employee.department]?.className ||
-    'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-0.5 rounded-[16px] [corner-shape:squircle] text-[10px] font-medium'
+    'bg-slate-500/10 text-slate-400 border border-slate-500/20 px-2 py-0.5 rounded-[20px] [corner-shape:squircle] text-[10px] font-medium'
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {

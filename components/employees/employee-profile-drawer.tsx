@@ -1,7 +1,7 @@
 // components/employees/employee-profile-drawer.tsx
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -21,6 +21,8 @@ import { OnboardingChecklistTab } from './profile/onboarding-checklist-tab'
 import { OffboardingChecklistTab } from './profile/offboarding-checklist-tab'
 import { ClipboardCheck, FileX } from 'lucide-react'
 import { employeeService } from '@/services/employee-service'
+import { usePermissions } from '@/components/auth/permissions-provider'
+import type { DropdownItem } from '@/types/employee'
 
 interface EmployeeProfileDrawerProps {
   employee: Employee | null
@@ -29,15 +31,39 @@ interface EmployeeProfileDrawerProps {
   onClose: () => void
   onEdit: (employee: Employee) => void
   canManage?: boolean
+  onboardingDocumentTypes?: DropdownItem[]
+  offboardingDocumentTypes?: DropdownItem[]
+  isDropdownLoading?: boolean
 }
 
-const tabs = [
+const ALL_TABS = [
   { id: 'personal', label: 'Personal', icon: Building2 },
   { id: 'onboarding', label: 'Onboarding', icon: ClipboardCheck },
   { id: 'offboarding', label: 'Offboarding', icon: FileX },
 ] as const
 
-export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClose, onEdit, canManage = false }: EmployeeProfileDrawerProps) {
+export function EmployeeProfileDrawer({
+  employee,
+  open,
+  detailVersion = 0,
+  onClose,
+  onEdit,
+  canManage = false,
+  onboardingDocumentTypes = [],
+  offboardingDocumentTypes = [],
+  isDropdownLoading = false,
+}: EmployeeProfileDrawerProps) {
+  const { canView } = usePermissions()
+  const visibleTabs = useMemo(
+    () =>
+      ALL_TABS.filter((tab) => {
+        if (tab.id === 'personal') return true
+        if (tab.id === 'onboarding') return canView('onboarding')
+        if (tab.id === 'offboarding') return canView('offboarding')
+        return true
+      }),
+    [canView]
+  )
   const [activeTab, setActiveTab] = useState('personal')
   const [detailedEmployee, setDetailedEmployee] = useState<Employee | null>(null)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
@@ -67,6 +93,12 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
   useEffect(() => {
     setActiveTab('personal')
   }, [employee?.id])
+
+  useEffect(() => {
+    if (!visibleTabs.some((tab) => tab.id === activeTab)) {
+      setActiveTab('personal')
+    }
+  }, [activeTab, visibleTabs])
 
   useEffect(() => {
     if (!open || !employee?.id) {
@@ -164,7 +196,7 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
               </div>
 
               <div className="flex flex-wrap gap-1.5 min-w-0">
-                {tabs.map((tab) => (
+                {visibleTabs.map((tab) => (
                   <button
                     key={tab.id}
                     type="button"
@@ -198,10 +230,20 @@ export function EmployeeProfileDrawer({ employee, open, detailVersion = 0, onClo
                 )
               )}
               {activeTab === 'onboarding' ? (
-                <OnboardingChecklistTab key={`onboarding-${displayEmployee.id}`} employeeId={displayEmployee.id} />
+                <OnboardingChecklistTab
+                  key={`onboarding-${displayEmployee.id}`}
+                  employeeId={displayEmployee.id}
+                  documentTypes={onboardingDocumentTypes}
+                  isDropdownLoading={isDropdownLoading}
+                />
               ) : null}
               {activeTab === 'offboarding' ? (
-                <OffboardingChecklistTab key={`offboarding-${displayEmployee.id}`} employeeId={displayEmployee.id} />
+                <OffboardingChecklistTab
+                  key={`offboarding-${displayEmployee.id}`}
+                  employeeId={displayEmployee.id}
+                  documentTypes={offboardingDocumentTypes}
+                  isDropdownLoading={isDropdownLoading}
+                />
               ) : null}
             </div>
           </motion.div>

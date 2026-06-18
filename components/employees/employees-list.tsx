@@ -1,8 +1,10 @@
 // components/employees/employees-list.tsx
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { UserX } from 'lucide-react'
+import { employeeService } from '@/services/employee-service'
 import { Button } from '@/components/ui/button'
 import {
   CommonEmptyState,
@@ -11,6 +13,7 @@ import {
   CommonFilterChips,
   CommonMobileCardGrid,
   CommonPagination,
+  TableSkeleton,
 } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { uiOutlineBtn } from '@/lib/ui/design-system'
@@ -27,6 +30,7 @@ import { AddEmployeeModal } from './add-employee-modal'
 import { DeleteEmployeeDialog } from './delete-employee-dialog'
 import { useEmployeeTable } from './useEmployeeTable'
 import { usePermissions } from '@/components/auth/permissions-provider'
+import { isInitialDataLoading } from '@/lib/helpers/is-initial-data-loading'
 
 const DIRECTORY_TABS = [
   { value: 'all', label: 'All' },
@@ -35,8 +39,21 @@ const DIRECTORY_TABS = [
 ]
 
 export function EmployeesList() {
-  const { canManage } = usePermissions()
+  const { isLoading: isPermissionsLoading, canManage, canView } = usePermissions()
   const canManageEmployees = canManage('employees')
+  const canAccessEmployeesSection =
+    canView('employees') || canView('onboarding') || canView('offboarding')
+
+  const visibleTabs = useMemo(
+    () =>
+      DIRECTORY_TABS.filter((tab) => {
+        if (tab.value === 'all') return canView('employees')
+        if (tab.value === 'onboarding') return canView('onboarding')
+        if (tab.value === 'offboarding') return canView('offboarding')
+        return false
+      }),
+    [canView],
+  )
 
   const {
     employeeList,
@@ -56,6 +73,7 @@ export function EmployeesList() {
     activeTab,
     hasError,
     dropdownsError,
+    dropdownsLoading,
     reloadDropdowns,
     workforceStats,
     setSelectedEmployee,
@@ -66,13 +84,80 @@ export function EmployeesList() {
     fetchEmployees,
     updateQueryParams,
     handleClearFilters,
+    togglingStatusEmployeeId,
     handleToggleStatus,
     handleDelete,
     executeDelete,
     handleEdit,
-  } = useEmployeeTable()
+  } = useEmployeeTable({ enabled: canAccessEmployeesSection })
 
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [detailVersion, setDetailVersion] = useState(0)
+  const employeeIdParam = searchParams.get('employeeId')
+
+  useEffect(() => {
+    if (!employeeIdParam) return
+    const currentId = employeeIdParam
+
+    const controller = new AbortController()
+
+    async function autoSelectEmployee() {
+      // 1. Check if employee is in current list
+      const localMatch = employeeList.find(
+        (e) => e.employee_id.toLowerCase() === currentId.toLowerCase()
+      )
+
+      if (localMatch) {
+        setSelectedEmployee(localMatch)
+        setDrawerOpen(true)
+        const nextParams = new URLSearchParams(searchParams.toString())
+        nextParams.delete('employeeId')
+        const queryString = nextParams.toString()
+        router.replace(`/employees${queryString ? `?${queryString}` : ''}`)
+        return
+      }
+
+      // 2. Fetch from backend if not found locally
+      try {
+        const result = await employeeService.getEmployees({ search: currentId }, controller.signal)
+        const remoteMatch = result.data.find(
+          (e) => e.employee_id.toLowerCase() === currentId.toLowerCase()
+        )
+        if (remoteMatch) {
+          setSelectedEmployee(remoteMatch)
+          setDrawerOpen(true)
+        }
+        const nextParams = new URLSearchParams(searchParams.toString())
+        nextParams.delete('employeeId')
+        const queryString = nextParams.toString()
+        router.replace(`/employees${queryString ? `?${queryString}` : ''}`)
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        console.error('🔴 Error fetching employee for auto-selection:', error)
+      }
+    }
+
+    void autoSelectEmployee()
+    return () => controller.abort()
+  }, [employeeIdParam, employeeList, setSelectedEmployee, setDrawerOpen, searchParams, router])
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'add-employee') {
+      setIsAddModalOpen(true)
+      const nextParams = new URLSearchParams(searchParams.toString())
+      nextParams.delete('action')
+      const queryString = nextParams.toString()
+      router.replace(`/employees${queryString ? `?${queryString}` : ''}`)
+    }
+  }, [searchParams, setIsAddModalOpen, router])
+
+  useEffect(() => {
+    const tabAllowed = visibleTabs.some((tab) => tab.value === activeTab)
+    if (!tabAllowed) {
+      updateQueryParams({ tab: null, page: '1' })
+    }
+  }, [activeTab, visibleTabs, updateQueryParams])
 
   const handleAddEmployee = () => {
     setEditTarget(null)
@@ -89,6 +174,10 @@ export function EmployeesList() {
 
   const showEmpty = !isTableLoading && !hasError && employeeList.length === 0
 
+  if (isPermissionsLoading || isInitialDataLoading(isTableLoading, employeeList.length, hasError)) {
+    return <TableSkeleton showFilterChips filterChipCount={3} />
+  }
+
   return (
     <div className="space-y-6">
       <EmployeesPageHeader onAddEmployee={handleAddEmployee} canManage={canManageEmployees} />
@@ -103,7 +192,7 @@ export function EmployeesList() {
       />
 
       <CommonFilterChips
-        options={DIRECTORY_TABS}
+        options={visibleTabs}
         value={activeTab}
         onChange={(val) => updateQueryParams({ tab: val === 'all' ? null : val, page: '1' })}
       />
@@ -218,6 +307,7 @@ export function EmployeesList() {
             employees={employeeList}
             isLoading={isTableLoading}
             pagination={pagination}
+            togglingStatusEmployeeId={togglingStatusEmployeeId}
             onSelect={(employee) => {
               setSelectedEmployee(employee)
               setDrawerOpen(true)
@@ -248,6 +338,9 @@ export function EmployeesList() {
         onClose={() => setDrawerOpen(false)}
         onEdit={handleEdit}
         canManage={canManageEmployees}
+        onboardingDocumentTypes={dropdowns?.onboarding_document_types ?? []}
+        offboardingDocumentTypes={dropdowns?.offboarding_document_types ?? []}
+        isDropdownLoading={dropdownsLoading}
       />
 
       <DeleteEmployeeDialog

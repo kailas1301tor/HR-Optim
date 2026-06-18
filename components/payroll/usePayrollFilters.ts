@@ -135,11 +135,13 @@ export function usePayrollFilters(): UsePayrollFiltersReturn {
   const listParams = useMemo<PayrollListParams>(() => {
     const statusApiValue = payrollStatusFilterConfig[statusFilter].apiValue
     return {
+      month,
+      year,
       page_size: PAYROLL_LIST_PAGE_SIZE,
       ...(employeeFilter !== null ? { employee_id: employeeFilter } : {}),
       ...(statusApiValue ? { status: statusApiValue } : {}),
     }
-  }, [employeeFilter, statusFilter])
+  }, [employeeFilter, statusFilter, month, year])
 
   const exportParams = useMemo<PayrollExportParams>(
     () => ({

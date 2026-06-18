@@ -1,18 +1,21 @@
+// app/documents/page.tsx
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
-import { CommonPageHeader, CommonPageSkeleton } from '@/components/common'
+import { SelfServicePageHeader } from '@/components/common'
+import { DocumentsSkeleton } from '@/components/documents/documents-skeleton'
 import { DocumentsGrid } from '@/components/documents/documents-grid'
 
 export default function DocumentsPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <CommonPageHeader
+        <SelfServicePageHeader
+          moduleKey="documents"
           title="Documents"
           subtitle="Manage employee documents and track expiry dates"
         />
 
-        <Suspense fallback={<CommonPageSkeleton />}>
+        <Suspense fallback={<DocumentsSkeleton variant="employee" />}>
           <DocumentsGrid />
         </Suspense>
       </div>

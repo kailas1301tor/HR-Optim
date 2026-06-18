@@ -17,20 +17,13 @@ export const metadata: Metadata = {
   generator: 'v0.app',
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/brand/icon-16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/brand/icon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/brand/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/brand/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: '/apple-icon.png',
+    shortcut: '/favicon.ico',
   },
 }
 

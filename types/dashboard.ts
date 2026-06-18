@@ -82,3 +82,40 @@ export interface MainDashboardData {
   documentExpiry: DashboardDocumentExpiryItem[]
   attendanceOverview: DashboardAttendanceDay[]
 }
+
+export interface BackendEmployeeDashboardCards {
+  documents_expiring?: BackendDashboardCardMetric
+  assets_assigned?: BackendDashboardCardMetric
+  pending_requests?: BackendDashboardCardMetric
+}
+
+export interface BackendEmployeePendingRequest {
+  id?: number
+  type?: string
+  request_date?: string
+  status?: string
+  details?: string
+}
+
+export interface BackendEmployeeDashboard {
+  cards?: BackendEmployeeDashboardCards
+  attendance_overview?: BackendAttendanceOverviewDay[]
+  document_expiry_timeline?: BackendDocumentExpiryItem[]
+  pending_approval_list?: BackendEmployeePendingRequest[]
+}
+
+export interface EmployeePendingRequestItem {
+  /** Composite key — backend ids are scoped per request table, not globally unique */
+  id: string
+  type: string
+  submittedDate: string
+  status: string
+  details: string
+}
+
+export interface EmployeeDashboardData {
+  kpis: DashboardKpiItem[]
+  attendanceOverview: DashboardAttendanceDay[]
+  documentExpiry: DashboardDocumentExpiryItem[]
+  pendingRequests: EmployeePendingRequestItem[]
+}

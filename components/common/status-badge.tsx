@@ -12,7 +12,7 @@ export function CommonStatusBadge({ label, variant, className }: CommonStatusBad
   return (
     <span
       className={cn(
-        'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide',
+        'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold',
         statusBadgeClasses[variant],
         className
       )}

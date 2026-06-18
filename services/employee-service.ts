@@ -1,5 +1,9 @@
 // services/employee-service.ts
 import { api } from '@/lib/api'
+import {
+  formatEmployeeForDisplay,
+  formatEmployeesForDisplay,
+} from '@/lib/mappers/employee-display-mapper'
 import { cleanParams } from '@/lib/types'
 import { departmentService } from '@/services/department-service'
 import { designationService } from '@/services/designation-service'
@@ -10,8 +14,11 @@ import type {
   DropdownItem,
   DropdownResponse,
   Employee,
+  EmployeeBankDetails,
   EmployeeListParams,
+  EmployeeListPickerResponse,
   EmployeeListResponse,
+  EmployeeListWireItem,
 } from '@/types/employee'
 import type { Department } from '@/types/settings'
 
@@ -33,6 +40,9 @@ function normalizeDropdownData(data: Partial<DropdownData> | null | undefined): 
     nationalities: data?.nationalities ?? [],
     status_choices: data?.status_choices ?? [],
     accommodation_choices: data?.accommodation_choices ?? [],
+    leave_types: data?.leave_types ?? [],
+    onboarding_document_types: data?.onboarding_document_types ?? [],
+    offboarding_document_types: data?.offboarding_document_types ?? [],
   };
 }
 
@@ -96,6 +106,36 @@ function dropdownDepartmentsToDepartments(items: DropdownItem[]): Department[] {
   return items.map(({ id, name }) => ({ id, name, description: '' }))
 }
 
+const EMPTY_EMPLOYEE_BANK_DETAILS: EmployeeBankDetails = {
+  bank_name: '',
+  account_number: '',
+  ifsc: '',
+  branch: '',
+}
+
+function mapEmployeeListWireItem(item: EmployeeListWireItem): Employee {
+  return formatEmployeeForDisplay({
+    id: item.id,
+    full_name: (item.full_name ?? item.name ?? '').trim(),
+    employee_id: item.employee_id ?? '',
+    user: item.user ?? { username: '', email: '' },
+    bank_details: EMPTY_EMPLOYEE_BANK_DETAILS,
+    phone_number: '',
+    role: 0,
+    department: '',
+    designation: '',
+    status: '',
+    shift: '',
+    employee_type: '',
+    nationality: '',
+    joined_date: '',
+    basic_salary: '',
+    accommodation: '',
+    date_of_birth: '',
+    address: '',
+  })
+}
+
 export const employeeService = {
   /**
    * Fetches dropdown metadata from the backend.
@@ -123,6 +163,14 @@ export const employeeService = {
   },
 
   /**
+   * Leave types from employee dropdowns — avoids master leave-type permissions.
+   */
+  async getLeaveTypesFromDropdowns(signal?: AbortSignal): Promise<DropdownItem[]> {
+    const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
+    return normalizeDropdownData(response.results?.data).leave_types
+  },
+
+  /**
    * Fetches the employee list from the backend.
    * Bubbles up errors directly to the caller.
    */
@@ -137,7 +185,29 @@ export const employeeService = {
       signal,
     });
     return {
-      data: response.results?.data || [],
+      data: formatEmployeesForDisplay(response.results?.data || []),
+      total_count: response.results?.total_count || 0,
+      total_pages: response.results?.total_pages || 1,
+      current_page: response.results?.current_page || 1,
+    };
+  },
+
+  /**
+   * Permission-safe employee list for filter pickers outside the Employees tab.
+   */
+  async getEmployeesList(params: EmployeeListParams, signal?: AbortSignal): Promise<{
+    data: Employee[];
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+  }> {
+    const response = await api.get<EmployeeListPickerResponse>('/api/employee/employees-list/', {
+      params: cleanParams(params),
+      signal,
+    });
+    const rawItems = response.results?.data ?? []
+    return {
+      data: rawItems.map(mapEmployeeListWireItem),
       total_count: response.results?.total_count || 0,
       total_pages: response.results?.total_pages || 1,
       current_page: response.results?.current_page || 1,
@@ -149,7 +219,7 @@ export const employeeService = {
    */
   async getEmployee(id: number, signal?: AbortSignal): Promise<Employee> {
     const response = await api.get<{ results: { data: Employee } }>(`/api/employee/employees/${id}/`, { signal });
-    return response.results.data;
+    return formatEmployeeForDisplay(response.results.data);
   },
 
   /**

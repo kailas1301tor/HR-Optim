@@ -85,6 +85,7 @@ export interface SalaryAdvanceRequestRecord {
   request_amount: string
   status: string
   tenure: number
+  deducted_months?: number
   reason: string
   rejected_reason: string | null
   approved_date: string | null
@@ -125,6 +126,20 @@ export interface DocumentRequestRecord {
   file: string | null
 }
 
+export interface DashboardAllRequestItem {
+  id: number
+  created_at: string
+  status: string
+  request_type: string
+}
+
+export interface DashboardAllRequestsData {
+  count: number
+  results: DashboardAllRequestItem[]
+  page: number
+  limit: number
+}
+
 export interface RequestChoices {
   session_choices: RequestChoiceItem[]
   request_status_choices: RequestChoiceItem[]
@@ -144,6 +159,11 @@ export interface LeaveCalendarViewModel {
 export const EMPTY_LEAVE_CALENDAR: LeaveCalendarViewModel = {
   holidayEvents: [],
   existingLeaveDates: [],
+}
+
+export interface LeaveBalanceRecord {
+  leave_type: string
+  balance: number
 }
 
 export interface LeaveCalculatePayload {

@@ -1,10 +1,12 @@
 // lib/mappers/dashboard-mapper.ts
 import type {
+  BackendEmployeeDashboard,
   BackendMainDashboard,
   DashboardAttendanceDay,
   DashboardDepartmentItem,
   DashboardDocumentExpiryItem,
   DashboardKpiItem,
+  EmployeeDashboardData,
   MainDashboardData,
 } from '@/types/dashboard'
 
@@ -59,31 +61,84 @@ export function mapBackendMainDashboard(data: BackendMainDashboard): MainDashboa
     }),
   )
 
-  const documentExpiry: DashboardDocumentExpiryItem[] = (data.document_expiry_timeline ?? []).map(
-    (item, index) => ({
-      id: item.id ?? index,
-      name: item.name ?? 'Document',
-      owner: item.owner ?? '—',
-      idNumber: item.id_number ?? '—',
-      expiryDate: item.expiry_date ?? '',
-      daysLeft: item.days_left ?? 0,
-      status: item.status ?? 'Unknown',
-      type: item.type ?? 'Document',
-    }),
-  )
+  const documentExpiry = mapDocumentExpiryTimeline(data.document_expiry_timeline)
 
-  const attendanceOverview: DashboardAttendanceDay[] = (data.attendance_overview ?? []).map(
-    (item) => ({
-      date: item.date ?? '',
-      dayOfWeek: item.day_of_week ?? '',
-      presentCount: item.present_count ?? 0,
-    }),
-  )
+  const attendanceOverview = mapAttendanceOverview(data.attendance_overview)
 
   return {
     kpis: mapKpis(data.cards),
     departmentDistribution,
     documentExpiry,
     attendanceOverview,
+  }
+}
+
+function mapDocumentExpiryTimeline(
+  items: BackendMainDashboard['document_expiry_timeline'],
+): DashboardDocumentExpiryItem[] {
+  return (items ?? []).map((item, index) => ({
+    id: item.id ?? index,
+    name: item.name ?? 'Document',
+    owner: item.owner ?? '—',
+    idNumber: item.id_number ?? '—',
+    expiryDate: item.expiry_date ?? '',
+    daysLeft: item.days_left ?? 0,
+    status: item.status ?? 'Unknown',
+    type: item.type ?? 'Document',
+  }))
+}
+
+function mapAttendanceOverview(
+  items: BackendMainDashboard['attendance_overview'],
+): DashboardAttendanceDay[] {
+  return (items ?? []).map((item) => ({
+    date: item.date ?? '',
+    dayOfWeek: item.day_of_week ?? '',
+    presentCount: item.present_count ?? 0,
+  }))
+}
+
+function mapEmployeeKpis(cards: BackendEmployeeDashboard['cards']): DashboardKpiItem[] {
+  const documentsExpiring = cards?.documents_expiring?.value ?? 0
+  const assetsAssigned = cards?.assets_assigned?.value ?? 0
+  const pendingRequests = cards?.pending_requests?.value ?? 0
+
+  return [
+    {
+      title: 'Documents Expiring',
+      value: formatNumber(documentsExpiring),
+      color: 'amber',
+    },
+    {
+      title: 'Assets Assigned',
+      value: formatNumber(assetsAssigned),
+      color: 'teal',
+    },
+    {
+      title: 'Pending Requests',
+      value: formatNumber(pendingRequests),
+      color: 'violet',
+    },
+  ]
+}
+
+export function mapBackendEmployeeDashboard(data: BackendEmployeeDashboard): EmployeeDashboardData {
+  const pendingRequests = (data.pending_approval_list ?? []).map((item, index) => {
+    const type = item.type ?? 'Request'
+    const rawId = item.id ?? index
+    return {
+      id: `${type}-${rawId}`,
+      type,
+      submittedDate: item.request_date ?? '',
+      status: item.status ?? 'Unknown',
+      details: item.details ?? '—',
+    }
+  })
+
+  return {
+    kpis: mapEmployeeKpis(data.cards),
+    attendanceOverview: mapAttendanceOverview(data.attendance_overview),
+    documentExpiry: mapDocumentExpiryTimeline(data.document_expiry_timeline),
+    pendingRequests,
   }
 }

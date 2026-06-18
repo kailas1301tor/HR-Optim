@@ -1,12 +1,12 @@
 // components/login/set-password-dialog.tsx
 'use client'
 
-import { Eye, EyeOff, Lock, KeyRound } from 'lucide-react'
+import { Eye, EyeOff, Lock } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import { CommonFormFieldError } from '@/components/common'
+import { BrandLogo, CommonFormFieldError } from '@/components/common'
 import { uiDialog, uiInput } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { useSetPasswordDialog } from './useSetPasswordDialog'
@@ -39,9 +39,7 @@ export function SetPasswordDialog({ open, authToken, onSuccess }: SetPasswordDia
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
         <DialogHeader className="flex flex-col items-center text-center space-y-2">
-          <div className="w-12 h-12 rounded-[20px] [corner-shape:squircle] bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center shadow-lg shadow-violet-core/20">
-            <KeyRound className="w-6 h-6 text-white" />
-          </div>
+          <BrandLogo variant="full" size="xl" />
           <DialogTitle className="text-xl font-bold tracking-tight text-cloud font-sans">
             Create Your Password
           </DialogTitle>

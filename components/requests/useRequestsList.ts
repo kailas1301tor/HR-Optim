@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useRequestsFilters } from './useRequestsFilters'
 import { useRequestStatusCounts } from './useRequestStatusCounts'
 import { useRequestEmployeeSearch } from './useRequestEmployeeSearch'
@@ -44,6 +45,11 @@ export interface UseRequestsListReturn {
 }
 
 export function useRequestsList(): UseRequestsListReturn {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const requestIdParam = searchParams.get('requestId')
+
   const filters = useRequestsFilters()
   const {
     searchQuery,
@@ -108,8 +114,21 @@ export function useRequestsList(): UseRequestsListReturn {
   }, [])
 
   useEffect(() => {
+    if (requestIdParam) return
     setExpandedRequest(null)
-  }, [statusFilter, typeFilter, employeeFilter, pageParam, searchQuery])
+  }, [statusFilter, typeFilter, employeeFilter, pageParam, searchQuery, requestIdParam])
+
+  useEffect(() => {
+    if (!requestIdParam) return
+
+    setExpandedRequest(requestIdParam)
+
+    // Clean up query param
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.delete('requestId')
+    const queryString = nextParams.toString()
+    router.replace(`${pathname}${queryString ? `?${queryString}` : ''}`)
+  }, [requestIdParam, searchParams, router, pathname])
 
   useEffect(() => {
     if (isLoading || pageParam <= totalPages) return

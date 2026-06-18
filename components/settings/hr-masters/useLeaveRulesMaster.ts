@@ -8,7 +8,8 @@ import {
   type LeaveRule,
   type ConfigureLeaveRulePayload,
 } from '@/services/leave-rule-service'
-import { leaveTypeService, type LeaveType } from '@/services/leave-type-service'
+import { employeeService } from '@/services/employee-service'
+import type { LeaveType } from '@/services/leave-type-service'
 import {
   formatLeaveRuleSubtitle,
   getLeaveTypeName,
@@ -55,13 +56,13 @@ export function useLeaveRulesMaster(): UseLeaveRulesMasterReturn {
     setHasError(false)
 
     try {
-      const [rules, types] = await Promise.all([
+      const [rules, typeItems] = await Promise.all([
         leaveRuleService.getLeaveRules(),
-        leaveTypeService.getLeaveTypes(),
+        employeeService.getLeaveTypesFromDropdowns(),
       ])
       if (requestId !== requestIdRef.current) return
       setLeaveRules(rules)
-      setLeaveTypes(types)
+      setLeaveTypes(typeItems.map(({ id, name }) => ({ id, name })))
     } catch (error: unknown) {
       if (requestId !== requestIdRef.current) return
       setHasError(true)
@@ -77,8 +78,8 @@ export function useLeaveRulesMaster(): UseLeaveRulesMasterReturn {
 
   const reloadLeaveTypes = useCallback(async (): Promise<void> => {
     try {
-      const types = await leaveTypeService.getLeaveTypes()
-      setLeaveTypes(types)
+      const typeItems = await employeeService.getLeaveTypesFromDropdowns()
+      setLeaveTypes(typeItems.map(({ id, name }) => ({ id, name })))
     } catch {
       // Leave rules remain usable; type names may be stale until full reload.
     }

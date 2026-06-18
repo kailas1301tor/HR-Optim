@@ -13,9 +13,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { CommonFormFieldError } from '@/components/common'
 import { PrimaryButton } from '@/components/ui/primary-button'
 import { cn } from '@/lib/utils'
 import { uiDialog, uiInput, uiOutlineBtn } from '@/lib/ui/design-system'
+import { LIMIT_REASON } from '@/validations/field-limits'
 import type { Request } from './requests-constants'
 
 interface RequestActionDialogsProps {
@@ -23,6 +25,8 @@ interface RequestActionDialogsProps {
   isRejectOpen: boolean
   rejectTarget: Request | null
   rejectReason: string
+  rejectReasonError: string | null
+  isRejectReasonValid: boolean
   isSubmitting: boolean
   onRejectReasonChange: (value: string) => void
   onApproveDialogChange: (open: boolean) => void
@@ -36,6 +40,8 @@ export function RequestActionDialogs({
   isRejectOpen,
   rejectTarget,
   rejectReason,
+  rejectReasonError,
+  isRejectReasonValid,
   isSubmitting,
   onRejectReasonChange,
   onApproveDialogChange,
@@ -90,7 +96,10 @@ export function RequestActionDialogs({
               placeholder="Explain why this request is being rejected"
               className={cn(uiInput, 'min-h-24 resize-none')}
               disabled={isSubmitting}
+              maxLength={LIMIT_REASON}
+              aria-invalid={rejectReasonError ? true : undefined}
             />
+            <CommonFormFieldError message={rejectReasonError ?? undefined} />
           </div>
           <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-4 border-t border-border/40">
             <AlertDialogCancel asChild>
@@ -101,7 +110,7 @@ export function RequestActionDialogs({
             <Button
               type="button"
               onClick={onConfirmReject}
-              disabled={isSubmitting || !rejectReason.trim()}
+              disabled={isSubmitting || !isRejectReasonValid}
               className="h-10 bg-destructive text-white hover:bg-destructive/90 font-semibold rounded-[20px] [corner-shape:squircle] px-5 text-xs"
             >
               Reject

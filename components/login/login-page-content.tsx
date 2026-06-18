@@ -3,16 +3,15 @@
 
 import { motion } from 'framer-motion'
 import { FormProvider } from 'react-hook-form'
-import { Mail, Lock, Eye, EyeOff, Building2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { PrimaryButton } from '@/components/ui/primary-button'
-import { CommonFormFieldError, CommonErrorBanner } from '@/components/common'
-import { uiCard, uiInput, uiSquircleSm } from '@/lib/ui/design-system'
+import { BrandLogo, CommonFormFieldError, CommonErrorBanner } from '@/components/common'
+import { uiCard, uiInput } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { Label } from '@/components/ui/label'
 import { SetPasswordDialog } from '@/components/login/set-password-dialog'
 import { useLoginForm } from '@/components/login/useLoginForm'
-import { PRODUCT_NAME, PRODUCT_TAGLINE } from '@/lib/brand'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -50,17 +49,8 @@ export function LoginPageContent() {
         animate="visible"
         className="w-full max-w-md md:max-w-lg z-10 space-y-6"
       >
-        <motion.div variants={itemVariants} className="flex flex-col items-center">
-          <div
-            className={cn(
-              'w-12 h-12 bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center shadow-lg shadow-violet-core/20 mb-3',
-              uiSquircleSm
-            )}
-          >
-            <Building2 className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-cloud font-sans">{PRODUCT_NAME}</h1>
-          <p className="text-sm text-muted-foreground mt-1 font-sans">{PRODUCT_TAGLINE}</p>
+        <motion.div variants={itemVariants} className="flex flex-col items-center overflow-visible">
+          <BrandLogo variant="full" size="xl" showTagline priority className="mb-2" />
         </motion.div>
 
         <motion.div variants={itemVariants}>
@@ -84,7 +74,7 @@ export function LoginPageContent() {
                         id="username-input"
                         type="text"
                         autoComplete="username"
-                        placeholder="name@acmecorp.com"
+                        placeholder="name@tortillon.in"
                         disabled={isLoading}
                         className={cn(
                           uiInput,

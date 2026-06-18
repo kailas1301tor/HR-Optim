@@ -23,12 +23,17 @@ import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import type { LeaveType } from '@/services/leave-type-service'
 import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { leaveRequestSchema, type LeaveRequestInput } from '@/validations/request.schema'
-import type { LeaveCalendarEvent } from '@/types/request'
+import { LIMIT_REASON } from '@/validations/field-limits'
+import type { LeaveBalanceRecord, LeaveCalendarEvent } from '@/types/request'
+import { findBalanceForLeaveType, formatLeaveBalance } from '@/lib/helpers/leave-balance'
 import { LeaveCalendarPanel } from './leave-calendar-panel'
 import { LeaveDateRangeFields } from './leave-date-range-fields'
 
 interface LeaveRequestFormProps {
   leaveTypes: LeaveType[]
+  leaveBalances?: LeaveBalanceRecord[]
+  isBalancesLoading?: boolean
+  hasBalancesError?: boolean
   holidayEvents?: LeaveCalendarEvent[]
   existingLeaveDates?: Date[]
   isCalendarLoading?: boolean
@@ -64,6 +69,9 @@ function isInvalidSessionCombo(
 
 export function LeaveRequestForm({
   leaveTypes,
+  leaveBalances = [],
+  isBalancesLoading = false,
+  hasBalancesError = false,
   holidayEvents = [],
   existingLeaveDates = [],
   isCalendarLoading = false,
@@ -102,6 +110,23 @@ export function LeaveRequestForm({
   const endSession = watch('end_session')
   const numberOfDays = watch('number_of_days')
   const leaveTypeValue = watch('leave_type')
+
+  const selectedLeaveType = leaveTypes.find((type) => type.id === leaveTypeValue)
+  const selectedBalance =
+    selectedLeaveType && leaveTypeValue > 0
+      ? findBalanceForLeaveType(selectedLeaveType.name, leaveBalances)
+      : null
+
+  const hasInsufficientBalance = selectedBalance !== null && selectedBalance <= 0
+  const exceedsBalance =
+    selectedBalance !== null && numberOfDays > 0 && numberOfDays > selectedBalance
+
+  const getBalanceHint = (leaveTypeName: string): string | null => {
+    if (isBalancesLoading || hasBalancesError || leaveBalances.length === 0) return null
+    const balance = findBalanceForLeaveType(leaveTypeName, leaveBalances)
+    if (balance === null) return null
+    return formatLeaveBalance(balance)
+  }
 
   const resetCalculation = useCallback((): void => {
     setValue('number_of_days', 0)
@@ -251,17 +276,95 @@ export function LeaveRequestForm({
                 <SelectValue placeholder="Select leave type..." />
               </SelectTrigger>
               <SelectContent className="bg-popover border border-border text-xs">
-                {leaveTypes.map((type) => (
-                  <SelectItem key={type.id} value={String(type.id)}>
-                    {type.name}
-                  </SelectItem>
-                ))}
+                {leaveTypes.map((type) => {
+                  const balanceHint = getBalanceHint(type.name)
+                  return (
+                    <SelectItem key={type.id} value={String(type.id)}>
+                      {type.name}
+                      {balanceHint !== null ? (
+                        <span className="text-muted-foreground"> ({balanceHint})</span>
+                      ) : null}
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
             {errors.leave_type?.message && (
               <CommonFormFieldError message={errors.leave_type.message} />
             )}
           </div>
+
+          {leaveTypeValue > 0 && (
+            <div
+              className={cn(
+                'flex items-center justify-between gap-3 rounded-[20px] [corner-shape:squircle] border px-4 py-3',
+                isBalancesLoading && 'border-violet-core/30 bg-violet-core/10',
+                hasBalancesError && 'border-red-500/30 bg-red-500/10',
+                !isBalancesLoading &&
+                  !hasBalancesError &&
+                  hasInsufficientBalance &&
+                  'border-amber-500/30 bg-amber-500/10',
+                !isBalancesLoading &&
+                  !hasBalancesError &&
+                  exceedsBalance &&
+                  'border-amber-500/30 bg-amber-500/10',
+                !isBalancesLoading &&
+                  !hasBalancesError &&
+                  !hasInsufficientBalance &&
+                  !exceedsBalance &&
+                  selectedBalance !== null &&
+                  'border-border/50 bg-muted/40'
+              )}
+            >
+              <div className="min-w-0">
+                <Label className="text-xs text-muted-foreground">Available Balance</Label>
+                {isBalancesLoading && (
+                  <p className="text-[11px] font-medium mt-0.5 text-muted-foreground">
+                    Loading balance...
+                  </p>
+                )}
+                {hasBalancesError && (
+                  <p className="text-[11px] font-medium mt-0.5 text-red-600 dark:text-red-400">
+                    Could not load leave balance
+                  </p>
+                )}
+                {!isBalancesLoading && !hasBalancesError && selectedBalance === null && (
+                  <p className="text-[11px] font-medium mt-0.5 text-amber-600 dark:text-amber-300">
+                    No balance record found for this leave type
+                  </p>
+                )}
+                {!isBalancesLoading && !hasBalancesError && hasInsufficientBalance && (
+                  <p className="text-[11px] font-medium mt-0.5 text-amber-600 dark:text-amber-300">
+                    No leave balance available for this type
+                  </p>
+                )}
+                {!isBalancesLoading && !hasBalancesError && exceedsBalance && (
+                  <p className="text-[11px] font-medium mt-0.5 text-amber-600 dark:text-amber-300">
+                    Requested days exceed available balance
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {isBalancesLoading ? (
+                  <Loader2 className="size-5 animate-spin text-muted-foreground" aria-label="Loading balance" />
+                ) : (
+                  <span
+                    className={cn(
+                      'tabular-nums font-bold',
+                      selectedBalance !== null && selectedBalance > 0
+                        ? 'text-2xl text-foreground'
+                        : 'text-lg text-muted-foreground'
+                    )}
+                  >
+                    {selectedBalance !== null ? formatLeaveBalance(selectedBalance) : '—'}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">
+                  {selectedBalance === 1 ? 'day' : 'days'}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -371,6 +474,7 @@ export function LeaveRequestForm({
               placeholder="Reason for leave..."
               className={cn(uiInput, 'text-xs flex-1 min-h-[88px] resize-none')}
               aria-label="Leave reason"
+              maxLength={LIMIT_REASON}
             />
             {errors.reason?.message && <CommonFormFieldError message={errors.reason.message} />}
           </div>
@@ -392,7 +496,13 @@ export function LeaveRequestForm({
                 calculateState === 'loading' ||
                 calculateState === 'error' ||
                 calculateState === 'invalid' ||
-                calculateState === 'zero'
+                calculateState === 'zero' ||
+                isBalancesLoading ||
+                hasBalancesError ||
+                leaveTypeValue <= 0 ||
+                hasInsufficientBalance ||
+                exceedsBalance ||
+                (selectedBalance === null && leaveTypeValue > 0 && !isBalancesLoading)
               }
               className="text-xs h-10"
             >

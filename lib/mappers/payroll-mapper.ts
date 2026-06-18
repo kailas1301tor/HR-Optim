@@ -1,5 +1,6 @@
 // lib/mappers/payroll-mapper.ts
 import { initialsFromName } from '@/lib/cookies'
+import { formatPersonName, formatTitleLabel } from '@/lib/helpers/format-display-text'
 import type { WPSStatus } from '@/components/payroll/payroll-constants'
 import type {
   BackendPayroll,
@@ -66,12 +67,12 @@ function resolveDeductions(record: BackendPayroll): number {
 
 function resolveEmployeeName(record: BackendPayroll): string {
   if (typeof record.employee === 'string' && record.employee.trim()) {
-    return record.employee.trim()
+    return formatPersonName(record.employee.trim())
   }
-  return (
+  return formatPersonName(
     record.employee_name?.trim() ||
-    record.full_name?.trim() ||
-    'Unknown employee'
+      record.full_name?.trim() ||
+      'Unknown employee'
   )
 }
 
@@ -102,7 +103,7 @@ export function mapPayrollStatusToWps(status: string | undefined): WPSStatus {
 
 export function getPayrollStatusLabel(status: string | undefined): string {
   const trimmed = status?.trim()
-  return trimmed && trimmed.length > 0 ? trimmed : 'Processing'
+  return trimmed && trimmed.length > 0 ? formatTitleLabel(trimmed) : 'Processing'
 }
 
 export function canFinalizePayroll(status: string | undefined): boolean {
@@ -133,10 +134,8 @@ export function mapBackendPayrollDashboard(data: BackendPayrollDashboard): Payro
 export function mapBackendPayroll(record: BackendPayroll): PayrollRecord {
   const employeeName = resolveEmployeeName(record)
   const employeeId = resolveEmployeeId(record)
-  const department =
-    record.department_name?.trim() ||
-    record.department?.trim() ||
-    employeeId
+  const rawDepartment = record.department_name?.trim() || record.department?.trim() || ''
+  const department = rawDepartment ? formatTitleLabel(rawDepartment) : employeeId
 
   const status = getPayrollStatusLabel(record.status)
   const baseSalary = parseAmount(record.basic_salary ?? record.base_salary)
