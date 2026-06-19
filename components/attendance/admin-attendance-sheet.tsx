@@ -22,6 +22,7 @@ import { AttendanceDetailDrawer } from './attendance-detail-drawer'
 import { useAttendanceSheet } from './useAttendanceSheet'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { isInitialDataLoading } from '@/lib/helpers/is-initial-data-loading'
+import { formatApiDate } from '@/lib/helpers/format-api-date'
 import { useState } from 'react'
 import type { AttendanceRecord } from '@/types/attendance'
 
@@ -145,7 +146,14 @@ export function AdminAttendanceSheet() {
         </>
       )}
 
-      <AttendanceDetailDrawer record={selectedRecord} date={formatDate(selectedDate)} onClose={() => setSelectedRecord(null)} />
+      <AttendanceDetailDrawer
+        record={selectedRecord}
+        attendanceDate={formatApiDate(selectedDate)}
+        date={formatDate(selectedDate)}
+        canManage={canManageAttendance}
+        onLateReasonSubmitted={handleRetry}
+        onClose={() => setSelectedRecord(null)}
+      />
     </div>
   )
 }

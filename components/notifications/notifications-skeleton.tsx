@@ -2,11 +2,15 @@
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { uiSkeletonBlock, uiSquircleSm, uiSquircleNav } from '@/lib/ui/design-system'
+import { uiSkeletonBlock } from '@/lib/ui/design-system'
 
 export function NotificationsSkeleton(): React.JSX.Element {
   return (
-    <Card className="bg-card/40 backdrop-blur border border-border/80 shadow-lg animate-pulse" aria-label="Loading notifications" role="status">
+    <Card
+      className="bg-card/40 backdrop-blur border border-border/80 shadow-lg"
+      aria-label="Loading notifications"
+      role="status"
+    >
       <CardHeader className="pb-3 border-b border-border/40 space-y-2">
         <div className="flex items-center gap-2">
           <Skeleton className={cn('h-4 w-4 rounded-lg', uiSkeletonBlock)} />

@@ -247,5 +247,29 @@ export const employeeService = {
    */
   async deleteEmployee(id: number): Promise<void> {
     await api.delete('/api/employee/employees/', { params: { id } });
-  }
+  },
+
+  /**
+   * Resolves numeric employee profile PK from a display code (e.g. EMP002).
+   * Attendance list returns `employee_id` as a code; late-reason POST needs the profile `id`.
+   */
+  async resolveProfileIdByEmployeeCode(
+    employeeCode: string,
+    signal?: AbortSignal,
+  ): Promise<number | null> {
+    const trimmed = employeeCode.trim()
+    if (!trimmed) return null
+
+    const response = await this.getEmployeesList(
+      { search: trimmed, page_size: 50 },
+      signal,
+    )
+
+    const exactMatch = response.data.find(
+      (employee) => employee.employee_id?.trim().toLowerCase() === trimmed.toLowerCase(),
+    )
+    if (exactMatch) return exactMatch.id
+
+    return response.data[0]?.id ?? null
+  },
 };

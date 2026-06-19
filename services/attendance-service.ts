@@ -16,6 +16,8 @@ import {
   type DepartmentAttendanceExportParams,
   type ManualPunchPayload,
   type ManualPunchResponse,
+  type LateReasonPayload,
+  type LateReasonResponse,
 } from '@/types/attendance'
 import type { ApiSimpleListResponse, ApiSingleResponse } from '@/lib/types'
 
@@ -131,6 +133,17 @@ export const attendanceService = {
   ): Promise<ManualPunchResponse> {
     return await api.post<ManualPunchResponse>(
       '/api/employee/attendance/manual-punch/',
+      payload,
+      { signal },
+    )
+  },
+
+  async submitLateReason(
+    payload: LateReasonPayload,
+    signal?: AbortSignal,
+  ): Promise<LateReasonResponse> {
+    return await api.post<LateReasonResponse>(
+      '/api/employee/attendance/late-reason/',
       payload,
       { signal },
     )

@@ -10,6 +10,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { STATUS_CONFIG, getShiftBadgeClassName } from './attendance-constants'
 import { cn } from '@/lib/utils'
 import { Clock, Coffee, LogIn, LogOut, Timer, MapPin, Activity } from 'lucide-react'
+import { AttendanceLateReasonForm } from './attendance-late-reason-form'
+import { formatDisplayDate } from '@/lib/helpers/format-api-date'
 import type { AttendanceRecord } from '@/types/attendance'
 
 function formatTo12Hour(time24: string | null): string {
@@ -29,11 +31,21 @@ function timeToPercent(time: string): number {
 
 interface AttendanceDetailDrawerProps {
   record: AttendanceRecord | null
+  attendanceDate?: string
   date?: string
+  canManage?: boolean
+  onLateReasonSubmitted?: () => void
   onClose: () => void
 }
 
-export function AttendanceDetailDrawer({ record, date, onClose }: AttendanceDetailDrawerProps) {
+export function AttendanceDetailDrawer({
+  record,
+  attendanceDate,
+  date,
+  canManage = false,
+  onLateReasonSubmitted,
+  onClose,
+}: AttendanceDetailDrawerProps) {
   if (!record) return null
 
   const { status, shiftName } = record
@@ -83,7 +95,9 @@ export function AttendanceDetailDrawer({ record, date, onClose }: AttendanceDeta
             </div>
             <div className="mt-4 pt-4 border-t border-border/40 flex items-center justify-between">
               <div className="text-xs text-slate-400">Date</div>
-              <div className="text-sm font-medium text-cloud">{record.date || date || '--'}</div>
+              <div className="text-sm font-medium text-cloud">
+                {record.date || (attendanceDate ? formatDisplayDate(attendanceDate) : date) || '--'}
+              </div>
             </div>
             <div className="mt-2 flex items-center justify-between">
               <div className="text-xs text-slate-400">First Check-in</div>
@@ -138,13 +152,13 @@ export function AttendanceDetailDrawer({ record, date, onClose }: AttendanceDeta
             </div>
 
             {record.timings && record.timings.length > 0 && (
-              <div className="mb-8">
+              <div>
                 <h4 className="text-sm font-medium text-cloud mb-4 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-emerald-400" />
                   Daily Activity (24h)
                 </h4>
                 <TooltipProvider>
-                  <div className="relative w-full h-8 bg-slate-800/50 rounded-md border border-border/50 overflow-hidden">
+                  <div className="relative w-full h-8 bg-carbon/40 rounded-xl border border-border/50 overflow-hidden">
                     {/* Hour ticks */}
                     {Array.from({ length: 24 }).map((_, hour) => (
                       <div 
@@ -206,6 +220,15 @@ export function AttendanceDetailDrawer({ record, date, onClose }: AttendanceDeta
                   })}
                 </div>
               </div>
+            )}
+
+            {canManage && attendanceDate && (
+              <AttendanceLateReasonForm
+                record={record}
+                attendanceDate={attendanceDate}
+                canSubmit={canManage}
+                onSuccess={onLateReasonSubmitted}
+              />
             )}
 
             <div>

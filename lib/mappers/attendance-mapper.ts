@@ -7,6 +7,9 @@ import type {
   AttendanceStatusCounts,
 } from '@/types/attendance'
 export interface BackendAttendanceRecord {
+  id?: number
+  employee?: number
+  employee_profile_id?: number
   employee_id: string
   employee_name: string
   role: string
@@ -31,6 +34,29 @@ export interface BackendAttendanceStatusCount {
   'on leave'?: number
   on_leave?: number
   weekend?: number
+}
+
+function parseNumericId(value: string | undefined): number | null {
+  if (!value) return null
+  const trimmed = value.trim()
+  if (!/^\d+$/.test(trimmed)) return null
+  const parsed = Number(trimmed)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function toNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') return parseNumericId(value)
+  return null
+}
+
+function resolveEmployeeProfileId(record: BackendAttendanceRecord): number | null {
+  return (
+    toNumber(record.employee) ??
+    toNumber(record.employee_profile_id) ??
+    toNumber(record.id) ??
+    parseNumericId(record.employee_id)
+  )
 }
 
 function formatTimeValue(value: string | null): string | null {
@@ -64,8 +90,10 @@ export function normalizeAttendanceStatus(status: string): AttendanceStatus {
 
 export function mapBackendAttendanceRecord(record: BackendAttendanceRecord): AttendanceRecord {
   const employeeName = formatPersonName(record.employee_name)
+  const employeeProfileId = resolveEmployeeProfileId(record)
   return {
     id: record.employee_id,
+    employeeProfileId,
     employeeId: record.employee_id,
     employeeName,
     initials: initialsFromName(employeeName),
