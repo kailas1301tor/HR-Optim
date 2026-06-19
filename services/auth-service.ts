@@ -39,6 +39,8 @@ function unwrapField<T>(field: T | ProfileField<T> | undefined | null): T | unde
 function normalizeCurrentUserProfile(data: CurrentUserProfileWire): CurrentUserProfile {
   return {
     id: unwrapField(data.id) ?? 0,
+    fullName: unwrapField(data.full_name)?.trim() ?? '',
+    designation: unwrapField(data.designation)?.trim() ?? '',
     username: unwrapField(data.username) ?? '',
     email: unwrapField(data.email) ?? '',
     permissions: unwrapField(data.permissions) ?? [],
