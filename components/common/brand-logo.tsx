@@ -2,50 +2,93 @@
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import {
+  APP_LOGO_ALT,
+  APP_LOGO_DARK_PATH,
+  APP_LOGO_LIGHT_PATH,
   APP_MARK_ALT,
-  APP_MARK_PATH,
+  APP_MARK_DARK_PATH,
+  APP_MARK_LIGHT_PATH,
   COMPANY_TAGLINE,
-  PRODUCT_NAME,
 } from '@/lib/brand'
-import { uiBrandMark } from '@/lib/ui/design-system'
 
-const markSizeClasses = {
+type BrandLogoSize = 'sm' | 'md' | 'lg' | 'xl' | 'hero'
+
+const markSizeClasses: Record<Exclude<BrandLogoSize, 'hero'>, string> = {
   sm: 'size-8',
   md: 'size-10',
   lg: 'size-12',
   xl: 'size-14',
-} as const
+}
 
-const markSizePixels = {
+const markSizePixels: Record<Exclude<BrandLogoSize, 'hero'>, number> = {
   sm: 32,
   md: 40,
   lg: 48,
   xl: 56,
-} as const
+}
 
-const fullTitleClasses = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-lg',
-  xl: 'text-xl',
-} as const
+const fullHeightClasses: Record<BrandLogoSize, string> = {
+  sm: 'h-8',
+  md: 'h-10',
+  lg: 'h-12',
+  xl: 'h-14',
+  hero: 'h-24 sm:h-28 lg:h-32 xl:h-36',
+}
 
-const fullTaglineClasses = {
+const fullTaglineClasses: Record<Exclude<BrandLogoSize, 'hero'>, string> = {
   sm: 'text-[9px] tracking-[0.14em]',
   md: 'text-[10px] tracking-[0.16em]',
   lg: 'text-[11px] tracking-[0.18em]',
   xl: 'text-xs tracking-[0.2em]',
-} as const
+}
 
-const fullGapClasses = {
-  sm: 'gap-2',
-  md: 'gap-2.5',
-  lg: 'gap-2.5',
-  xl: 'gap-3',
-} as const
+interface ThemeImagePairProps {
+  lightSrc: string
+  darkSrc: string
+  alt: string
+  className?: string
+  width: number
+  height: number
+  sizes: string
+  priority?: boolean
+}
+
+function ThemeImagePair({
+  lightSrc,
+  darkSrc,
+  alt,
+  className,
+  width,
+  height,
+  sizes,
+  priority = false,
+}: ThemeImagePairProps) {
+  return (
+    <>
+      <Image
+        src={lightSrc}
+        alt={alt}
+        width={width}
+        height={height}
+        priority={priority}
+        sizes={sizes}
+        className={cn(className, 'dark:hidden')}
+      />
+      <Image
+        src={darkSrc}
+        alt={alt}
+        width={width}
+        height={height}
+        priority={priority}
+        sizes={sizes}
+        className={cn(className, 'hidden dark:block')}
+      />
+    </>
+  )
+}
 
 interface BrandMarkImageProps {
-  size: 'sm' | 'md' | 'lg' | 'xl'
+  size: Exclude<BrandLogoSize, 'hero'>
   priority?: boolean
   className?: string
 }
@@ -54,22 +97,71 @@ function BrandMarkImage({ size, priority = false, className }: BrandMarkImagePro
   const pixelSize = markSizePixels[size]
 
   return (
-    <div className={cn(uiBrandMark, markSizeClasses[size], className)}>
-      <Image
-        src={APP_MARK_PATH}
+    <div className={cn('relative shrink-0', markSizeClasses[size], className)}>
+      <ThemeImagePair
+        lightSrc={APP_MARK_LIGHT_PATH}
+        darkSrc={APP_MARK_DARK_PATH}
         alt={APP_MARK_ALT}
-        fill
-        priority={priority}
+        width={pixelSize}
+        height={pixelSize}
         sizes={`${pixelSize}px`}
-        className="object-cover"
+        priority={priority}
+        className="absolute inset-0 size-full object-contain"
       />
+    </div>
+  )
+}
+
+interface BrandFullWordmarkProps {
+  size: BrandLogoSize
+  showTagline?: boolean
+  priority?: boolean
+  className?: string
+}
+
+function BrandFullWordmark({
+  size,
+  showTagline = false,
+  priority = false,
+  className,
+}: BrandFullWordmarkProps) {
+  const heightClass = fullHeightClasses[size]
+  const imageSizes =
+    size === 'hero'
+      ? '(max-width: 1024px) 280px, 360px'
+      : '(max-width: 768px) 120px, 160px'
+
+  return (
+    <div className={cn('flex min-w-0 flex-col items-start', className)}>
+      <div className={cn('relative w-fit max-w-full', heightClass)}>
+        <ThemeImagePair
+          lightSrc={APP_LOGO_LIGHT_PATH}
+          darkSrc={APP_LOGO_DARK_PATH}
+          alt={APP_LOGO_ALT}
+          width={1024}
+          height={512}
+          sizes={imageSizes}
+          priority={priority}
+          className="h-full w-auto max-w-full object-contain object-left"
+        />
+      </div>
+      {showTagline && size !== 'hero' ? (
+        <span
+          className={cn(
+            'mt-1.5 truncate font-medium uppercase text-muted-foreground',
+            fullTaglineClasses[size],
+          )}
+        >
+          {COMPANY_TAGLINE}
+        </span>
+      ) : null}
     </div>
   )
 }
 
 interface BrandLogoProps {
   variant?: 'full' | 'mark'
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  size?: BrandLogoSize
   showTagline?: boolean
   className?: string
   priority?: boolean
@@ -83,32 +175,16 @@ export function BrandLogo({
   priority = false,
 }: BrandLogoProps) {
   if (variant === 'mark') {
-    return <BrandMarkImage size={size} priority={priority} className={className} />
+    const markSize = size === 'hero' ? 'xl' : size
+    return <BrandMarkImage size={markSize} priority={priority} className={className} />
   }
 
   return (
-    <div className={cn('flex items-center min-w-0', fullGapClasses[size], className)}>
-      <BrandMarkImage size={size} priority={priority} />
-      <div className="flex min-w-0 flex-col justify-center leading-none">
-        <span
-          className={cn(
-            'truncate font-bold uppercase tracking-tight text-foreground',
-            fullTitleClasses[size],
-          )}
-        >
-          {PRODUCT_NAME.toUpperCase()}
-        </span>
-        {showTagline ? (
-          <span
-            className={cn(
-              'mt-1 truncate font-medium uppercase text-muted-foreground',
-              fullTaglineClasses[size],
-            )}
-          >
-            {COMPANY_TAGLINE}
-          </span>
-        ) : null}
-      </div>
-    </div>
+    <BrandFullWordmark
+      size={size}
+      showTagline={showTagline}
+      priority={priority}
+      className={className}
+    />
   )
 }

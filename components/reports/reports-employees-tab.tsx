@@ -70,7 +70,7 @@ export function ReportsEmployeesTab({ data, isLoading = false }: ReportsEmployee
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip contentStyle={reportsChartTooltipStyle} cursor={false} />
-                <Bar dataKey="value" fill="#7c3aed" radius={[6, 6, 0, 0]} name="New Hires" />
+                <Bar dataKey="value" fill="var(--violet-core)" radius={[6, 6, 0, 0]} name="New Hires" />
               </BarChart>
             </ResponsiveContainer>
           </div>

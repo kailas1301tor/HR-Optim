@@ -7,7 +7,7 @@ import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { canViewEmployeesSection } from '@/lib/permissions/module-permissions'
-import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { uiSkeletonBlock, uiSquircleNav } from '@/lib/ui/design-system'
 import { SIDEBAR_NAV_ITEMS, SIDEBAR_SECTIONS } from './sidebar-nav-config'
 import { MagnificationNavItem } from './magnification-nav-item'
 
@@ -91,7 +91,7 @@ export function SidebarMagnificationNav({
             {Array.from({ length: 2 }).map((_, index) => (
               <Skeleton
                 key={`${section}-${index}`}
-                className={cn('h-10 w-full rounded-[16px] [corner-shape:squircle]', uiSkeletonBlock)}
+                className={cn('h-10 w-full', uiSquircleNav, uiSkeletonBlock)}
               />
             ))}
           </div>

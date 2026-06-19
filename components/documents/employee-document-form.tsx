@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { uiInput, uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/ui/date-picker'
 import type { Employee } from '@/types/employee'
 import { employeeDocumentUploadSchema, type EmployeeDocumentUploadInput } from '@/validations/document.schema'
 import { LIMIT_DOCUMENT_NUMBER } from '@/validations/field-limits'
@@ -53,6 +54,7 @@ export function EmployeeDocumentForm({
   const file = watch('file')
   const selectedEmployee = watch('employee')
   const selectedDocumentType = watch('document_type')
+  const expiryDate = watch('expiry_date')
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
@@ -123,11 +125,10 @@ export function EmployeeDocumentForm({
 
       <div className="space-y-1.5">
         <Label htmlFor="expiry_date" className="text-xs text-slate-400">Expiry Date</Label>
-        <Input
+        <DatePicker
           id="expiry_date"
-          type="date"
-          className={cn(uiInput, 'text-xs min-h-11')}
-          {...register('expiry_date')}
+          value={expiryDate}
+          onChange={(val) => setValue('expiry_date', val, { shouldValidate: true })}
         />
         <CommonFormFieldError message={errors.expiry_date?.message} />
       </div>

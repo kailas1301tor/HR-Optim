@@ -1,12 +1,10 @@
 // components/requests/forms/leave-date-range-fields.tsx
 'use client'
 
-import { CalendarDays } from 'lucide-react'
-import { format, startOfToday } from 'date-fns'
-import { Input } from '@/components/ui/input'
+import { parseISO, startOfToday } from 'date-fns'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import { uiInput } from '@/lib/ui/design-system'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface LeaveDateRangeFieldsProps {
   fromDate: string
@@ -16,8 +14,6 @@ interface LeaveDateRangeFieldsProps {
   className?: string
 }
 
-const todayMin = format(startOfToday(), 'yyyy-MM-dd')
-
 export function LeaveDateRangeFields({
   fromDate,
   toDate,
@@ -25,48 +21,35 @@ export function LeaveDateRangeFields({
   onToDateChange,
   className,
 }: LeaveDateRangeFieldsProps) {
+  const today = startOfToday()
+
+  // Parse strings to Dates safely
+  const parsedFromDate = fromDate ? parseISO(fromDate) : undefined
+
   return (
     <div className={cn('grid grid-cols-2 gap-3', className)}>
       <div className="space-y-1.5">
         <Label htmlFor="leave-start-date" className="text-xs text-muted-foreground">
           Start Date
         </Label>
-        <div className="relative">
-          <CalendarDays
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            id="leave-start-date"
-            type="date"
-            min={todayMin}
-            value={fromDate}
-            onChange={(e) => onFromDateChange(e.target.value)}
-            className={cn(uiInput, 'h-10 pl-9 text-xs')}
-            aria-label="Leave start date"
-          />
-        </div>
+        <DatePicker
+          id="leave-start-date"
+          value={fromDate}
+          onChange={onFromDateChange}
+          disabledDays={{ before: today }}
+        />
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="leave-end-date" className="text-xs text-muted-foreground">
           End Date
         </Label>
-        <div className="relative">
-          <CalendarDays
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground"
-            aria-hidden
-          />
-          <Input
-            id="leave-end-date"
-            type="date"
-            min={fromDate || todayMin}
-            value={toDate}
-            onChange={(e) => onToDateChange(e.target.value)}
-            className={cn(uiInput, 'h-10 pl-9 text-xs')}
-            aria-label="Leave end date"
-          />
-        </div>
+        <DatePicker
+          id="leave-end-date"
+          value={toDate}
+          onChange={onToDateChange}
+          disabledDays={{ before: parsedFromDate || today }}
+        />
       </div>
     </div>
   )

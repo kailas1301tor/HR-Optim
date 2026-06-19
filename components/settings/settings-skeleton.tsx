@@ -20,7 +20,7 @@ function SettingsMasterCardSkeleton({ rowCount = 4 }: { rowCount?: number }) {
     <div className={cn(uiCard, 'p-0 overflow-hidden')}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border-b border-border/40">
         <Skeleton className={cn('h-5 w-32 rounded', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-9 w-16 rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-9 w-16', uiSquircleSm, uiSkeletonBlock)} />
       </div>
       <div className="p-4 space-y-2">
         {Array.from({ length: rowCount }).map((_, index) => (
@@ -30,8 +30,8 @@ function SettingsMasterCardSkeleton({ rowCount = 4 }: { rowCount?: number }) {
           >
             <Skeleton className={cn('h-4 w-36 rounded', uiSkeletonBlock)} />
             <div className="flex items-center gap-2">
-              <Skeleton className={cn('h-8 w-8 rounded-xl', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-8 w-8 rounded-xl', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-8 w-8 rounded-[16px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-8 w-8 rounded-[16px] [corner-shape:squircle]', uiSkeletonBlock)} />
             </div>
           </div>
         ))}
@@ -57,7 +57,7 @@ export function SettingsSkeleton({
         {TAB_WIDTHS.map((width, index) => (
           <Skeleton
             key={index}
-            className={cn('h-9 rounded-xl shrink-0', width, uiSquircleSm, uiSkeletonBlock)}
+            className={cn('h-9 shrink-0', width, uiSquircleSm, uiSkeletonBlock)}
           />
         ))}
       </div>

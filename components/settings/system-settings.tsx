@@ -14,7 +14,7 @@ import { useSystemSettings } from './useSystemSettings'
 import { useNotificationSettings } from './useNotificationSettings'
 
 export function SystemSettings() {
-  const { lang, theme, setTheme, mounted } = useSystemSettings()
+  const { lang, theme, setTheme, colorTheme, setColorTheme, mounted } = useSystemSettings()
   const {
     status: notificationStatus,
     settings,
@@ -120,6 +120,74 @@ export function SystemSettings() {
                     <SelectContent className="bg-card border border-border/80 rounded-[20px] [corner-shape:squircle]">
                       <SelectItem value="dark" className="cursor-pointer">Dark (Command Center)</SelectItem>
                       <SelectItem value="light" className="cursor-pointer">Light Mode</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Primary Accent Color</Label>
+                {!mounted ? (
+                  <Skeleton className={cn('h-10 w-full rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+                ) : (
+                  <Select value={colorTheme} onValueChange={(val) => setColorTheme(val as any)}>
+                    <SelectTrigger className="bg-midnight border-border rounded-[20px] [corner-shape:squircle] text-xs text-slate-300 cursor-pointer">
+                      <SelectValue placeholder="Select accent color..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border border-border/80 rounded-[20px] [corner-shape:squircle]">
+                      <SelectItem value="theme-violet" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#7c3aed]" />
+                          <span>Amethyst Violet</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-blue" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#2563eb]" />
+                          <span>Sapphire Blue</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-emerald" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#059669]" />
+                          <span>Jade Emerald</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-rose" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#e11d48]" />
+                          <span>Ruby Rose</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-amber" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#d97706]" />
+                          <span>Topaz Amber</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-red" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#dc2626]" />
+                          <span>Crimson Red (Default)</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-cyan" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#0891b2]" />
+                          <span>Cyan Turquoise</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-black" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#18181b]" />
+                          <span>Obsidian Black</span>
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="theme-grey" className="cursor-pointer">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="h-3 w-3 rounded-full border border-white/10 shrink-0 bg-[#4b5563]" />
+                          <span>Steel Slate Grey</span>
+                        </span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 )}

@@ -33,7 +33,7 @@ export function PayrollCardSkeleton() {
           <Skeleton className={cn('h-2.5 w-16 rounded', uiSkeletonBlock)} />
           <Skeleton className={cn('h-5 w-24 rounded', uiSkeletonBlock)} />
         </div>
-        <Skeleton className={cn('h-10 w-20 rounded-xl shrink-0', uiSquircleSm, uiSkeletonBlock)} />
+        <Skeleton className={cn('h-10 w-20 shrink-0', uiSquircleSm, uiSkeletonBlock)} />
       </div>
     </div>
   )

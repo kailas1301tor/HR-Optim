@@ -37,6 +37,10 @@ export interface UsePayrollActionsReturn {
   handleExportWps: () => Promise<void>
   handleExportDepartmentSummary: () => Promise<void>
   isExporting: boolean
+  detailsTarget: PayrollRecord | null
+  setDetailsTarget: (record: PayrollRecord | null) => void
+  isDeletingAdjustment: boolean
+  handleDeleteAdjustment: (adjustmentId: number) => Promise<void>
 }
 
 export function usePayrollActions({ onSuccess, exportParams }: UsePayrollActionsProps): UsePayrollActionsReturn {
@@ -46,6 +50,8 @@ export function usePayrollActions({ onSuccess, exportParams }: UsePayrollActions
   const [isAdjusting, setIsAdjusting] = useState(false)
   const [isFinalizing, setIsFinalizing] = useState(false)
   const [isExporting, setIsExporting] = useState(false)
+  const [detailsTarget, setDetailsTarget] = useState<PayrollRecord | null>(null)
+  const [isDeletingAdjustment, setIsDeletingAdjustment] = useState(false)
 
   const handleGenerate = useCallback(
     async (payload: GeneratePayrollPayload) => {
@@ -148,6 +154,32 @@ export function usePayrollActions({ onSuccess, exportParams }: UsePayrollActions
     }
   }, [exportParams])
 
+  const handleDeleteAdjustment = useCallback(
+    async (adjustmentId: number) => {
+      setIsDeletingAdjustment(true)
+      try {
+        await payrollService.deleteAdjustment(adjustmentId)
+        toast.success('Adjustment deleted successfully')
+        if (detailsTarget) {
+          setDetailsTarget((prev) => {
+            if (!prev) return null
+            return {
+              ...prev,
+              adjustments: prev.adjustments?.filter((adj) => adj.id !== adjustmentId) ?? [],
+            }
+          })
+        }
+        onSuccess()
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Failed to delete adjustment'
+        toast.error(message)
+      } finally {
+        setIsDeletingAdjustment(false)
+      }
+    },
+    [detailsTarget, onSuccess],
+  )
+
   return {
     isGenerateOpen,
     setIsGenerateOpen,
@@ -162,5 +194,9 @@ export function usePayrollActions({ onSuccess, exportParams }: UsePayrollActions
     handleExportWps,
     handleExportDepartmentSummary,
     isExporting,
+    detailsTarget,
+    setDetailsTarget,
+    isDeletingAdjustment,
+    handleDeleteAdjustment,
   }
 }

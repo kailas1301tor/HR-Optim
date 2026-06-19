@@ -14,6 +14,8 @@ import {
   type AttendanceRecord,
   type AttendanceStatusCounts,
   type DepartmentAttendanceExportParams,
+  type ManualPunchPayload,
+  type ManualPunchResponse,
 } from '@/types/attendance'
 import type { ApiSimpleListResponse, ApiSingleResponse } from '@/lib/types'
 
@@ -121,5 +123,16 @@ export const attendanceService = {
       blob,
       filename: parseContentDispositionFilename(contentDisposition, fallbackFilename),
     }
+  },
+
+  async manualPunch(
+    payload: ManualPunchPayload,
+    signal?: AbortSignal,
+  ): Promise<ManualPunchResponse> {
+    return await api.post<ManualPunchResponse>(
+      '/api/employee/attendance/manual-punch/',
+      payload,
+      { signal },
+    )
   },
 }

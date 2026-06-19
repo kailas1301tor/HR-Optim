@@ -9,7 +9,7 @@ import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import type { DashboardDepartmentItem } from '@/types/dashboard'
 
-const CHART_COLORS = ['#7c3aed', '#a855f7', '#14b8a6', '#a3e635', '#f59e0b', '#64748b']
+const CHART_COLORS = ['var(--violet-core)', 'var(--violet-glow)', '#14b8a6', '#a3e635', '#f59e0b', '#64748b']
 
 interface DepartmentDistributionProps {
   items: DashboardDepartmentItem[]

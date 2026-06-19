@@ -1,6 +1,7 @@
 // components/layout/shell-top-bar.tsx
 'use client'
 
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
@@ -42,6 +43,92 @@ interface ShellTopBarProps {
   isMobile: boolean
 }
 
+interface ShellIconButtonProps {
+  label: string
+  onClick: () => void
+  children: ReactNode
+  className?: string
+  showDot?: boolean
+}
+
+function ShellIconButton({
+  label,
+  onClick,
+  children,
+  className,
+  showDot = false,
+}: ShellIconButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        'relative flex size-9 shrink-0 items-center justify-center rounded-full',
+        'text-slate-300 transition-colors hover:bg-carbon/80 hover:text-cloud',
+        className,
+      )}
+    >
+      {children}
+      {showDot ? (
+        <span className="absolute right-2 top-2 size-1.5 rounded-full bg-violet-core ring-2 ring-midnight" />
+      ) : null}
+    </button>
+  )
+}
+
+function UserMenuDropdown({ userProfile }: { userProfile: UserProfile }) {
+  const { handleLogout, handleGoToProfile, handleGoToSettings } = useSidebar()
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label="Open account menu"
+          className="flex size-9 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-carbon/80"
+        >
+          <Avatar className="size-8 ring-2 ring-border/60">
+            <AvatarImage src="/placeholder-user.jpg" />
+            <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-[10px] font-semibold text-white">
+              {userProfile.initials}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-64 max-w-[calc(100vw-2rem)] border border-border bg-popover"
+      >
+        <DropdownMenuLabel className="min-w-0 overflow-hidden">
+          <div className="flex min-w-0 flex-col gap-0.5 overflow-hidden">
+            <span className="truncate font-semibold text-cloud" title={userProfile.fullName}>
+              {userProfile.fullName}
+            </span>
+            <span className="truncate text-xs text-muted-foreground" title={userProfile.email}>
+              {userProfile.email}
+            </span>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator className="border-border/40" />
+        <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToProfile}>
+          <User className="mr-2 size-4 text-slate-400" />
+          Profile
+        </DropdownMenuItem>
+        <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToSettings}>
+          <Settings className="mr-2 size-4 text-slate-400" />
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="border-border/40" />
+        <DropdownMenuItem className="cursor-pointer text-destructive" onClick={handleLogout}>
+          <LogOut className="mr-2 size-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export function ShellTopBar({
   collapsed,
   setCollapsed,
@@ -51,83 +138,104 @@ export function ShellTopBar({
   isMobile,
 }: ShellTopBarProps) {
   const {
-    handleLogout,
-    handleGoToProfile,
-    handleGoToSettings,
     handleGoToNotifications,
     breadcrumbs,
     pathname,
   } = useSidebar()
 
-  const brandWidth = isMobile
-    ? undefined
-    : collapsed
-    ? SHELL_SIDEBAR_WIDTH_COLLAPSED
-    : SHELL_SIDEBAR_WIDTH_EXPANDED
-
+  const brandWidth = collapsed ? SHELL_SIDEBAR_WIDTH_COLLAPSED : SHELL_SIDEBAR_WIDTH_EXPANDED
   const showBreadcrumbs = pathname !== '/' && breadcrumbs.length > 0
+  const mobilePageTitle =
+    pathname === '/'
+      ? 'Dashboard'
+      : (breadcrumbs[breadcrumbs.length - 1]?.label ?? 'Dashboard')
+
+  if (isMobile) {
+    return (
+      <header className={cn(uiShellHeader, 'fixed inset-x-0 top-0 z-50')}>
+        <div className="flex w-full min-w-0 items-center gap-2 px-3">
+          <ShellIconButton label="Open main menu" onClick={onMenuClick}>
+            <Menu className="size-5" />
+          </ShellIconButton>
+
+          <Link
+            href="/"
+            className="flex shrink-0 items-center"
+            aria-label="Go to dashboard"
+          >
+            <BrandLogo variant="mark" size="sm" priority />
+          </Link>
+
+          <div className="min-w-0 flex-1 px-1">
+            <p className="truncate text-sm font-semibold leading-tight text-cloud">
+              {mobilePageTitle}
+            </p>
+            <p className="truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {userProfile.roleName}
+            </p>
+          </div>
+
+          <div
+            className={cn(
+              'flex shrink-0 items-center gap-0.5 rounded-full border border-border/50 bg-carbon/40 p-0.5',
+            )}
+          >
+            <ShellIconButton label="Search" onClick={onSearchOpen}>
+              <Search className="size-4" />
+            </ShellIconButton>
+            <ShellIconButton label="Notifications" onClick={handleGoToNotifications} showDot>
+              <Bell className="size-4" />
+            </ShellIconButton>
+          </div>
+
+          <UserMenuDropdown userProfile={userProfile} />
+        </div>
+      </header>
+    )
+  }
 
   return (
     <header
       className={cn(
         uiShellHeader,
-        'fixed top-0 left-0 right-0 z-50 bg-midnight',
-        'flex items-stretch'
+        'fixed inset-x-0 top-0 z-50 flex items-stretch',
       )}
     >
       {/* Brand zone — width locked to sidebar column on desktop */}
       <div
         className={cn(
-          'shrink-0 flex items-center border-r border-border transition-[width] duration-300 ease-in-out',
-          isMobile
-            ? 'gap-2 px-3'
-            : collapsed
-              ? 'justify-center px-0'
-              : 'gap-0 pl-3.5 pr-1',
+          'flex shrink-0 items-center border-r border-border transition-[width] duration-300 ease-in-out',
+          collapsed ? 'justify-center px-0' : 'gap-0 pl-5 pr-1',
         )}
-        style={brandWidth !== undefined ? { width: brandWidth } : undefined}
+        style={{ width: brandWidth }}
       >
-        {isMobile && (
-          <button
-            type="button"
-            onClick={onMenuClick}
-            className={cn(
-              'p-2 hover:bg-carbon text-slate-400 hover:text-cloud transition-colors cursor-pointer shrink-0',
-              uiSquircleNav
-            )}
-            aria-label="Open main menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
-
         <Link
           href="/"
           className={cn(
-            'flex items-center min-w-0 py-1',
-            !collapsed && !isMobile && 'min-w-0 flex-1 pr-1',
-            collapsed && !isMobile && 'justify-center px-2',
+            'flex min-w-0 items-center py-1.5',
+            !collapsed && 'min-w-0 flex-1 pr-1 pl-2',
+            collapsed && 'justify-center px-2',
           )}
           aria-label="Go to dashboard"
         >
-          {collapsed && !isMobile ? (
-            <BrandLogo variant="mark" size="md" />
+          {collapsed ? (
+            <BrandLogo variant="mark" size="lg" />
           ) : (
-            <BrandLogo variant="full" size="md" showTagline className="w-full" />
+            <BrandLogo variant="full" size="lg" showTagline className="w-full" />
           )}
         </Link>
 
-        {!isMobile && !collapsed && (
+        {!collapsed && (
           <button
             type="button"
             onClick={() => setCollapsed(true)}
             className={cn(
-              'shrink-0 p-1 hover:bg-carbon text-slate-500 hover:text-slate-300 transition-colors cursor-pointer',
-              uiSquircleNav
+              'shrink-0 p-1 text-slate-500 transition-colors hover:bg-carbon hover:text-slate-300 cursor-pointer',
+              uiSquircleNav,
             )}
             aria-label="Collapse sidebar"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
+            <ChevronLeft className="size-3.5" />
           </button>
         )}
       </div>
@@ -135,26 +243,26 @@ export function ShellTopBar({
       {/* App chrome — breadcrumbs + utilities */}
       <div
         className={cn(
-          'flex-1 flex items-center justify-between gap-4 min-w-0',
-          uiShellHeaderInset
+          'flex min-w-0 flex-1 items-center justify-between gap-4',
+          uiShellHeaderInset,
         )}
       >
-        <nav className="hidden sm:flex items-center gap-2 text-xs sm:text-sm font-medium min-w-0 truncate">
+        <nav className="flex min-w-0 items-center gap-2 truncate text-xs font-medium sm:text-sm">
           {showBreadcrumbs && (
             <>
-              <Link href="/" className="text-muted-foreground hover:text-cloud transition-colors shrink-0">
+              <Link href="/" className="shrink-0 text-muted-foreground transition-colors hover:text-cloud">
                 Home
               </Link>
               {breadcrumbs.map((crumb, index) => (
-                <div key={crumb.href} className="flex items-center gap-2 min-w-0">
-                  <span className="text-muted-foreground shrink-0">/</span>
+                <div key={crumb.href} className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 text-muted-foreground">/</span>
                   <Link
                     href={crumb.href}
                     className={cn(
                       'truncate transition-colors',
                       index === breadcrumbs.length - 1
-                        ? 'text-cloud font-semibold'
-                        : 'text-muted-foreground hover:text-cloud'
+                        ? 'font-semibold text-cloud'
+                        : 'text-muted-foreground hover:text-cloud',
                     )}
                   >
                     {crumb.label}
@@ -165,69 +273,27 @@ export function ShellTopBar({
           )}
         </nav>
 
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto sm:ml-0">
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onSearchOpen}
             className={cn(
-              'flex items-center gap-2 h-9 px-3 sm:px-4 bg-carbon/80 border border-border text-xs sm:text-sm text-muted-foreground hover:text-cloud hover:border-violet-core/40 transition-all cursor-pointer',
-              uiSquircleSm
+              'flex h-9 cursor-pointer items-center gap-2 border border-border bg-carbon/80 px-4 text-sm text-muted-foreground transition-all hover:border-violet-core/40 hover:text-cloud',
+              uiSquircleSm,
             )}
           >
-            <Search className="w-4 h-4 text-slate-400 shrink-0" />
-            <span className="hidden sm:inline">Search...</span>
-            <kbd className="hidden sm:inline-flex h-5 px-1.5 items-center gap-1 rounded bg-midnight text-[9px] font-medium text-muted-foreground">
+            <Search className="size-4 shrink-0 text-slate-400" />
+            <span>Search...</span>
+            <kbd className="inline-flex h-5 items-center gap-1 rounded bg-midnight px-1.5 text-[9px] font-medium text-muted-foreground">
               ⌘K
             </kbd>
           </button>
 
-          <button
-            type="button"
-            onClick={handleGoToNotifications}
-            className={cn('relative p-2 hover:bg-carbon transition-colors cursor-pointer', uiSquircleNav)}
-            aria-label="Notifications"
-          >
-            <Bell className="w-5 h-5 text-slate-300" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-violet-core rounded-full" />
-          </button>
+          <ShellIconButton label="Notifications" onClick={handleGoToNotifications} showDot>
+            <Bell className="size-5" />
+          </ShellIconButton>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className={cn('flex items-center p-1 hover:bg-carbon transition-colors cursor-pointer', uiSquircleNav)}
-              >
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src="/placeholder-user.jpg" />
-                  <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-xs font-mono">
-                    {userProfile.initials}
-                  </AvatarFallback>
-                </Avatar>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-popover border border-border">
-              <DropdownMenuLabel>
-                <div className="flex flex-col">
-                  <span className="font-semibold text-cloud">{userProfile.fullName}</span>
-                  <span className="text-xs text-muted-foreground">{userProfile.email}</span>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="border-border/40" />
-              <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToProfile}>
-                <User className="w-4 h-4 mr-2 text-slate-400" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" onSelect={handleGoToSettings}>
-                <Settings className="w-4 h-4 mr-2 text-slate-400" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="border-border/40" />
-              <DropdownMenuItem className="text-destructive cursor-pointer" onClick={handleLogout}>
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <UserMenuDropdown userProfile={userProfile} />
         </div>
       </div>
     </header>

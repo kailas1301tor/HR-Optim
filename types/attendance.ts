@@ -2,6 +2,11 @@
 
 export type AttendanceStatus = 'present' | 'late' | 'absent' | 'leave' | 'weekend' | 'holiday'
 
+export interface AttendanceTiming {
+  in: string | null
+  out: string | null
+}
+
 export interface AttendanceRecord {
   id: string
   employeeId: string
@@ -14,6 +19,9 @@ export interface AttendanceRecord {
   timeOut: string | null
   status: AttendanceStatus
   workHours: string | null
+  breakHours: string | null
+  totalHours: string | null
+  timings: AttendanceTiming[]
   role?: string
   email?: string
   phoneNumber?: string | null
@@ -75,4 +83,19 @@ export interface DepartmentAttendanceExportParams {
   date?: string
   month?: number
   year?: number
+}
+
+export type ManualPunchType = 'in' | 'out'
+
+export interface ManualPunchPayload {
+  punch_type: ManualPunchType
+  latitude: string
+  longitude: string
+}
+
+export interface ManualPunchResponse {
+  message: string
+  results?: {
+    data?: unknown
+  }
 }

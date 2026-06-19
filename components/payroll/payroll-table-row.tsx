@@ -16,7 +16,7 @@ interface PayrollTableRowProps {
   index: number
   isSelected: boolean
   onToggleSelect: (id: number) => void
-  onAddAdjustment: (record: PayrollRecord) => void
+  onViewDetails: (record: PayrollRecord) => void
   canManage?: boolean
 }
 
@@ -25,7 +25,7 @@ export function PayrollTableRow({
   index,
   isSelected,
   onToggleSelect,
-  onAddAdjustment,
+  onViewDetails,
   canManage = false,
 }: PayrollTableRowProps) {
   const wpsStatus = wpsStatusConfig[record.wpsStatus]
@@ -91,17 +91,15 @@ export function PayrollTableRow({
         </span>
       </td>
       <td className="px-4 py-3">
-        {canManage ? (
         <Button
           variant="ghost"
           size="sm"
           className="h-8 w-8 p-0"
-          onClick={() => onAddAdjustment(record)}
-          aria-label={`Add adjustment for ${record.employeeName}`}
+          onClick={() => onViewDetails(record)}
+          aria-label={`View details for ${record.employeeName}`}
         >
           <Eye className="w-4 h-4" />
         </Button>
-        ) : null}
       </td>
     </motion.tr>
   )

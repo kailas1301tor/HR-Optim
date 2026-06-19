@@ -18,13 +18,17 @@ import { AttendanceTableSkeleton } from './attendance-table-skeleton'
 import { AttendanceCard } from './attendance-card'
 import { AttendanceCardSkeleton } from './attendance-card-skeleton'
 import { AttendanceSkeleton } from './attendance-skeleton'
+import { AttendanceDetailDrawer } from './attendance-detail-drawer'
 import { useAttendanceSheet } from './useAttendanceSheet'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { isInitialDataLoading } from '@/lib/helpers/is-initial-data-loading'
+import { useState } from 'react'
+import type { AttendanceRecord } from '@/types/attendance'
 
 export function AdminAttendanceSheet() {
   const { canManage } = usePermissions()
   const canManageAttendance = canManage('attendance')
+  const [selectedRecord, setSelectedRecord] = useState<AttendanceRecord | null>(null)
 
   const {
     searchQuery,
@@ -129,12 +133,19 @@ export function AdminAttendanceSheet() {
         <>
           <CommonMobileCardGrid>
             {records.map((record, index) => (
-              <AttendanceCard key={record.id} record={record} index={index} />
+              <AttendanceCard 
+                key={record.id} 
+                record={record} 
+                index={index} 
+                onClick={() => setSelectedRecord(record)} 
+              />
             ))}
           </CommonMobileCardGrid>
-          <AttendanceTable records={records} />
+          <AttendanceTable records={records} onRowClick={setSelectedRecord} />
         </>
       )}
+
+      <AttendanceDetailDrawer record={selectedRecord} date={formatDate(selectedDate)} onClose={() => setSelectedRecord(null)} />
     </div>
   )
 }

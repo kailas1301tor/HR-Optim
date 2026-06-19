@@ -23,11 +23,11 @@ function AttendanceDateNavSkeleton() {
   return (
     <div className="flex items-center gap-4 flex-wrap">
       <div className="flex items-center gap-2">
-        <Skeleton className={cn('h-11 w-11 rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-11 w-11', uiSquircleSm, uiSkeletonBlock)} />
         <Skeleton className={cn('h-11 w-44 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
-        <Skeleton className={cn('h-11 w-11 rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-11 w-11', uiSquircleSm, uiSkeletonBlock)} />
       </div>
-      <Skeleton className={cn('h-11 w-20 rounded-xl', uiSkeletonBlock)} />
+      <Skeleton className={cn('h-11 w-20', uiSquircleSm, uiSkeletonBlock)} />
     </div>
   )
 }
@@ -67,10 +67,10 @@ function AttendanceEmployeeStatsSkeleton() {
 function AttendanceToolbarSkeleton() {
   return (
     <div className="flex flex-col lg:flex-row gap-3">
-      <Skeleton className={cn('h-11 flex-1 rounded-xl', uiSkeletonBlock)} />
-      <Skeleton className={cn('h-11 w-full lg:w-52 rounded-xl', uiSkeletonBlock)} />
-      <Skeleton className={cn('h-11 w-full lg:w-32 rounded-xl', uiSkeletonBlock)} />
-      <Skeleton className={cn('h-11 w-full lg:w-36 rounded-xl', uiSkeletonBlock)} />
+      <Skeleton className={cn('h-11 flex-1', uiSquircleSm, uiSkeletonBlock)} />
+      <Skeleton className={cn('h-11 w-full lg:w-52', uiSquircleSm, uiSkeletonBlock)} />
+      <Skeleton className={cn('h-11 w-full lg:w-32', uiSquircleSm, uiSkeletonBlock)} />
+      <Skeleton className={cn('h-11 w-full lg:w-36', uiSquircleSm, uiSkeletonBlock)} />
     </div>
   )
 }
@@ -126,7 +126,7 @@ function EmployeeAttendanceSkeleton() {
             Review your monthly attendance summary and daily status
           </p>
         </div>
-        <Skeleton className={cn('h-11 w-full max-w-sm rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-11 w-full max-w-sm', uiSquircleSm, uiSkeletonBlock)} />
       </div>
 
       <AttendanceEmployeeStatsSkeleton />

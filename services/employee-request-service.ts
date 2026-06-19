@@ -211,7 +211,7 @@ export const employeeRequestService = {
   },
 
   async createLeaveRequest(
-    payload: CreateLeaveRequestPayload,
+    payload: CreateLeaveRequestPayload | FormData,
     signal?: AbortSignal
   ): Promise<LeaveRequestRecord> {
     const response = await api.post<ApiSingleResponse<LeaveRequestRecord>>(

@@ -12,9 +12,10 @@ import type { AttendanceRecord } from '@/types/attendance'
 interface AttendanceCardProps {
   record: AttendanceRecord
   index: number
+  onClick?: () => void
 }
 
-export function AttendanceCard({ record, index }: AttendanceCardProps) {
+export function AttendanceCard({ record, index, onClick }: AttendanceCardProps) {
   const status = STATUS_CONFIG[record.status]
 
   return (
@@ -22,7 +23,8 @@ export function AttendanceCard({ record, index }: AttendanceCardProps) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.25 }}
-      className={cn(uiCard, 'p-5')}
+      onClick={onClick}
+      className={cn(uiCard, 'p-5', onClick && 'cursor-pointer hover:bg-violet-core/5 transition-colors')}
       aria-label={`${record.employeeName} attendance — ${status.label}`}
     >
       <div className="flex items-start justify-between gap-3 mb-4">

@@ -56,7 +56,7 @@ export function AppShell({ children }: AppShellProps) {
         {mobileOpen && (
           <div
             onClick={() => setMobileOpen(false)}
-            className="fixed inset-x-0 top-16 bottom-0 bg-background/60 backdrop-blur-md z-30 md:hidden transition-opacity duration-300"
+            className="fixed inset-x-0 top-16 bottom-0 z-30 bg-background/60 backdrop-blur-md transition-opacity duration-300 md:hidden"
             aria-hidden="true"
           />
         )}
@@ -71,7 +71,7 @@ export function AppShell({ children }: AppShellProps) {
 
         <div
           className={cn(
-            'transition-all duration-300 ease-in-out pt-16 pl-0 min-h-screen flex flex-col',
+            'flex min-h-screen flex-col pl-0 pt-16 transition-all duration-300 ease-in-out md:pt-20',
             'md:pl-[var(--shell-sidebar-width)]',
             collapsed && 'md:pl-[var(--shell-sidebar-width-collapsed)]'
           )}

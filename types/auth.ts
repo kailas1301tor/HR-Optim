@@ -61,6 +61,9 @@ export interface ProfileField<T> {
   is_editable: boolean
 }
 
+/** Profile API may return either a wrapped field or a plain value (attendance flags). */
+export type ProfileWireValue<T> = T | ProfileField<T>
+
 export interface CurrentUserProfileWire {
   id: ProfileField<number>
   username: ProfileField<string>
@@ -69,6 +72,8 @@ export interface CurrentUserProfileWire {
   employee_profile_id?: ProfileField<number | null>
   phone_number?: ProfileField<string>
   address?: ProfileField<string>
+  is_manual_attendance_enabled?: ProfileWireValue<boolean>
+  is_punch_in?: ProfileWireValue<boolean>
 }
 
 export interface CurrentUserProfile {
@@ -77,6 +82,8 @@ export interface CurrentUserProfile {
   email: string
   permissions: UserPermission[]
   employee_profile_id?: number | null
+  isManualAttendanceEnabled: boolean
+  isPunchIn: boolean
 }
 
 export interface CurrentUserProfileResponse {

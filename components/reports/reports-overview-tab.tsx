@@ -115,15 +115,15 @@ export function ReportsOverviewTab({ data, isLoading = false }: ReportsOverviewT
               <AreaChart data={employees.hireTrend}>
                 <defs>
                   <linearGradient id="hireGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--violet-core)" stopOpacity={0.35} />
+                    <stop offset="95%" stopColor="var(--violet-core)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
                 <XAxis dataKey="label" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
                 <YAxis tick={{ fontSize: 11 }} className="fill-muted-foreground" />
                 <Tooltip contentStyle={reportsChartTooltipStyle} cursor={false} />
-                <Area type="monotone" dataKey="value" stroke="#7c3aed" fill="url(#hireGradient)" name="New Hires" />
+                <Area type="monotone" dataKey="value" stroke="var(--violet-core)" fill="url(#hireGradient)" name="New Hires" />
               </AreaChart>
             </ResponsiveContainer>
           </div>

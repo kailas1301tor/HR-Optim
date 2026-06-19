@@ -12,6 +12,7 @@ export interface LeaveRule {
   accrual_frequency: string
   is_paid_leave: boolean
   description: string | null
+  is_document_required: boolean
 }
 
 export interface ConfigureLeaveRulePayload {
@@ -24,6 +25,7 @@ export interface ConfigureLeaveRulePayload {
   accrual_frequency: string
   is_paid_leave: boolean
   description: string
+  is_document_required: boolean
 }
 
 export const leaveRuleService = {

@@ -46,12 +46,12 @@ export function ReportsSkeleton() {
           <Skeleton className={cn('h-8 w-48 rounded', uiSkeletonBlock)} />
           <Skeleton className={cn('h-4 w-72 rounded', uiSkeletonBlock)} />
         </div>
-        <Skeleton className={cn('h-10 w-10 rounded-xl', uiSkeletonBlock)} />
+        <Skeleton className={cn('h-10 w-10', uiSquircleSm, uiSkeletonBlock)} />
       </div>
 
       <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
         {Array.from({ length: 6 }).map((_, index) => (
-          <Skeleton key={index} className={cn('h-9 w-24 rounded-xl shrink-0', uiSkeletonBlock)} />
+          <Skeleton key={index} className={cn('h-9 w-24 rounded-full shrink-0', uiSkeletonBlock)} />
         ))}
       </div>
 

@@ -74,8 +74,7 @@ export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen, us
       }
       transition={{ duration: 0.25, ease: 'easeInOut' }}
       className={cn(
-        'fixed left-0 bg-midnight border-r border-border flex flex-col shadow-2xl md:shadow-none overflow-x-visible',
-        'top-16 h-[calc(100vh-4rem)] z-40'
+        'fixed left-0 top-16 z-40 flex h-[calc(100vh-4rem)] flex-col overflow-x-visible border-r border-border bg-midnight shadow-2xl md:top-20 md:h-[calc(100vh-5rem)] md:shadow-none',
       )}
     >
       {!isMobile && collapsed && (

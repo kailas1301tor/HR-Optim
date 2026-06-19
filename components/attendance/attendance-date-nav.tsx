@@ -78,6 +78,10 @@ export function AttendanceDateNav({
               selected={selectedDate}
               onSelect={handleCalendarSelect}
               defaultMonth={selectedDate}
+              captionLayout="dropdown"
+              reverseYears
+              startMonth={new Date(new Date().getFullYear() - 10, 0)}
+              endMonth={new Date(new Date().getFullYear() + 1, 11)}
               initialFocus
             />
           </PopoverContent>

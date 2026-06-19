@@ -6,6 +6,7 @@ import {
   uiCard,
   uiSkeletonBlock,
   uiTableShell,
+  uiSquircleSm,
 } from '@/lib/ui/design-system'
 
 interface TicketsSkeletonProps {
@@ -43,7 +44,7 @@ function TicketsFilterChipsSkeleton() {
   return (
     <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
       {Array.from({ length: 4 }).map((_, index) => (
-        <Skeleton key={index} className={cn('h-9 w-20 rounded-xl shrink-0', uiSkeletonBlock)} />
+        <Skeleton key={index} className={cn('h-9 w-20 rounded-full shrink-0', uiSkeletonBlock)} />
       ))}
     </div>
   )
@@ -103,7 +104,7 @@ function TicketsTableSkeleton() {
 export function TicketsContentSkeleton() {
   return (
     <div className="space-y-6">
-      <Skeleton className={cn('h-11 w-full rounded-xl', uiSkeletonBlock)} />
+      <Skeleton className={cn('h-11 w-full', uiSquircleSm, uiSkeletonBlock)} />
       <TicketsFilterChipsSkeleton />
       <TicketsTableSkeleton />
       <CommonMobileCardGrid className="lg:hidden">
@@ -127,7 +128,7 @@ export function TicketsSkeleton({
             <Skeleton className={cn('h-8 w-36 rounded', uiSkeletonBlock)} />
             <Skeleton className={cn('h-4 w-56 rounded', uiSkeletonBlock)} />
           </div>
-          <Skeleton className={cn('h-11 w-32 rounded-xl', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-11 w-32', uiSquircleSm, uiSkeletonBlock)} />
         </div>
       ) : null}
 

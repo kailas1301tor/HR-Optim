@@ -10,6 +10,7 @@ import type { AttendanceRecord } from '@/types/attendance'
 
 interface AttendanceTableProps {
   records: AttendanceRecord[]
+  onRowClick?: (record: AttendanceRecord) => void
 }
 
 const TABLE_COLUMNS = [
@@ -21,7 +22,7 @@ const TABLE_COLUMNS = [
   { id: 'workHours', label: 'Work Hours' },
 ] as const
 
-export function AttendanceTable({ records }: AttendanceTableProps) {
+export function AttendanceTable({ records, onRowClick }: AttendanceTableProps) {
   return (
     <div className={cn(uiTableShell, 'hidden lg:block')}>
       <div className="overflow-x-auto">
@@ -42,7 +43,11 @@ export function AttendanceTable({ records }: AttendanceTableProps) {
             {records.map((record) => (
               <tr
                 key={record.id}
-                className="border-b border-border/50 hover:bg-violet-core/5 transition-colors"
+                className={cn(
+                  'border-b border-border/50 hover:bg-violet-core/5 transition-colors',
+                  onRowClick && 'cursor-pointer'
+                )}
+                onClick={() => onRowClick?.(record)}
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">

@@ -14,6 +14,7 @@ import {
   SettingsFormDialog,
   SettingsDeleteDialog,
 } from '@/components/settings/shared'
+import { DatePicker } from '@/components/ui/date-picker'
 import { uiInput } from '@/lib/ui/design-system'
 import { holidaySchema, type HolidayInput } from '@/validations/holiday.schema'
 import { useHolidaysMaster } from './useHolidaysMaster'
@@ -40,12 +41,16 @@ export function HolidaysMaster() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     reset,
     formState: { errors },
   } = useForm<HolidayInput>({
     resolver: zodResolver(holidaySchema),
     defaultValues: { name: '', date: '' },
   })
+
+  const dateValue = watch('date')
 
   useEffect(() => {
     if (!isDialogOpen) return
@@ -144,11 +149,10 @@ export function HolidaysMaster() {
             <Label htmlFor="holiday-date" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Date
             </Label>
-            <Input
+            <DatePicker
               id="holiday-date"
-              type="date"
-              {...register('date')}
-              className={uiInput}
+              value={dateValue}
+              onChange={(val) => setValue('date', val, { shouldValidate: true })}
               disabled={isSubmitting}
             />
             {errors.date?.message && <CommonFormFieldError message={errors.date.message} />}

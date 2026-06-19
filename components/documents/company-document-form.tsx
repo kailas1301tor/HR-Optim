@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { uiInput, uiOutlineBtn, uiSelect } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/ui/date-picker'
 import { companyDocumentUploadSchema, type CompanyDocumentUploadInput } from '@/validations/document.schema'
 import { DocumentFileDropzone } from './document-file-dropzone'
 
@@ -45,6 +46,8 @@ export function CompanyDocumentForm({
   const file = watch('file')
   const selectedDocumentType = watch('company_document_type')
   const selectedBranch = watch('branch')
+  const issueDate = watch('issue_date')
+  const expiryDate = watch('expiry_date')
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
@@ -92,21 +95,19 @@ export function CompanyDocumentForm({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="issue_date" className="text-xs text-slate-400">Issue Date</Label>
-          <Input
+          <DatePicker
             id="issue_date"
-            type="date"
-            className={cn(uiInput, 'text-xs min-h-11')}
-            {...register('issue_date')}
+            value={issueDate}
+            onChange={(val) => setValue('issue_date', val, { shouldValidate: true })}
           />
           <CommonFormFieldError message={errors.issue_date?.message} />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="company_expiry_date" className="text-xs text-slate-400">Expiry Date</Label>
-          <Input
+          <DatePicker
             id="company_expiry_date"
-            type="date"
-            className={cn(uiInput, 'text-xs min-h-11')}
-            {...register('expiry_date')}
+            value={expiryDate}
+            onChange={(val) => setValue('expiry_date', val, { shouldValidate: true })}
           />
           <CommonFormFieldError message={errors.expiry_date?.message} />
         </div>

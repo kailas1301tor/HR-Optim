@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, Controller } from 'react-hook-form'
 import { Eye, EyeOff } from 'lucide-react'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -21,17 +21,20 @@ interface BankInfoStepProps {
   isEditMode?: boolean
 }
 
+const toInputString = (value: unknown): string => (value == null ? '' : String(value))
+
 export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
   const [accountRevealed, setAccountRevealed] = useState(false)
 
   const {
     register,
+    control,
     watch,
     formState: { errors },
   } = useFormContext<EmployeeInput>()
 
-  const accountValue = watch('account_number')
-  const showMaskedAccount = isEditMode && !accountRevealed && Boolean(accountValue)
+  const accountValue = toInputString(watch('account_number'))
+  const showMaskedAccount = isEditMode && !accountRevealed && accountValue.length > 0
 
   return (
     <div className="space-y-4">
@@ -45,7 +48,7 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
             Bank Name
           </Label>
           <Input
-            {...register('bank_name')}
+            {...register('bank_name', { setValueAs: toInputString })}
             id="emp-bank-name"
             placeholder="e.g. Global Bank, FAB"
             className={uiInput}
@@ -58,50 +61,66 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
           <Label htmlFor="emp-account-no" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Account Number
           </Label>
-          {showMaskedAccount ? (
-            <div className="flex gap-2">
-              <Input
-                id="emp-account-no"
-                readOnly
-                value={maskAccountNumber(accountValue)}
-                className={uiInput}
-                aria-label="Account number (masked)"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="shrink-0 min-h-11 min-w-11"
-                onClick={() => setAccountRevealed(true)}
-                aria-label="Reveal account number"
-              >
-                <Eye className="w-4 h-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Input
-                {...register('account_number')}
-                id="emp-account-no"
-                placeholder="e.g. 1234567890"
-                className={uiInput}
-                required
-                maxLength={LIMIT_ACCOUNT_NUMBER}
-              />
-              {isEditMode && accountValue && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0 min-h-11 min-w-11"
-                  onClick={() => setAccountRevealed(false)}
-                  aria-label="Mask account number"
-                >
-                  <EyeOff className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-          )}
+          <Controller
+            name="account_number"
+            control={control}
+            render={({ field }) => {
+              const normalizedValue = toInputString(field.value)
+
+              if (showMaskedAccount) {
+                return (
+                  <div className="flex gap-2">
+                    <Input
+                      key="account-masked"
+                      id="emp-account-no"
+                      readOnly
+                      value={maskAccountNumber(normalizedValue)}
+                      onChange={() => {}}
+                      className={uiInput}
+                      aria-label="Account number (masked)"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 min-h-11 min-w-11"
+                      onClick={() => setAccountRevealed(true)}
+                      aria-label="Reveal account number"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )
+              }
+
+              return (
+                <div className="flex gap-2">
+                  <Input
+                    key="account-editable"
+                    {...field}
+                    value={normalizedValue}
+                    id="emp-account-no"
+                    placeholder="e.g. 1234567890"
+                    className={uiInput}
+                    required
+                    maxLength={LIMIT_ACCOUNT_NUMBER}
+                  />
+                  {isEditMode && normalizedValue.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 min-h-11 min-w-11"
+                      onClick={() => setAccountRevealed(false)}
+                      aria-label="Mask account number"
+                    >
+                      <EyeOff className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              )
+            }}
+          />
           {errors.account_number?.message && <CommonFormFieldError message={errors.account_number.message} />}
         </div>
       </div>
@@ -112,7 +131,7 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
             IFSC / Routing Code
           </Label>
           <Input
-            {...register('ifsc')}
+            {...register('ifsc', { setValueAs: toInputString })}
             id="emp-ifsc"
             placeholder="e.g. GLOB0001"
             className={uiInput}
@@ -126,7 +145,7 @@ export function BankInfoStep({ isEditMode = false }: BankInfoStepProps) {
             Branch Name
           </Label>
           <Input
-            {...register('branch')}
+            {...register('branch', { setValueAs: toInputString })}
             id="emp-branch"
             placeholder="e.g. Downtown"
             className={uiInput}
