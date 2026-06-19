@@ -10,7 +10,10 @@ function buildEmployeeFromProfile(profile: CurrentUserProfile): Employee | null 
   if (!employeeProfileId) return null
 
   const fullName = formatPersonName(
-    formatDisplayNameFromUsername(profile.username) || profile.email || 'User',
+    profile.fullName ||
+      formatDisplayNameFromUsername(profile.username) ||
+      profile.email ||
+      'User',
   )
 
   return {
@@ -26,7 +29,7 @@ function buildEmployeeFromProfile(profile: CurrentUserProfile): Employee | null 
     phone_number: '',
     role: 0,
     department: '',
-    designation: '',
+    designation: profile.designation || '',
     status: 'Active',
     shift: '',
     employee_type: '',

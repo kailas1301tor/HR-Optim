@@ -9,9 +9,7 @@ import {
   initialsFromName,
 } from '@/lib/cookies'
 import { formatPersonName } from '@/lib/helpers/format-display-text'
-import { resolveCurrentEmployeeRecord } from '@/lib/helpers/resolve-current-employee'
 import { loadCachedUserProfile } from '@/components/auth/permissions-provider'
-import { canViewModule } from '@/lib/permissions/module-permissions'
 import type { UserProfile } from './app-shell'
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -19,6 +17,18 @@ const DEFAULT_PROFILE: UserProfile = {
   email: '',
   roleName: 'Employee',
   initials: 'U',
+}
+
+function resolveDisplayName(
+  profile: Awaited<ReturnType<typeof loadCachedUserProfile>>,
+  inferredName: string,
+): string {
+  return formatPersonName(
+    profile.fullName ||
+      formatDisplayNameFromUsername(profile.username) ||
+      profile.email ||
+      inferredName,
+  )
 }
 
 export interface UseAppShellReturn {
@@ -58,28 +68,13 @@ export function useAppShell(): UseAppShellReturn {
         const profile = await loadCachedUserProfile()
         if (controller.signal.aborted) return
 
-        const profileName = formatPersonName(
-          formatDisplayNameFromUsername(profile.username) || profile.email || inferredName,
-        )
+        const profileName = resolveDisplayName(profile, inferredName)
+
         setUserProfile({
           fullName: profileName,
           email: profile.email || email,
-          roleName: DEFAULT_PROFILE.roleName,
+          roleName: profile.designation || DEFAULT_PROFILE.roleName,
           initials: initialsFromName(profileName),
-        })
-
-        const permissions = new Set(profile.permissions.map((permission) => permission.codename))
-        if (!canViewModule(permissions, 'employees')) return
-
-        const profileSource = await resolveCurrentEmployeeRecord(controller.signal)
-        if (!profileSource || controller.signal.aborted) return
-
-        setUserProfile({
-          fullName: formatPersonName(profileSource.full_name),
-          email: profileSource.user.email,
-          roleName:
-            profileSource.designation || profileSource.role_name || DEFAULT_PROFILE.roleName,
-          initials: initialsFromName(profileSource.full_name),
         })
       } catch (err: unknown) {
         if (err instanceof Error && err.name === 'AbortError') return
@@ -87,7 +82,7 @@ export function useAppShell(): UseAppShellReturn {
       }
     }
 
-    loadProfile()
+    void loadProfile()
 
     return () => {
       controller.abort()

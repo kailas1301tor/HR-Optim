@@ -19,10 +19,11 @@ interface ProfileHeroProps {
 export function ProfileHero({ profile, employee }: ProfileHeroProps): React.JSX.Element {
   const displayName =
     employee?.full_name ||
+    formatPersonName(profile.fullName) ||
     formatPersonName(formatDisplayNameFromUsername(profile.username)) ||
     'User'
   const initials = initialsFromName(displayName)
-  const jobTitle = employee?.designation || 'System User'
+  const jobTitle = employee?.designation || profile.designation || 'System User'
   const departmentName = employee?.department || 'Operations'
   const joinedYear = employee?.joined_date ? new Date(employee.joined_date).getFullYear() : null
 

@@ -66,6 +66,8 @@ export type ProfileWireValue<T> = T | ProfileField<T>
 
 export interface CurrentUserProfileWire {
   id: ProfileField<number>
+  full_name?: ProfileField<string>
+  designation?: ProfileField<string>
   username: ProfileField<string>
   email: ProfileField<string>
   permissions: ProfileField<UserPermission[]>
@@ -78,6 +80,8 @@ export interface CurrentUserProfileWire {
 
 export interface CurrentUserProfile {
   id: number
+  fullName: string
+  designation: string
   username: string
   email: string
   permissions: UserPermission[]
