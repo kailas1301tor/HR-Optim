@@ -76,9 +76,12 @@ export function NotificationsList(): React.JSX.Element {
           <div className="divide-y divide-border/30">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="p-5 flex items-start gap-4">
-                <Skeleton className={cn('h-9 w-9 rounded-lg shrink-0', uiSkeletonBlock)} />
+                <Skeleton className={cn('h-9 w-9 rounded-lg shrink-0 ml-2', uiSkeletonBlock)} />
                 <div className="flex-1 space-y-2 min-w-0">
-                  <Skeleton className={cn('h-3.5 w-1/3 rounded', uiSkeletonBlock)} />
+                  <div className="flex justify-between items-center gap-4">
+                    <Skeleton className={cn('h-3.5 w-1/3 rounded', uiSkeletonBlock)} />
+                    <Skeleton className={cn('h-2.5 w-12 rounded', uiSkeletonBlock)} />
+                  </div>
                   <Skeleton className={cn('h-3 w-3/4 rounded', uiSkeletonBlock)} />
                   <Skeleton className={cn('h-2.5 w-24 rounded', uiSkeletonBlock)} />
                 </div>

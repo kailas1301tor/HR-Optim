@@ -37,6 +37,8 @@ interface PermissionsContextValue {
   hasError: boolean
   permissions: Set<string>
   employeeProfileId: number | null
+  isManualAttendanceEnabled: boolean
+  isPunchIn: boolean
   hasAnyModuleAccess: boolean
   isEmployeeOnly: boolean
   reloadPermissions: () => void
@@ -57,6 +59,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
   const [hasError, setHasError] = useState(false)
   const [permissions, setPermissions] = useState<Set<string>>(new Set())
   const [employeeProfileId, setEmployeeProfileId] = useState<number | null>(null)
+  const [isManualAttendanceEnabled, setIsManualAttendanceEnabled] = useState(false)
+  const [isPunchIn, setIsPunchIn] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
 
   const reloadPermissions = useCallback(() => {
@@ -80,11 +84,15 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
         )
         setPermissions(codenames)
         setEmployeeProfileId(profile.employee_profile_id ?? null)
+        setIsManualAttendanceEnabled(profile.isManualAttendanceEnabled)
+        setIsPunchIn(profile.isPunchIn)
       } catch {
         if (!active) return
         setHasError(true)
         setPermissions(new Set())
         setEmployeeProfileId(null)
+        setIsManualAttendanceEnabled(false)
+        setIsPunchIn(false)
       } finally {
         if (active) {
           setIsLoading(false)
@@ -157,6 +165,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
       hasError,
       permissions,
       employeeProfileId,
+      isManualAttendanceEnabled,
+      isPunchIn,
       hasAnyModuleAccess,
       isEmployeeOnly,
       reloadPermissions,
@@ -170,6 +180,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
       hasError,
       permissions,
       employeeProfileId,
+      isManualAttendanceEnabled,
+      isPunchIn,
       hasAnyModuleAccess,
       isEmployeeOnly,
       reloadPermissions,

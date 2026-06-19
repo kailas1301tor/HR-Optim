@@ -14,8 +14,8 @@ import type {
 } from '@/types/reports'
 
 export const REPORT_CHART_COLORS = [
-  '#7c3aed',
-  '#a855f7',
+  'var(--violet-core)',
+  'var(--violet-glow)',
   '#14b8a6',
   '#a3e635',
   '#f59e0b',

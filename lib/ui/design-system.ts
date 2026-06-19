@@ -14,7 +14,7 @@ export const uiCard =
   `bg-card border border-border/80 shadow-lg transition-all duration-200 ${uiSquircleLg}`
 
 export const uiCardInteractive =
-  `bg-card border border-border/80 shadow-lg transition-all duration-200 hover:border-violet-core/30 hover:shadow-[0_0_20px_rgba(139,92,246,0.08)] ${uiSquircleLg}`
+  `bg-card border border-border/80 shadow-lg transition-all duration-200 hover:border-violet-core/30 hover:shadow-[0_0_20px_var(--tw-shadow-color)] hover:shadow-violet-core/8 ${uiSquircleLg}`
 
 export const uiDialog =
   `bg-card border border-border/80 p-6 shadow-2xl ${uiSquircleLg}`
@@ -26,7 +26,7 @@ export const uiSelect =
   `h-10 w-full bg-input border-border text-sm text-foreground ${uiSquircleSm}`
 
 export const uiPrimaryBtn =
-  `h-10 bg-violet-core hover:bg-violet-core/90 text-sm font-medium text-white shadow-[0_0_20px_rgba(124,58,237,0.25)] transition-all duration-200 hover:shadow-[0_0_28px_rgba(124,58,237,0.35)] ${uiSquircleSm}`
+  `h-10 bg-violet-core hover:bg-violet-core/90 text-sm font-medium text-white shadow-[0_0_20px_var(--tw-shadow-color)] shadow-violet-core/25 transition-all duration-200 hover:shadow-[0_0_28px_var(--tw-shadow-color)] hover:shadow-violet-core/35 ${uiSquircleSm}`
 
 export const uiApproveBtn =
   `h-10 min-h-10 bg-lime-400 text-lime-900 hover:bg-lime-300 text-sm font-medium transition-all duration-200 ${uiSquircleSm}`
@@ -56,12 +56,13 @@ export const uiCalendarCellOutMonth = 'bg-muted/50'
 export const uiPageHeaderBorder = 'pb-2 border-b border-border/40'
 
 /** App shell layout — shared header height & sidebar widths */
-export const SHELL_HEADER_HEIGHT_PX = 64
+export const SHELL_HEADER_HEIGHT_PX = 80
+export const SHELL_HEADER_HEIGHT_MOBILE_PX = 64
 export const SHELL_SIDEBAR_WIDTH_EXPANDED = 240
 export const SHELL_SIDEBAR_WIDTH_COLLAPSED = 72
 
 export const uiShellHeader =
-  'h-16 shrink-0 flex items-center border-b border-border'
+  'h-16 md:h-20 shrink-0 flex items-center border-b border-border/80 bg-midnight/95 backdrop-blur-md'
 
 export const uiShellHeaderInset = 'px-4 sm:px-6'
 
@@ -85,7 +86,7 @@ export const uiFilterChipBase =
   `shrink-0 py-2 px-3.5 text-xs font-medium border transition-all duration-200 cursor-pointer rounded-full`
 
 export const uiFilterChipActive =
-  'bg-violet-core/15 text-violet-glow border-violet-core/30 shadow-[0_0_12px_rgba(139,92,246,0.12)]'
+  'bg-violet-core/15 text-violet-glow border-violet-core/30 shadow-[0_0_12px_var(--tw-shadow-color)] shadow-violet-core/12'
 
 export const uiFilterChipInactive =
   'text-slate-400 border-transparent hover:text-slate-200 hover:bg-midnight/60'
@@ -113,7 +114,7 @@ export const uiTabChipInactive = uiFilterChipInactive
 
 /** Radix `TabsTrigger` active state — includes `dark:` so chip styles win over shadcn tabs defaults. */
 export const uiTabChipActiveTrigger =
-  'data-[state=active]:bg-violet-core/15 data-[state=active]:text-violet-glow data-[state=active]:border-violet-core/30 data-[state=active]:shadow-[0_0_12px_rgba(139,92,246,0.12)] dark:data-[state=active]:bg-violet-core/15 dark:data-[state=active]:text-violet-glow dark:data-[state=active]:border-violet-core/30 dark:data-[state=active]:shadow-[0_0_12px_rgba(139,92,246,0.12)]'
+  'data-[state=active]:bg-violet-core/15 data-[state=active]:text-violet-glow data-[state=active]:border-violet-core/30 data-[state=active]:shadow-[0_0_12px_var(--tw-shadow-color)] data-[state=active]:shadow-violet-core/12 dark:data-[state=active]:bg-violet-core/15 dark:data-[state=active]:text-violet-glow dark:data-[state=active]:border-violet-core/30 dark:data-[state=active]:shadow-[0_0_12px_var(--tw-shadow-color)] dark:data-[state=active]:shadow-violet-core/12'
 
 export const statusBadgeClasses = {
   pending:

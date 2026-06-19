@@ -1,7 +1,7 @@
 // components/employees/useAddEmployeeModal.ts
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm, type UseFormReturn, type Path } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { bankDetailsService } from '@/services/bank-details-service'
@@ -35,6 +35,8 @@ const EMPTY_DEFAULTS: EmployeeInput = {
   date_of_birth: '',
   nationality: '',
   address: '',
+  is_tl: false,
+  is_manual_attendance_enabled: false,
   bank_name: '',
   account_number: '',
   ifsc: '',
@@ -77,6 +79,35 @@ export function useAddEmployeeModal(
   })
 
   const { reset } = methods
+
+  const resolvedFormValues = useMemo((): EmployeeInput | null => {
+    if (!open || !dropdowns) return null
+
+    if (editEmployee) {
+      if (!loadedEditEmployee || loadedEditEmployee.id !== editEmployee.id) return null
+      return employeeToFormValues(loadedEditEmployee, dropdowns)
+    }
+
+    return defaultFormValues(dropdowns)
+  }, [open, dropdowns, editEmployee, loadedEditEmployee])
+
+  const [isFormReady, setIsFormReady] = useState(false)
+
+  useEffect(() => {
+    if (!open) {
+      setIsFormReady(false)
+      return
+    }
+
+    if (!resolvedFormValues) {
+      setIsFormReady(false)
+      return
+    }
+
+    reset(resolvedFormValues)
+    setAddStep(1)
+    setIsFormReady(true)
+  }, [open, resolvedFormValues, reset])
 
   useEffect(() => {
     if (!open || !editEmployee?.id) {
@@ -136,20 +167,6 @@ export function useAddEmployeeModal(
     }
   }, [open, editEmployee?.id, editReloadToken])
 
-  useEffect(() => {
-    if (!open || !dropdowns) return
-
-    setAddStep(1)
-
-    if (editEmployee) {
-      if (!loadedEditEmployee || loadedEditEmployee.id !== editEmployee.id) return
-      reset(employeeToFormValues(loadedEditEmployee, dropdowns))
-      return
-    }
-
-    reset(defaultFormValues(dropdowns))
-  }, [open, dropdowns, editEmployee, loadedEditEmployee, reset])
-
   const onSubmit = async (data: EmployeeInput) => {
     setIsSubmitting(true)
     try {
@@ -195,7 +212,7 @@ export function useAddEmployeeModal(
     e.preventDefault()
     const fields = [
       ['full_name', 'username', 'email', 'phone_number', 'employee_id', 'role', 'department', 'designation', 'status', 'shift'],
-      ['basic_salary', 'joined_date', 'employee_type', 'accommodation'],
+      ['basic_salary', 'joined_date', 'employee_type', 'accommodation', 'is_tl', 'is_manual_attendance_enabled'],
       ['date_of_birth', 'nationality', 'address'],
     ][addStep - 1]
 
@@ -212,7 +229,9 @@ export function useAddEmployeeModal(
   }
 
   const isFormLoading =
-    dropdownsLoading || (isEditMode && (isLoadingEditEmployee || !loadedEditEmployee))
+    dropdownsLoading ||
+    (isEditMode && (isLoadingEditEmployee || !loadedEditEmployee)) ||
+    !isFormReady
 
   return {
     addStep,

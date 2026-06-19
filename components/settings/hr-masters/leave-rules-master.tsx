@@ -14,6 +14,7 @@ export function LeaveRulesMaster() {
     items,
     leaveRules,
     leaveTypes,
+    frequencyChoices,
     isLoading,
     hasError,
     isSubmitting,
@@ -85,6 +86,7 @@ export function LeaveRulesMaster() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         leaveTypes={leaveTypes}
+        frequencyChoices={frequencyChoices}
         editingRule={editingRule}
         isSubmitting={isSubmitting}
         onSubmit={handleConfigureRule}

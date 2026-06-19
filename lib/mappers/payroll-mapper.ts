@@ -160,5 +160,6 @@ export function mapBackendPayroll(record: BackendPayroll): PayrollRecord {
     canFinalize: canFinalizePayroll(status),
     startDate: record.start_date ?? '',
     endDate: record.end_date ?? '',
+    adjustments: record.adjustments ?? [],
   }
 }

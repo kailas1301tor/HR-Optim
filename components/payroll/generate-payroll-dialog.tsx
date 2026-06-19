@@ -8,6 +8,7 @@ import { SettingsFormDialog } from '@/components/settings/shared'
 import { CommonFormFieldError } from '@/components/common'
 import { uiInput } from '@/lib/ui/design-system'
 import { generatePayrollSchema } from '@/validations/payroll.schema'
+import { DatePicker } from '@/components/ui/date-picker'
 import type { PayPeriod } from '@/lib/helpers/payroll-period'
 import type { GeneratePayrollPayload } from '@/types/payroll'
 
@@ -146,16 +147,13 @@ export function GeneratePayrollDialog({
           <Label htmlFor="payroll-start" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Start Date
           </Label>
-          <Input
+          <DatePicker
             id="payroll-start"
-            type="date"
             value={startDate}
-            onChange={(e) => {
-              setStartDate(e.target.value)
+            onChange={(val) => {
+              setStartDate(val)
               if (startDateError) setStartDateError(null)
             }}
-            className={uiInput}
-            required
             disabled={isSubmitting}
           />
           <CommonFormFieldError message={startDateError ?? undefined} />
@@ -164,16 +162,13 @@ export function GeneratePayrollDialog({
           <Label htmlFor="payroll-end" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             End Date
           </Label>
-          <Input
+          <DatePicker
             id="payroll-end"
-            type="date"
             value={endDate}
-            onChange={(e) => {
-              setEndDate(e.target.value)
+            onChange={(val) => {
+              setEndDate(val)
               if (endDateError) setEndDateError(null)
             }}
-            className={uiInput}
-            required
             disabled={isSubmitting}
           />
           <CommonFormFieldError message={endDateError ?? undefined} />

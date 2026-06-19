@@ -43,6 +43,8 @@ function normalizeCurrentUserProfile(data: CurrentUserProfileWire): CurrentUserP
     email: unwrapField(data.email) ?? '',
     permissions: unwrapField(data.permissions) ?? [],
     employee_profile_id: unwrapField(data.employee_profile_id) ?? null,
+    isManualAttendanceEnabled: Boolean(unwrapField(data.is_manual_attendance_enabled)),
+    isPunchIn: Boolean(unwrapField(data.is_punch_in)),
   }
 }
 

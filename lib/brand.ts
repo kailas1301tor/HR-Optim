@@ -11,7 +11,7 @@ export const COMPANY_NAME = 'HROPTIM'
 /** Shown under the product name in metadata and legacy contexts. */
 export const PRODUCT_TAGLINE = `${PRODUCT_NAME} by ${COMPANY_NAME}`
 
-/** Shown under the wordmark logo in shell and login (logo already includes product name). */
+/** Shown under the wordmark logo in shell contexts. */
 export const COMPANY_TAGLINE = `by ${COMPANY_NAME}`
 
 export const PRODUCT_DESCRIPTION =
@@ -21,17 +21,29 @@ export function pageTitle(page: string): string {
   return `${page} | ${PRODUCT_NAME}`
 }
 
-/** App icon used in favicon contexts. */
-export const APP_ICON_PATH = '/brand/roka-app-icon.png'
+/** Full horizontal wordmark — dark shapes for light mode. */
+export const APP_LOGO_LIGHT_PATH = '/brand/roka-logo-light.png'
 
-export const APP_ICON_ALT = `${PRODUCT_NAME} app icon`
-
-/** Full horizontal wordmark logo (icon + ROKA text). Legacy asset — prefer composited BrandLogo. */
-export const APP_LOGO_PATH = '/brand/roka-logo.png'
+/** Full horizontal wordmark — white shapes for dark mode. */
+export const APP_LOGO_DARK_PATH = '/brand/roka-logo-dark.png'
 
 export const APP_LOGO_ALT = 'ROKA'
 
-/** Squircle app icon — high-contrast mark for shell, favicon, and composited wordmark. */
-export const APP_MARK_PATH = '/brand/roka-app-icon.png'
+/** Icon mark only — dark shapes for light mode. */
+export const APP_MARK_LIGHT_PATH = '/brand/roka-mark-light.png'
+
+/** Icon mark only — white shapes for dark mode. */
+export const APP_MARK_DARK_PATH = '/brand/roka-mark-dark.png'
 
 export const APP_MARK_ALT = `${PRODUCT_NAME} mark`
+
+/** @deprecated Use APP_MARK_LIGHT_PATH / APP_MARK_DARK_PATH */
+export const APP_MARK_PATH = APP_MARK_LIGHT_PATH
+
+/** @deprecated Use APP_MARK_LIGHT_PATH */
+export const APP_ICON_PATH = APP_MARK_LIGHT_PATH
+
+export const APP_ICON_ALT = `${PRODUCT_NAME} app icon`
+
+/** @deprecated Use APP_LOGO_LIGHT_PATH / APP_LOGO_DARK_PATH */
+export const APP_LOGO_PATH = APP_LOGO_LIGHT_PATH

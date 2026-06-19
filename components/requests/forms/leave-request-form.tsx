@@ -4,7 +4,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -28,9 +27,12 @@ import type { LeaveBalanceRecord, LeaveCalendarEvent } from '@/types/request'
 import { findBalanceForLeaveType, formatLeaveBalance } from '@/lib/helpers/leave-balance'
 import { LeaveCalendarPanel } from './leave-calendar-panel'
 import { LeaveDateRangeFields } from './leave-date-range-fields'
+import { LeaveBalanceVisualizer } from './leave-balance-visualizer'
+import { LeaveDaysVisualizer } from './leave-days-visualizer'
+import { LeaveDocumentUploader } from './leave-document-uploader'
 
 interface LeaveRequestFormProps {
-  leaveTypes: LeaveType[]
+  leaveTypes: (LeaveType & { is_document_required?: boolean })[]
   leaveBalances?: LeaveBalanceRecord[]
   isBalancesLoading?: boolean
   hasBalancesError?: boolean
@@ -42,7 +44,7 @@ interface LeaveRequestFormProps {
   onCalculate: (
     values: Pick<LeaveRequestInput, 'from_date' | 'to_date' | 'start_session' | 'end_session'>
   ) => Promise<number>
-  onSubmit: (data: LeaveRequestInput) => Promise<void>
+  onSubmit: (data: LeaveRequestInput, files: File[]) => Promise<void>
   onCancel: () => void
 }
 
@@ -58,12 +60,9 @@ function isInvalidSessionCombo(
   if (!fromDate || !toDate || fromDate !== toDate || !startSession || !endSession) {
     return false
   }
-
   const startIndex = sessionChoices.findIndex((choice) => choice.id === startSession)
   const endIndex = sessionChoices.findIndex((choice) => choice.id === endSession)
-
   if (startIndex === -1 || endIndex === -1) return false
-
   return endIndex < startIndex
 }
 
@@ -80,9 +79,11 @@ export function LeaveRequestForm({
   onCalculate,
   onSubmit,
   onCancel,
-}: LeaveRequestFormProps) {
+}: LeaveRequestFormProps): React.JSX.Element {
   const [calculateState, setCalculateState] = useState<CalculateState>('idle')
   const [calculateMessage, setCalculateMessage] = useState<string | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [fileError, setFileError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const calculateIdRef = useRef(0)
 
@@ -111,7 +112,7 @@ export function LeaveRequestForm({
   const numberOfDays = watch('number_of_days')
   const leaveTypeValue = watch('leave_type')
 
-  const selectedLeaveType = leaveTypes.find((type) => type.id === leaveTypeValue)
+  const selectedLeaveType = leaveTypes.find((type) => type.id === leaveTypeValue) || null
   const selectedBalance =
     selectedLeaveType && leaveTypeValue > 0
       ? findBalanceForLeaveType(selectedLeaveType.name, leaveBalances)
@@ -140,18 +141,15 @@ export function LeaveRequestForm({
       setCalculateMessage(null)
       return
     }
-
     if (isInvalidSessionCombo(fromDate, toDate, startSession, endSession, sessionChoices)) {
       setCalculateState('invalid')
       setCalculateMessage('End session must be on or after start session on the same day.')
       setValue('number_of_days', 0)
       return
     }
-
     const calculateId = ++calculateIdRef.current
     setCalculateState('loading')
     setCalculateMessage(null)
-
     try {
       const days = await onCalculate({
         from_date: fromDate,
@@ -159,16 +157,13 @@ export function LeaveRequestForm({
         start_session: startSession,
         end_session: endSession,
       })
-
       if (calculateId !== calculateIdRef.current) return
-
       if (days <= 0) {
         setCalculateState('zero')
         setCalculateMessage('0 working days for this range. Try different dates or sessions.')
         setValue('number_of_days', 0)
         return
       }
-
       setValue('number_of_days', days, { shouldValidate: true })
       setCalculateState('success')
       setCalculateMessage(null)
@@ -182,21 +177,23 @@ export function LeaveRequestForm({
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-
     if (!fromDate || !toDate || !startSession || !endSession) {
       setCalculateState('idle')
       setValue('number_of_days', 0)
       return
     }
-
     debounceRef.current = setTimeout(() => {
       runCalculate()
     }, 400)
-
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
   }, [fromDate, toDate, startSession, endSession, runCalculate, setValue])
+
+  useEffect(() => {
+    setSelectedFiles([])
+    setFileError(null)
+  }, [leaveTypeValue])
 
   const handleRangeChange = (from: string, to: string): void => {
     setValue('from_date', from, { shouldValidate: true })
@@ -224,8 +221,16 @@ export function LeaveRequestForm({
     resetCalculation()
   }
 
+  const onFormSubmit = async (data: LeaveRequestInput): Promise<void> => {
+    if (selectedLeaveType?.is_document_required && selectedFiles.length === 0) {
+      setFileError('At least one document is required for this leave type.')
+      return
+    }
+    await onSubmit(data, selectedFiles)
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="lg:h-full">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="lg:h-full">
       <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-stretch gap-5 lg:gap-6 lg:min-h-[520px]">
         <div className="lg:col-span-3 flex flex-col h-full min-h-0">
           {isCalendarLoading ? (
@@ -248,12 +253,7 @@ export function LeaveRequestForm({
           )}
         </div>
 
-        <div
-          className={cn(
-            uiCard,
-            'lg:col-span-2 p-5 flex flex-col h-full min-h-0 gap-4'
-          )}
-        >
+        <div className={cn(uiCard, 'lg:col-span-2 p-5 flex flex-col h-full min-h-0 gap-4 overflow-y-auto max-h-[85vh]')}>
           <LeaveDateRangeFields
             fromDate={fromDate}
             toDate={toDate}
@@ -261,9 +261,7 @@ export function LeaveRequestForm({
             onToDateChange={handleToDateChange}
           />
           {(errors.from_date?.message || errors.to_date?.message) && (
-            <CommonFormFieldError
-              message={errors.from_date?.message ?? errors.to_date?.message ?? ''}
-            />
+            <CommonFormFieldError message={errors.from_date?.message ?? errors.to_date?.message ?? ''} />
           )}
 
           <div className="space-y-1.5">
@@ -289,82 +287,18 @@ export function LeaveRequestForm({
                 })}
               </SelectContent>
             </Select>
-            {errors.leave_type?.message && (
-              <CommonFormFieldError message={errors.leave_type.message} />
-            )}
+            {errors.leave_type?.message && <CommonFormFieldError message={errors.leave_type.message} />}
           </div>
 
-          {leaveTypeValue > 0 && (
-            <div
-              className={cn(
-                'flex items-center justify-between gap-3 rounded-[20px] [corner-shape:squircle] border px-4 py-3',
-                isBalancesLoading && 'border-violet-core/30 bg-violet-core/10',
-                hasBalancesError && 'border-red-500/30 bg-red-500/10',
-                !isBalancesLoading &&
-                  !hasBalancesError &&
-                  hasInsufficientBalance &&
-                  'border-amber-500/30 bg-amber-500/10',
-                !isBalancesLoading &&
-                  !hasBalancesError &&
-                  exceedsBalance &&
-                  'border-amber-500/30 bg-amber-500/10',
-                !isBalancesLoading &&
-                  !hasBalancesError &&
-                  !hasInsufficientBalance &&
-                  !exceedsBalance &&
-                  selectedBalance !== null &&
-                  'border-border/50 bg-muted/40'
-              )}
-            >
-              <div className="min-w-0">
-                <Label className="text-xs text-muted-foreground">Available Balance</Label>
-                {isBalancesLoading && (
-                  <p className="text-[11px] font-medium mt-0.5 text-muted-foreground">
-                    Loading balance...
-                  </p>
-                )}
-                {hasBalancesError && (
-                  <p className="text-[11px] font-medium mt-0.5 text-red-600 dark:text-red-400">
-                    Could not load leave balance
-                  </p>
-                )}
-                {!isBalancesLoading && !hasBalancesError && selectedBalance === null && (
-                  <p className="text-[11px] font-medium mt-0.5 text-amber-600 dark:text-amber-300">
-                    No balance record found for this leave type
-                  </p>
-                )}
-                {!isBalancesLoading && !hasBalancesError && hasInsufficientBalance && (
-                  <p className="text-[11px] font-medium mt-0.5 text-amber-600 dark:text-amber-300">
-                    No leave balance available for this type
-                  </p>
-                )}
-                {!isBalancesLoading && !hasBalancesError && exceedsBalance && (
-                  <p className="text-[11px] font-medium mt-0.5 text-amber-600 dark:text-amber-300">
-                    Requested days exceed available balance
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {isBalancesLoading ? (
-                  <Loader2 className="size-5 animate-spin text-muted-foreground" aria-label="Loading balance" />
-                ) : (
-                  <span
-                    className={cn(
-                      'tabular-nums font-bold',
-                      selectedBalance !== null && selectedBalance > 0
-                        ? 'text-2xl text-foreground'
-                        : 'text-lg text-muted-foreground'
-                    )}
-                  >
-                    {selectedBalance !== null ? formatLeaveBalance(selectedBalance) : '—'}
-                  </span>
-                )}
-                <span className="text-xs text-muted-foreground">
-                  {selectedBalance === 1 ? 'day' : 'days'}
-                </span>
-              </div>
-            </div>
-          )}
+          <LeaveBalanceVisualizer
+            selectedLeaveType={selectedLeaveType}
+            leaveBalances={leaveBalances}
+            isBalancesLoading={isBalancesLoading}
+            hasBalancesError={hasBalancesError}
+            selectedBalance={selectedBalance}
+            hasInsufficientBalance={hasInsufficientBalance}
+            exceedsBalance={exceedsBalance}
+          />
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -384,9 +318,7 @@ export function LeaveRequestForm({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.start_session?.message && (
-                <CommonFormFieldError message={errors.start_session.message} />
-              )}
+              {errors.start_session?.message && <CommonFormFieldError message={errors.start_session.message} />}
             </div>
 
             <div className="space-y-1.5">
@@ -406,78 +338,43 @@ export function LeaveRequestForm({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.end_session?.message && (
-                <CommonFormFieldError message={errors.end_session.message} />
-              )}
+              {errors.end_session?.message && <CommonFormFieldError message={errors.end_session.message} />}
             </div>
           </div>
 
-          <div
-            className={cn(
-              'flex items-center justify-between gap-3 rounded-[20px] [corner-shape:squircle] border px-4 py-3',
-              calculateState === 'success' && 'border-lime-400/30 bg-lime-400/10',
-              calculateState === 'zero' && 'border-amber-500/30 bg-amber-500/10',
-              calculateState === 'error' && 'border-red-500/30 bg-red-500/10',
-              calculateState === 'invalid' && 'border-red-500/30 bg-red-500/10',
-              calculateState === 'loading' && 'border-violet-core/30 bg-violet-core/10',
-              calculateState === 'idle' && 'border-border/50 bg-muted/40'
-            )}
-          >
-            <div className="min-w-0">
-              <Label className="text-xs text-muted-foreground">Working Days</Label>
-              {calculateMessage && (
-                <p
-                  className={cn(
-                    'text-[11px] font-medium mt-0.5 truncate',
-                    calculateState === 'zero' ? 'text-amber-600 dark:text-amber-300' : 'text-red-600 dark:text-red-400'
-                  )}
-                >
-                  {calculateMessage}
-                </p>
-              )}
-              {errors.number_of_days?.message && calculateState !== 'zero' && (
-                <CommonFormFieldError message={errors.number_of_days.message} />
-              )}
-            </div>
+          <LeaveDaysVisualizer
+            calculateState={calculateState}
+            calculateMessage={calculateMessage}
+            numberOfDays={numberOfDays}
+            fromDate={fromDate}
+            toDate={toDate}
+            startSession={startSession}
+            endSession={endSession}
+            onRecalculate={runCalculate}
+            error={errors.number_of_days?.message}
+          />
 
-            <div className="flex items-center gap-2 shrink-0">
-              {calculateState === 'loading' ? (
-                <Loader2 className="size-5 animate-spin text-muted-foreground" aria-label="Calculating" />
-              ) : (
-                <span
-                  className={cn(
-                    'tabular-nums font-bold',
-                    numberOfDays > 0 ? 'text-2xl text-foreground' : 'text-lg text-muted-foreground'
-                  )}
-                >
-                  {numberOfDays > 0 ? numberOfDays : '—'}
-                </span>
-              )}
-              {calculateState !== 'loading' && fromDate && toDate && startSession && endSession && (
-                <button
-                  type="button"
-                  onClick={runCalculate}
-                  className="flex items-center justify-center size-8 rounded-[16px] [corner-shape:squircle] border border-border/40 text-violet-glow hover:bg-violet-core/10 transition-colors"
-                  aria-label="Recalculate leave days"
-                >
-                  <RefreshCw className="size-3.5" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col min-h-0 space-y-1.5">
+          <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Reason</Label>
             <Textarea
               value={watch('reason')}
               onChange={(e) => setValue('reason', e.target.value, { shouldValidate: true })}
               placeholder="Reason for leave..."
-              className={cn(uiInput, 'text-xs flex-1 min-h-[88px] resize-none')}
+              className={cn(uiInput, 'text-xs min-h-[72px] resize-none')}
               aria-label="Leave reason"
               maxLength={LIMIT_REASON}
             />
             {errors.reason?.message && <CommonFormFieldError message={errors.reason.message} />}
           </div>
+
+          {selectedLeaveType?.is_document_required && (
+            <LeaveDocumentUploader
+              files={selectedFiles}
+              onFilesChange={setSelectedFiles}
+              error={fileError}
+              setError={setFileError}
+            />
+          )}
 
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 mt-auto border-t border-border/40 shrink-0">
             <Button

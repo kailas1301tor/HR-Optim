@@ -43,17 +43,26 @@ export function LoginPageContent() {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-violet-core/10 rounded-full filter blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 left-1/3 w-[300px] h-[300px] bg-teal-400/5 rounded-full filter blur-[100px] pointer-events-none" />
       <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none" />
+
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="w-full max-w-md md:max-w-lg z-10 space-y-6"
+        className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 items-center gap-8 lg:gap-12"
       >
-        <motion.div variants={itemVariants} className="flex flex-col items-center overflow-visible">
-          <BrandLogo variant="full" size="xl" showTagline priority className="mb-2" />
+        <motion.div
+          variants={itemVariants}
+          className="flex flex-col items-center lg:items-start justify-center overflow-visible"
+        >
+          <BrandLogo
+            variant="full"
+            size="hero"
+            priority
+            className="w-fit max-w-sm mx-auto lg:mx-0 lg:max-w-md items-center lg:items-start [&_img]:object-center lg:[&_img]:object-left"
+          />
         </motion.div>
 
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="w-full max-w-md lg:max-w-lg mx-auto lg:mx-0 lg:justify-self-end">
           <div className={cn(uiCard, 'bg-card/45 backdrop-blur-md shadow-2xl shadow-black/40 p-6 sm:p-8')}>
             <div className="pb-4">
               <h2 className="text-xl font-semibold text-cloud font-sans">Welcome Back</h2>

@@ -15,6 +15,7 @@ import {
 import { Loader2, Trash2, AlertTriangle } from 'lucide-react'
 import { type AssetDropdowns } from '@/types/asset'
 import { useDisposeAssetDialog } from './useDisposeAssetDialog'
+import { DatePicker } from '@/components/ui/date-picker'
 
 interface DisposeAssetDialogProps {
   open: boolean
@@ -38,8 +39,11 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors }
   } = form
+
+  const disposalDate = watch('disposal_date')
 
   return (
     <Dialog open={open} onOpenChange={(val) => {
@@ -72,11 +76,10 @@ export function DisposeAssetDialog({ open, onOpenChange, assetId, dropdowns, onS
           {/* Disposal Date */}
           <div className="space-y-1.5">
             <Label htmlFor="disposal_date" className="text-xs text-slate-400">Disposal Date</Label>
-            <Input
+            <DatePicker
               id="disposal_date"
-              type="date"
-              className="bg-midnight border-border"
-              {...register('disposal_date')}
+              value={disposalDate}
+              onChange={(val) => setValue('disposal_date', val, { shouldValidate: true })}
             />
             {errors.disposal_date && (
               <p className="text-[11px] text-destructive font-medium">{errors.disposal_date.message}</p>

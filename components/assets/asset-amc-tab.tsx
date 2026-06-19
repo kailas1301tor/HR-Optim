@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
@@ -53,8 +54,12 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = form
+
+  const startDate = watch('start_date')
+  const endDate = watch('end_date')
 
   return (
     <div className="space-y-6 animate-in fade-in-50 duration-200">
@@ -214,11 +219,10 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="start_date" className="text-xs text-slate-400">Start Date</Label>
-                <Input
+                <DatePicker
                   id="start_date"
-                  type="date"
-                  className="bg-midnight border-border"
-                  {...register('start_date')}
+                  value={startDate}
+                  onChange={(val) => setValue('start_date', val, { shouldValidate: true })}
                 />
                 {errors.start_date && (
                   <p className="text-[11px] text-destructive font-medium">{errors.start_date.message}</p>
@@ -226,11 +230,10 @@ export function AssetAMCTab({ assetId, dropdowns }: AssetAMCTabProps) {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="end_date" className="text-xs text-slate-400">End Date</Label>
-                <Input
+                <DatePicker
                   id="end_date"
-                  type="date"
-                  className="bg-midnight border-border"
-                  {...register('end_date')}
+                  value={endDate}
+                  onChange={(val) => setValue('end_date', val, { shouldValidate: true })}
                 />
                 {errors.end_date && (
                   <p className="text-[11px] text-destructive font-medium">{errors.end_date.message}</p>

@@ -8,11 +8,10 @@ export const leaveRuleSchema = z.object({
   is_carry_forward: z.boolean(),
   carry_forward_limit: z.coerce.number().min(0, { message: 'Carry forward limit must be 0 or greater' }),
   accrual_rate: z.coerce.number().min(0, { message: 'Accrual rate must be 0 or greater' }),
-  accrual_frequency: z.enum(['monthly', 'yearly'], {
-    required_error: 'Accrual frequency is required',
-  }),
+  accrual_frequency: z.string().min(1, { message: 'Accrual frequency is required' }),
   is_paid_leave: z.boolean(),
   description: requiredTrimmedString('Description', LIMIT_DESCRIPTION),
+  is_document_required: z.boolean().default(false),
 })
 
 export type LeaveRuleInput = z.infer<typeof leaveRuleSchema>

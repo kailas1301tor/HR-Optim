@@ -17,7 +17,7 @@ export function NotificationsSkeleton(): React.JSX.Element {
       <CardContent className="p-0 divide-y divide-border/30">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="p-5 flex items-start gap-4">
-            <Skeleton className={cn('h-9 w-9 rounded-lg shrink-0', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-9 w-9 rounded-lg shrink-0 ml-2', uiSkeletonBlock)} />
             <div className="flex-1 space-y-2 min-w-0">
               <div className="flex justify-between items-center gap-4">
                 <Skeleton className={cn('h-3.5 w-1/3 rounded', uiSkeletonBlock)} />

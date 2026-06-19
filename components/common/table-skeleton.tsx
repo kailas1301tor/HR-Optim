@@ -53,7 +53,7 @@ export function TableSkeleton({
       {showFilterChips ? (
         <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
           {Array.from({ length: filterChipCount }).map((_, index) => (
-            <Skeleton key={index} className={cn('h-9 w-24 rounded-xl shrink-0', uiSkeletonBlock)} />
+            <Skeleton key={index} className={cn('h-9 w-24 rounded-full shrink-0', uiSkeletonBlock)} />
           ))}
         </div>
       ) : null}
@@ -81,8 +81,8 @@ export function TableSkeleton({
             </div>
             <Skeleton className={cn('h-3 w-24 rounded', uiSkeletonBlock)} />
             <div className="flex items-center justify-between pt-3 border-t border-border/40">
-              <Skeleton className={cn('h-3 w-20 rounded', uiSkeletonBlock)} />
-              <Skeleton className={cn('h-8 w-8 rounded-[20px] [corner-shape:squircle]', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-3.5 w-20 rounded', uiSkeletonBlock)} />
+              <Skeleton className={cn('h-3.5 w-16 rounded', uiSkeletonBlock)} />
             </div>
           </div>
         ))}

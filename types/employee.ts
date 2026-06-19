@@ -1,5 +1,5 @@
 // types/employee.ts
-import type { DropdownItem } from '@/lib/types'
+import type { DropdownItem, StringDropdownItem } from '@/lib/types'
 
 export type { DropdownItem }
 
@@ -12,9 +12,10 @@ export interface DropdownData {
   nationalities: DropdownItem[]
   status_choices: DropdownItem[]
   accommodation_choices: DropdownItem[]
-  leave_types: DropdownItem[]
+  leave_types: (DropdownItem & { is_document_required?: boolean })[]
   onboarding_document_types: DropdownItem[]
   offboarding_document_types: DropdownItem[]
+  frequency_choices: StringDropdownItem[]
 }
 
 export interface DropdownResponse {
@@ -42,6 +43,8 @@ export interface CreateEmployeePayload {
   date_of_birth: string
   nationality: number
   address: string
+  is_tl?: boolean
+  is_manual_attendance_enabled?: boolean
   bank_details: {
     bank_name: string
     account_number: string
@@ -123,4 +126,6 @@ export interface Employee {
   accommodation: string
   date_of_birth: string
   address: string
+  is_tl?: boolean
+  is_manual_attendance_enabled?: boolean
 }

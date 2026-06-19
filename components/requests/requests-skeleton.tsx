@@ -47,7 +47,7 @@ function RequestsFilterChipsSkeleton({ count = 5 }: { count?: number }) {
   return (
     <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
       {Array.from({ length: count }).map((_, index) => (
-        <Skeleton key={index} className={cn('h-9 w-24 rounded-xl shrink-0', uiSkeletonBlock)} />
+        <Skeleton key={index} className={cn('h-9 w-24 rounded-full shrink-0', uiSkeletonBlock)} />
       ))}
     </div>
   )
@@ -60,7 +60,7 @@ function EmployeeRequestsHeaderSkeleton() {
         <h1 className="text-2xl font-bold text-cloud">My Requests</h1>
         <p className="text-xs text-muted-foreground mt-1">Submit and track your personal requests</p>
       </div>
-      <Skeleton className={cn('h-11 w-36 rounded-xl', uiSkeletonBlock)} />
+      <Skeleton className={cn('h-11 w-36', uiSquircleSm, uiSkeletonBlock)} />
     </div>
   )
 }
@@ -73,9 +73,9 @@ function AdminRequestsSkeleton({ showEmployeeFilter = true }: { showEmployeeFilt
       <div className="space-y-3">
         <RequestsFilterChipsSkeleton />
         <div className="flex flex-col lg:flex-row gap-3">
-          <Skeleton className={cn('h-11 flex-1 rounded-xl', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-11 flex-1', uiSquircleSm, uiSkeletonBlock)} />
           {showEmployeeFilter ? (
-            <Skeleton className={cn('h-11 w-full lg:w-52 rounded-xl', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-11 w-full lg:w-52', uiSquircleSm, uiSkeletonBlock)} />
           ) : null}
         </div>
       </div>

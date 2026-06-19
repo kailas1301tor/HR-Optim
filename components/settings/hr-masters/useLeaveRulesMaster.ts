@@ -8,8 +8,9 @@ import {
   type LeaveRule,
   type ConfigureLeaveRulePayload,
 } from '@/services/leave-rule-service'
-import { employeeService } from '@/services/employee-service'
+import { employeeService, type DropdownItem } from '@/services/employee-service'
 import type { LeaveType } from '@/services/leave-type-service'
+import type { StringDropdownItem } from '@/lib/types'
 import {
   formatLeaveRuleSubtitle,
   getLeaveTypeName,
@@ -21,6 +22,7 @@ export interface UseLeaveRulesMasterReturn {
   items: SettingsMasterItem[]
   leaveRules: LeaveRule[]
   leaveTypes: LeaveType[]
+  frequencyChoices: StringDropdownItem[]
   editingRule: LeaveRule | null
   isLoading: boolean
   hasError: boolean
@@ -41,6 +43,7 @@ export interface UseLeaveRulesMasterReturn {
 export function useLeaveRulesMaster(): UseLeaveRulesMasterReturn {
   const [leaveRules, setLeaveRules] = useState<LeaveRule[]>([])
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([])
+  const [frequencyChoices, setFrequencyChoices] = useState<StringDropdownItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -56,13 +59,22 @@ export function useLeaveRulesMaster(): UseLeaveRulesMasterReturn {
     setHasError(false)
 
     try {
-      const [rules, typeItems] = await Promise.all([
+      const [rules, dropdownData] = await Promise.all([
         leaveRuleService.getLeaveRules(),
-        employeeService.getLeaveTypesFromDropdowns(),
+        employeeService.getDropdowns(),
       ])
       if (requestId !== requestIdRef.current) return
       setLeaveRules(rules)
-      setLeaveTypes(typeItems.map(({ id, name }) => ({ id, name })))
+      setLeaveTypes(dropdownData.leave_types.map(({ id, name }) => ({ id, name })))
+      
+      const choices = dropdownData.frequency_choices?.length > 0
+        ? dropdownData.frequency_choices
+        : [
+            { id: 'monthly', name: 'Monthly' },
+            { id: 'quarterly', name: 'Quarterly' },
+            { id: 'yearly', name: 'Yearly' },
+          ]
+      setFrequencyChoices(choices)
     } catch (error: unknown) {
       if (requestId !== requestIdRef.current) return
       setHasError(true)
@@ -176,6 +188,7 @@ export function useLeaveRulesMaster(): UseLeaveRulesMasterReturn {
     items,
     leaveRules,
     leaveTypes,
+    frequencyChoices,
     editingRule,
     isLoading,
     hasError,

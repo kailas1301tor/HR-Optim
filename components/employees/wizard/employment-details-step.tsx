@@ -1,4 +1,5 @@
-import { useFormContext } from 'react-hook-form'
+import { useFormContext, Controller } from 'react-hook-form'
+import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import {
@@ -11,6 +12,7 @@ import {
 import { CommonFormFieldError } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
+import { DatePicker } from '@/components/ui/date-picker'
 import type { EmployeeInput } from '@/validations/employee.schema'
 import type { DropdownData } from '@/types/employee'
 
@@ -24,11 +26,13 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
     register,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useFormContext<EmployeeInput>()
 
   const currentEmployeeType = watch('employee_type')
   const currentAccommodation = watch('accommodation')
+  const joinedDate = watch('joined_date')
 
   return (
     <div className="space-y-4">
@@ -41,12 +45,10 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
           <Label htmlFor="emp-joined-date" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Joined Date
           </Label>
-          <Input
-            {...register('joined_date')}
+          <DatePicker
             id="emp-joined-date"
-            type="date"
-            className={cn(uiInput, 'text-slate-300')}
-            required
+            value={joinedDate}
+            onChange={(val) => setValue('joined_date', val, { shouldValidate: true })}
           />
           {errors.joined_date?.message && <CommonFormFieldError message={errors.joined_date.message} />}
         </div>
@@ -110,6 +112,50 @@ export function EmploymentDetailsStep({ isEditMode = false, dropdowns }: Employm
           </Select>
           {errors.accommodation?.message && <CommonFormFieldError message={errors.accommodation.message} />}
         </div>
+      </div>
+
+      <div className="flex items-center justify-between p-3.5 bg-midnight/40 border border-border/50 rounded-[20px] [corner-shape:squircle] mt-2">
+        <div className="space-y-0.5">
+          <Label htmlFor="emp-is-tl" className="text-sm font-semibold text-slate-200 cursor-pointer">
+            Team Lead Status
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Designate this employee as a Team Lead (TL)
+          </p>
+        </div>
+        <Controller
+          control={control}
+          name="is_tl"
+          render={({ field }) => (
+            <Switch
+              id="emp-is-tl"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
+      </div>
+
+      <div className="flex items-center justify-between p-3.5 bg-midnight/40 border border-border/50 rounded-[20px] [corner-shape:squircle]">
+        <div className="space-y-0.5">
+          <Label htmlFor="emp-manual-attendance" className="text-sm font-semibold text-slate-200 cursor-pointer">
+            Manual Attendance
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Allow this employee to check in and out from the dashboard
+          </p>
+        </div>
+        <Controller
+          control={control}
+          name="is_manual_attendance_enabled"
+          render={({ field }) => (
+            <Switch
+              id="emp-manual-attendance"
+              checked={field.value}
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
       </div>
     </div>
   )

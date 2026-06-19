@@ -45,40 +45,40 @@
   --card-foreground: #f1f5f9;
   --popover: #1e293b;
   --popover-foreground: #f1f5f9;
-  --primary: #7c3aed;
+  --primary: var(--violet-core);
   --primary-foreground: #ffffff;
   --secondary: #1e293b;
   --secondary-foreground: #94a3b8;
   --muted: #1e293b;
   --muted-foreground: #64748b;
-  --accent: #a855f7;
+  --accent: var(--violet-glow);
   --accent-foreground: #ffffff;
   --destructive: #991b1b;
   --destructive-foreground: #fee2e2;
   --border: #334155;
   --input: #0f172a;
-  --ring: #7c3aed;
-  --chart-1: #7c3aed;
-  --chart-2: #a855f7;
+  --ring: var(--violet-core);
+  --chart-1: var(--violet-core);
+  --chart-2: var(--violet-glow);
   --chart-3: #a3e635;
   --chart-4: #14b8a6;
   --chart-5: #f59e0b;
   --radius: 1.25rem;
   --sidebar: #0f172a;
   --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #7c3aed;
+  --sidebar-primary: var(--violet-core);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #1e293b;
   --sidebar-accent-foreground: #f1f5f9;
   --sidebar-border: #334155;
-  --sidebar-ring: #7c3aed;
+  --sidebar-ring: var(--violet-core);
 
   /* Shimmer base variables for dark theme */
   --skeleton-base: rgba(255, 255, 255, 0.05);
   --skeleton-highlight: rgba(255, 255, 255, 0.12);
 
   /* App shell layout */
-  --shell-header-height: 4rem;
+  --shell-header-height: 5rem;
   --shell-sidebar-width: 240px;
   --shell-sidebar-width-collapsed: 72px;
 }
@@ -90,27 +90,27 @@
   --card-foreground: #0f172a;
   --popover: #ffffff;
   --popover-foreground: #0f172a;
-  --primary: #7c3aed;
+  --primary: var(--violet-core);
   --primary-foreground: #ffffff;
   --secondary: #f1f5f9;
   --secondary-foreground: #475569;
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
-  --accent: #a855f7;
+  --accent: var(--violet-glow);
   --accent-foreground: #ffffff;
   --destructive: #991b1b;
   --destructive-foreground: #ffffff;
   --border: #e2e8f0;
   --input: #ffffff;
-  --ring: #7c3aed;
+  --ring: var(--violet-core);
   --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
-  --sidebar-primary: #7c3aed;
+  --sidebar-primary: var(--violet-core);
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f1f5f9;
   --sidebar-accent-foreground: #0f172a;
   --sidebar-border: #e2e8f0;
-  --sidebar-ring: #7c3aed;
+  --sidebar-ring: var(--violet-core);
 
   /* Custom HRMS Light Theme Equivalents */
   --void: #f8fafc;
@@ -126,6 +126,61 @@
   /* Shimmer base variables for light theme */
   --skeleton-base: rgba(0, 0, 0, 0.05);
   --skeleton-highlight: rgba(0, 0, 0, 0.12);
+}
+
+/* Curated Primary Color Theme Classes */
+.theme-violet {
+  --violet-core: #7c3aed;
+  --violet-deep: #4f28a8;
+  --violet-glow: #a855f7;
+}
+
+.theme-blue {
+  --violet-core: #2563eb;
+  --violet-deep: #1d4ed8;
+  --violet-glow: #60a5fa;
+}
+
+.theme-emerald {
+  --violet-core: #059669;
+  --violet-deep: #047857;
+  --violet-glow: #34d399;
+}
+
+.theme-rose {
+  --violet-core: #e11d48;
+  --violet-deep: #be123c;
+  --violet-glow: #fb7185;
+}
+
+.theme-amber {
+  --violet-core: #d97706;
+  --violet-deep: #b45309;
+  --violet-glow: #fbbf24;
+}
+
+.theme-red {
+  --violet-core: #dc2626;
+  --violet-deep: #991b1b;
+  --violet-glow: #f87171;
+}
+
+.theme-cyan {
+  --violet-core: #0891b2;
+  --violet-deep: #0e7490;
+  --violet-glow: #22d3ee;
+}
+
+.theme-black {
+  --violet-core: #18181b;
+  --violet-deep: #09090b;
+  --violet-glow: #f4f4f5;
+}
+
+.theme-grey {
+  --violet-core: #4b5563;
+  --violet-deep: #374151;
+  --violet-glow: #9ca3af;
 }
 
 @theme inline {

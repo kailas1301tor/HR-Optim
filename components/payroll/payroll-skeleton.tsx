@@ -90,8 +90,8 @@ function EmployeePayrollSkeleton() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className={cn('h-10 w-28 rounded-xl', uiSkeletonBlock)} />
-          <Skeleton className={cn('h-10 w-24 rounded-xl', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-10 w-28', uiSquircleSm, uiSkeletonBlock)} />
+          <Skeleton className={cn('h-10 w-24', uiSquircleSm, uiSkeletonBlock)} />
         </div>
       </div>
 
@@ -213,18 +213,18 @@ function AdminPayrollSkeleton({ showHeader = true }: { showHeader?: boolean }) {
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center justify-center sm:justify-start gap-3">
-            <Skeleton className={cn('h-10 w-10 rounded-xl', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-10 w-10', uiSquircleSm, uiSkeletonBlock)} />
             <Skeleton className={cn('h-10 w-32 rounded-[16px] [corner-shape:squircle]', uiSkeletonBlock)} />
-            <Skeleton className={cn('h-10 w-10 rounded-xl', uiSkeletonBlock)} />
+            <Skeleton className={cn('h-10 w-10', uiSquircleSm, uiSkeletonBlock)} />
           </div>
           <Skeleton className={cn('h-3 w-40 rounded', uiSkeletonBlock)} />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-3">
-          <Skeleton className={cn('h-11 flex-1 rounded-xl', uiSkeletonBlock)} />
-          <Skeleton className={cn('h-11 w-full lg:w-52 rounded-xl', uiSkeletonBlock)} />
-          <Skeleton className={cn('h-11 w-full lg:w-40 rounded-xl', uiSkeletonBlock)} />
-          <Skeleton className={cn('h-11 w-full lg:w-32 rounded-xl', uiSkeletonBlock)} />
+          <Skeleton className={cn('h-11 flex-1', uiSquircleSm, uiSkeletonBlock)} />
+          <Skeleton className={cn('h-11 w-full lg:w-52', uiSquircleSm, uiSkeletonBlock)} />
+          <Skeleton className={cn('h-11 w-full lg:w-40', uiSquircleSm, uiSkeletonBlock)} />
+          <Skeleton className={cn('h-11 w-full lg:w-32', uiSquircleSm, uiSkeletonBlock)} />
         </div>
       </div>
 

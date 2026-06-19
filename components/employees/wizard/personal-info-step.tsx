@@ -11,6 +11,7 @@ import {
 import { CommonFormFieldError } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
+import { DatePicker } from '@/components/ui/date-picker'
 import type { EmployeeInput } from '@/validations/employee.schema'
 import { LIMIT_ADDRESS } from '@/validations/field-limits'
 import type { DropdownData } from '@/types/employee'
@@ -29,6 +30,7 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
   } = useFormContext<EmployeeInput>()
 
   const currentNationality = watch('nationality')
+  const dateOfBirth = watch('date_of_birth')
 
   return (
     <div className="space-y-4">
@@ -41,12 +43,11 @@ export function PersonalInfoStep({ isEditMode = false, dropdowns }: PersonalInfo
           <Label htmlFor="emp-dob" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
             Date of Birth
           </Label>
-          <Input
-            {...register('date_of_birth')}
+          <DatePicker
             id="emp-dob"
-            type="date"
-            className={cn(uiInput, 'text-slate-300')}
-            required
+            value={dateOfBirth}
+            onChange={(val) => setValue('date_of_birth', val, { shouldValidate: true })}
+            disableFuture
           />
           {errors.date_of_birth?.message && <CommonFormFieldError message={errors.date_of_birth.message} />}
         </div>

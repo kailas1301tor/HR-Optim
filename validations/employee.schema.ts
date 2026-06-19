@@ -31,6 +31,8 @@ export const employeeSchema = z.object({
   date_of_birth: z.string().min(1, 'Date of birth is required'),
   nationality: z.string().min(1, 'Nationality is required'),
   address: requiredTrimmedString('Address', LIMIT_ADDRESS),
+  is_tl: z.boolean().default(false),
+  is_manual_attendance_enabled: z.boolean().default(false),
 
   bank_name: requiredTrimmedString('Bank name', LIMIT_SHORT_NAME),
   account_number: requiredTrimmedString('Account number', LIMIT_ACCOUNT_NUMBER),

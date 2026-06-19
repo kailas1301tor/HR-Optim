@@ -34,6 +34,7 @@ export const viewport: Viewport = {
 }
 
 import { ThemeProvider } from '@/components/theme-provider'
+import { ColorThemeProvider } from '@/components/color-theme-provider'
 import { Toaster } from '@/components/ui/sonner'
 
 export default function RootLayout({
@@ -43,10 +44,28 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                const saved = localStorage.getItem('color-theme');
+                if (saved) {
+                  document.documentElement.classList.add(saved);
+                } else {
+                  document.documentElement.classList.add('theme-red');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
       <body className={`${plusJakarta.variable} ${inter.variable} ${jetbrainsMono.variable} font-sans antialiased bg-background text-foreground`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          {children}
-          <Toaster position="top-right" richColors closeButton />
+          <ColorThemeProvider>
+            {children}
+            <Toaster position="top-right" richColors closeButton />
+          </ColorThemeProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

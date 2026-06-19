@@ -85,8 +85,8 @@ export function PayrollTrendsChart({ data, isLoading = false }: PayrollTrendsCha
               content={<PayrollTrendsTooltip />}
               cursor={{ fill: 'rgba(148, 163, 184, 0.06)' }}
             />
-            <Bar dataKey="base" stackId="a" fill="#7c3aed" radius={[0, 0, 0, 0]} activeBar={{ fill: '#7c3aed' }} />
-            <Bar dataKey="allowances" stackId="a" fill="#a855f7" radius={[0, 0, 0, 0]} activeBar={{ fill: '#a855f7' }} />
+            <Bar dataKey="base" stackId="a" fill="var(--violet-core)" radius={[0, 0, 0, 0]} activeBar={{ fill: 'var(--violet-core)' }} />
+            <Bar dataKey="allowances" stackId="a" fill="var(--violet-glow)" radius={[0, 0, 0, 0]} activeBar={{ fill: 'var(--violet-glow)' }} />
             <Bar dataKey="overtime" stackId="a" fill="#a3e635" radius={[4, 4, 0, 0]} activeBar={{ fill: '#a3e635' }} />
           </BarChart>
         </ResponsiveContainer>

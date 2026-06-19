@@ -4,6 +4,7 @@ import {
   formatEmployeeForDisplay,
   formatEmployeesForDisplay,
 } from '@/lib/mappers/employee-display-mapper'
+import { normalizeEmployeeFromApi } from '@/lib/mappers/employee-detail-mapper'
 import { cleanParams } from '@/lib/types'
 import { departmentService } from '@/services/department-service'
 import { designationService } from '@/services/designation-service'
@@ -43,6 +44,7 @@ function normalizeDropdownData(data: Partial<DropdownData> | null | undefined): 
     leave_types: data?.leave_types ?? [],
     onboarding_document_types: data?.onboarding_document_types ?? [],
     offboarding_document_types: data?.offboarding_document_types ?? [],
+    frequency_choices: data?.frequency_choices ?? [],
   };
 }
 
@@ -165,7 +167,7 @@ export const employeeService = {
   /**
    * Leave types from employee dropdowns — avoids master leave-type permissions.
    */
-  async getLeaveTypesFromDropdowns(signal?: AbortSignal): Promise<DropdownItem[]> {
+  async getLeaveTypesFromDropdowns(signal?: AbortSignal): Promise<(DropdownItem & { is_document_required?: boolean })[]> {
     const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
     return normalizeDropdownData(response.results?.data).leave_types
   },
@@ -185,7 +187,9 @@ export const employeeService = {
       signal,
     });
     return {
-      data: formatEmployeesForDisplay(response.results?.data || []),
+      data: formatEmployeesForDisplay(
+        (response.results?.data || []).map((item) => normalizeEmployeeFromApi(item)),
+      ),
       total_count: response.results?.total_count || 0,
       total_pages: response.results?.total_pages || 1,
       current_page: response.results?.current_page || 1,
@@ -218,8 +222,8 @@ export const employeeService = {
    * Fetches a single employee detail from the backend.
    */
   async getEmployee(id: number, signal?: AbortSignal): Promise<Employee> {
-    const response = await api.get<{ results: { data: Employee } }>(`/api/employee/employees/${id}/`, { signal });
-    return formatEmployeeForDisplay(response.results.data);
+    const response = await api.get<{ results: { data: unknown } }>(`/api/employee/employees/${id}/`, { signal });
+    return formatEmployeeForDisplay(normalizeEmployeeFromApi(response.results.data));
   },
 
   /**

@@ -69,10 +69,17 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
           employeeRequestService.getRequestChoices(controller.signal),
           employeeService.getLeaveTypesFromDropdowns(controller.signal),
         ])
+
         if (controller.signal.aborted || fetchId !== metadataFetchIdRef.current) return
         setSessionChoices(choices.session_choices)
         setDocumentTypeChoices(choices.document_request_type_choices)
-        setLeaveTypes(typeItems.map(({ id, name }) => ({ id, name })))
+        setLeaveTypes(
+          typeItems.map(({ id, name, is_document_required }) => ({
+            id,
+            name,
+            is_document_required,
+          }))
+        )
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') return
         if (fetchId !== metadataFetchIdRef.current) return
@@ -184,7 +191,7 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
   )
 
   const handleSubmitLeave = useCallback(
-    async (data: LeaveRequestInput): Promise<void> => {
+    async (data: LeaveRequestInput, files?: File[]): Promise<void> => {
       const employeeId = requireEmployeeId()
       if (!employeeId) return
 
@@ -215,16 +222,23 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
 
       setIsSubmitting(true)
       try {
-        await employeeRequestService.createLeaveRequest({
-          employee: employeeId,
-          leave_type: data.leave_type,
-          start_session: data.start_session,
-          end_session: data.end_session,
-          number_of_days: data.number_of_days,
-          from_date: data.from_date,
-          to_date: data.to_date,
-          reason: data.reason,
-        })
+        const formData = new FormData()
+        formData.append('employee', String(employeeId))
+        formData.append('leave_type', String(data.leave_type))
+        formData.append('start_session', data.start_session)
+        formData.append('end_session', data.end_session)
+        formData.append('number_of_days', String(data.number_of_days))
+        formData.append('from_date', data.from_date)
+        formData.append('to_date', data.to_date)
+        formData.append('reason', data.reason)
+
+        if (files && files.length > 0) {
+          files.forEach((file) => {
+            formData.append('documents', file)
+          })
+        }
+
+        await employeeRequestService.createLeaveRequest(formData)
         toast.success('Leave request submitted successfully')
         handleSuccess()
       } catch (error: unknown) {

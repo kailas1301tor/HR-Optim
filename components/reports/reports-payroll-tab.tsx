@@ -80,7 +80,7 @@ export function ReportsPayrollTab({ data, isLoading = false }: ReportsPayrollTab
                 formatter={(value: number) => [formatCurrency(value), '']}
               />
               <Legend />
-              <Bar dataKey="gross" fill="#7c3aed" radius={[4, 4, 0, 0]} name="Gross" />
+              <Bar dataKey="gross" fill="var(--violet-core)" radius={[4, 4, 0, 0]} name="Gross" />
               <Bar dataKey="net" fill="#14b8a6" radius={[4, 4, 0, 0]} name="Net" />
             </BarChart>
           </ResponsiveContainer>

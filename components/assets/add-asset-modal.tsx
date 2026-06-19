@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { CommonErrorBanner } from '@/components/common'
+import { DatePicker } from '@/components/ui/date-picker'
 import type { Asset, AssetDropdowns } from '@/types/asset'
 import { LIMIT_SHORT_NAME } from '@/validations/field-limits'
 import type { Department } from '@/services/department-service'
@@ -265,11 +266,16 @@ export function AddAssetModal({
 
             <div className="space-y-1">
               <Label className="text-xs text-slate-300">Purchase Date</Label>
-              <Input
-                type="date"
-                {...register('purchase_date')}
-                className="bg-midnight border-border"
-                disabled={isSubmitting}
+              <Controller
+                name="purchase_date"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </div>
 
@@ -286,11 +292,16 @@ export function AddAssetModal({
 
             <div className="space-y-1">
               <Label className="text-xs text-slate-300">Service Due Date</Label>
-              <Input
-                type="date"
-                {...register('service_due_date')}
-                className="bg-midnight border-border"
-                disabled={isSubmitting}
+              <Controller
+                name="service_due_date"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </div>
           </div>

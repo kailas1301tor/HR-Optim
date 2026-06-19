@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useFormContext } from 'react-hook-form'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -37,6 +38,25 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
   const currentDesignation = watch('designation')
   const currentStatus = watch('status')
   const currentShift = watch('shift')
+
+  const designationOptions = useMemo(() => {
+    const allDesignations = dropdowns?.designations ?? []
+    const filtered = allDesignations.filter(
+      (item) =>
+        !currentDepartment ||
+        !item.department_id ||
+        String(item.department_id) === currentDepartment,
+    )
+
+    if (!currentDesignation) return filtered
+
+    const selected = allDesignations.find((item) => String(item.id) === currentDesignation)
+    if (selected && !filtered.some((item) => String(item.id) === currentDesignation)) {
+      return [...filtered, selected]
+    }
+
+    return filtered
+  }, [dropdowns?.designations, currentDepartment, currentDesignation])
 
   return (
     <div className="space-y-4">
@@ -194,13 +214,11 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
               <SelectValue placeholder="Select Designation" />
             </SelectTrigger>
             <SelectContent>
-              {dropdowns?.designations
-                .filter((item) => !currentDepartment || !item.department_id || String(item.department_id) === currentDepartment)
-                .map((item) => (
-                  <SelectItem key={item.id} value={String(item.id)}>
-                    {item.name}
-                  </SelectItem>
-                ))}
+              {designationOptions.map((item) => (
+                <SelectItem key={item.id} value={String(item.id)}>
+                  {item.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {errors.designation?.message && <CommonFormFieldError message={errors.designation.message} />}

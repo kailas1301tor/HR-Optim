@@ -58,6 +58,7 @@ export interface PayrollRecord {
   canFinalize: boolean
   startDate: string
   endDate: string
+  adjustments?: BackendPayrollAdjustment[]
 }
 
 export type PayrollStatusFilter = 'all' | 'processing' | 'finalized'

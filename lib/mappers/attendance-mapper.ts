@@ -18,6 +18,9 @@ export interface BackendAttendanceRecord {
   time_in: string | null
   time_out: string | null
   work_hours: string
+  break_hours?: string
+  total_hours?: string
+  timings?: { in: string | null; out: string | null }[]
   date?: string
 }
 
@@ -73,6 +76,12 @@ export function mapBackendAttendanceRecord(record: BackendAttendanceRecord): Att
     timeOut: formatTimeValue(record.time_out),
     status: normalizeAttendanceStatus(record.status),
     workHours: formatWorkHours(record.work_hours),
+    breakHours: formatWorkHours(record.break_hours),
+    totalHours: formatWorkHours(record.total_hours),
+    timings: (record.timings || []).map((t) => ({
+      in: formatTimeValue(t.in),
+      out: formatTimeValue(t.out),
+    })),
     role: formatTitleLabel(record.role),
     email: record.email,
     phoneNumber: record.phone_number,

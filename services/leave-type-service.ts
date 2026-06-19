@@ -8,6 +8,7 @@ export interface LeaveType {
   deleted?: boolean;
   created_at?: string;
   updated_at?: string;
+  is_document_required?: boolean;
 }
 
 interface LeaveTypeListResponse {

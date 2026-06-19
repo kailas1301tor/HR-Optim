@@ -16,7 +16,7 @@ interface PayrollTableProps {
   hasSelectableRows: boolean
   onToggleSelect: (id: number) => void
   onToggleSelectAll: () => void
-  onAddAdjustment: (record: PayrollRecord) => void
+  onViewDetails: (record: PayrollRecord) => void
   currentPage: number
   totalPages: number
   totalCount: number
@@ -42,7 +42,7 @@ export function PayrollTable({
   hasSelectableRows,
   onToggleSelect,
   onToggleSelectAll,
-  onAddAdjustment,
+  onViewDetails,
   currentPage,
   totalPages,
   totalCount,
@@ -99,7 +99,7 @@ export function PayrollTable({
                   index={index}
                   isSelected={selectedIds.has(record.id)}
                   onToggleSelect={onToggleSelect}
-                  onAddAdjustment={onAddAdjustment}
+                  onViewDetails={onViewDetails}
                   canManage={canManage}
                 />
               ))}

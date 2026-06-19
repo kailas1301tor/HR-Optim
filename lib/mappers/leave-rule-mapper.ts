@@ -14,6 +14,10 @@ export function formatLeaveRuleSubtitle(rule: LeaveRule): string {
 
   parts.push(rule.is_paid_leave ? 'Paid' : 'Unpaid')
 
+  if (rule.is_document_required) {
+    parts.push('Docs Required')
+  }
+
   return parts.join(' · ')
 }
 
@@ -28,8 +32,8 @@ function parseNumericField(value: string | null | undefined, fallback = 0): numb
   return Number.isNaN(parsed) ? fallback : parsed
 }
 
-function normalizeAccrualFrequency(value: string): 'monthly' | 'yearly' {
-  return value.toLowerCase() === 'yearly' ? 'yearly' : 'monthly'
+function normalizeAccrualFrequency(value: string): string {
+  return value.toLowerCase()
 }
 
 export function mapLeaveRuleToFormValues(rule: LeaveRule): LeaveRuleInput {
@@ -42,5 +46,6 @@ export function mapLeaveRuleToFormValues(rule: LeaveRule): LeaveRuleInput {
     accrual_frequency: normalizeAccrualFrequency(rule.accrual_frequency),
     is_paid_leave: rule.is_paid_leave,
     description: rule.description?.trim() || 'Leave policy',
+    is_document_required: rule.is_document_required,
   }
 }

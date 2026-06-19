@@ -45,9 +45,9 @@ export function RequestCardSkeleton({ showActions = false }: RequestCardSkeleton
         </div>
 
         {showActions ? (
-          <div className="flex items-center gap-2 pt-1">
-            <Skeleton className={cn('h-9 flex-1 rounded-xl', uiSkeletonBlock)} />
-            <Skeleton className={cn('h-9 flex-1 rounded-xl', uiSkeletonBlock)} />
+          <div className="flex items-center gap-1.5 pt-1">
+            <Skeleton className={cn('min-h-11 flex-1', uiSquircleSm, uiSkeletonBlock)} />
+            <Skeleton className={cn('min-h-11 flex-1', uiSquircleSm, uiSkeletonBlock)} />
           </div>
         ) : null}
       </div>

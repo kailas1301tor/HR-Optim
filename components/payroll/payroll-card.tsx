@@ -17,7 +17,7 @@ interface PayrollCardProps {
   index: number
   isSelected: boolean
   onToggleSelect: (id: number) => void
-  onAddAdjustment: (record: PayrollRecord) => void
+  onViewDetails: (record: PayrollRecord) => void
   canManage?: boolean
 }
 
@@ -30,7 +30,7 @@ export function PayrollCard({
   index,
   isSelected,
   onToggleSelect,
-  onAddAdjustment,
+  onViewDetails,
   canManage = false,
 }: PayrollCardProps) {
   const wpsStatus = wpsStatusConfig[record.wpsStatus]
@@ -96,18 +96,16 @@ export function PayrollCard({
             {formatAmount(record.netSalary)}
           </p>
         </div>
-        {canManage ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 min-h-10 gap-2 text-xs shrink-0"
-            onClick={() => onAddAdjustment(record)}
-            aria-label={`Add adjustment for ${record.employeeName}`}
-          >
-            <Eye className="w-4 h-4" />
-            Adjust
-          </Button>
-        ) : null}
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-10 min-h-10 gap-2 text-xs shrink-0"
+          onClick={() => onViewDetails(record)}
+          aria-label={`View details for ${record.employeeName}`}
+        >
+          <Eye className="w-4 h-4" />
+          Details
+        </Button>
       </div>
     </motion.article>
   )

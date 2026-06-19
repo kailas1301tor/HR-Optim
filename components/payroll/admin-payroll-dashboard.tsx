@@ -30,6 +30,7 @@ import { usePayrollActions } from './usePayrollActions'
 import { usePayrollEmployeeSearch } from './usePayrollEmployeeSearch'
 import { GeneratePayrollDialog } from './generate-payroll-dialog'
 import { PayrollAdjustmentDialog } from './payroll-adjustment-dialog'
+import { PayrollDetailsDrawer } from './payroll-details-drawer'
 import { PayrollSkeleton } from './payroll-skeleton'
 import type { PayrollRecord } from '@/types/payroll'
 import { usePermissions } from '@/components/auth/permissions-provider'
@@ -135,6 +136,10 @@ export function AdminPayrollDashboard() {
     handleExportWps,
     handleExportDepartmentSummary,
     isExporting,
+    detailsTarget,
+    setDetailsTarget,
+    isDeletingAdjustment,
+    handleDeleteAdjustment,
   } = usePayrollActions({
     onSuccess: () => {
       handleSuccess()
@@ -319,7 +324,7 @@ export function AdminPayrollDashboard() {
             hasSelectableRows={hasSelectableRows}
             onToggleSelect={toggleSelected}
             onToggleSelectAll={toggleSelectAll}
-            onAddAdjustment={setAdjustmentTarget}
+            onViewDetails={setDetailsTarget}
             currentPage={currentPage}
             totalPages={totalPages}
             totalCount={totalCount}
@@ -350,7 +355,7 @@ export function AdminPayrollDashboard() {
                 index={index}
                 isSelected={selectedIds.has(record.id)}
                 onToggleSelect={toggleSelected}
-                onAddAdjustment={setAdjustmentTarget}
+                onViewDetails={setDetailsTarget}
                 canManage={canManagePayroll}
               />
             ))}
@@ -376,7 +381,7 @@ export function AdminPayrollDashboard() {
             hasSelectableRows={hasSelectableRows}
             onToggleSelect={toggleSelected}
             onToggleSelectAll={toggleSelectAll}
-            onAddAdjustment={setAdjustmentTarget}
+            onViewDetails={setDetailsTarget}
             currentPage={currentPage}
             totalPages={totalPages}
             totalCount={totalCount}
@@ -400,6 +405,19 @@ export function AdminPayrollDashboard() {
         target={adjustmentTarget}
         isSubmitting={isAdjusting}
         onSubmit={handleAddAdjustment}
+      />
+
+      <PayrollDetailsDrawer
+        open={detailsTarget !== null}
+        onOpenChange={(open) => !open && setDetailsTarget(null)}
+        record={detailsTarget}
+        canManage={canManagePayroll}
+        isDeleting={isDeletingAdjustment}
+        onDeleteAdjustment={handleDeleteAdjustment}
+        onAddAdjustment={(record) => {
+          setDetailsTarget(null)
+          setAdjustmentTarget(record)
+        }}
       />
     </div>
   )

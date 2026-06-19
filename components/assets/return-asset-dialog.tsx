@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
 import { CommonEmptyState } from '@/components/common'
 import { cn } from '@/lib/utils'
 import { uiTabChipActive, uiTabChipBase, uiTabChipInactive } from '@/lib/ui/design-system'
@@ -47,8 +48,11 @@ export function ReturnAssetDialog({ open, onOpenChange, assetId, onSuccess }: Re
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors },
   } = form
+
+  const returnDate = watch('return_date')
 
   return (
     <Dialog
@@ -201,11 +205,10 @@ export function ReturnAssetDialog({ open, onOpenChange, assetId, onSuccess }: Re
 
           <div className="space-y-1.5">
             <Label htmlFor="return_date" className="text-xs text-slate-400">Return Date</Label>
-            <Input
+            <DatePicker
               id="return_date"
-              type="date"
-              className="bg-midnight border-border"
-              {...register('return_date')}
+              value={returnDate}
+              onChange={(val) => setValue('return_date', val, { shouldValidate: true })}
             />
             {errors.return_date && (
               <p className="text-[11px] text-destructive font-medium">{errors.return_date.message}</p>
