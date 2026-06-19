@@ -93,13 +93,8 @@ export const notificationService = {
    * GET /api/notifications/ (Bearer auth via api client).
    */
   async getNotifications(signal?: AbortSignal): Promise<Notification[]> {
-    try {
-      const response = await api.get<GetNotificationsResponse>('/api/notifications/', { signal })
-      return response.data || []
-    } catch (error) {
-      console.warn('🔴 Network error fetching notifications. Returning empty fallback.', error)
-      return []
-    }
+    const response = await api.get<GetNotificationsResponse>('/api/notifications/', { signal })
+    return response.data ?? []
   },
 
   /**

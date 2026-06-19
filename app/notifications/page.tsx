@@ -1,8 +1,6 @@
 // app/notifications/page.tsx
-import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
 import { CommonPageHeader } from '@/components/common'
-import { NotificationsSkeleton } from '@/components/notifications/notifications-skeleton'
 import { NotificationsList } from '@/components/notifications/notifications-list'
 
 export default function NotificationsPage(): React.JSX.Element {
@@ -14,9 +12,7 @@ export default function NotificationsPage(): React.JSX.Element {
           subtitle="View and manage system alerts and transactional updates"
         />
         <div className="w-full">
-          <Suspense fallback={<NotificationsSkeleton />}>
-            <NotificationsList />
-          </Suspense>
+          <NotificationsList />
         </div>
       </div>
     </AppShell>

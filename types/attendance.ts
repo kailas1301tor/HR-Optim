@@ -9,6 +9,7 @@ export interface AttendanceTiming {
 
 export interface AttendanceRecord {
   id: string
+  employeeProfileId: number | null
   employeeId: string
   employeeName: string
   initials: string
@@ -94,6 +95,19 @@ export interface ManualPunchPayload {
 }
 
 export interface ManualPunchResponse {
+  message: string
+  results?: {
+    data?: unknown
+  }
+}
+
+export interface LateReasonPayload {
+  employee: number
+  date: string
+  reason: string
+}
+
+export interface LateReasonResponse {
   message: string
   results?: {
     data?: unknown
