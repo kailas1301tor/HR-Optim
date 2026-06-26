@@ -45,7 +45,7 @@ interface SoftDeletableRecord {
 }
 
 function filterActiveRecords<T extends SoftDeletableRecord>(data: T[]): T[] {
-  return data.filter((record) => record.deleted !== true && record.is_active !== false)
+  return data.filter((record) => record.deleted !== true)
 }
 
 async function fetchPaginatedList<T extends SoftDeletableRecord>(

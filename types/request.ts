@@ -215,7 +215,7 @@ export interface PaginatedRequestResult<T> {
 
 export const REQUEST_PAGE_SIZE = 20
 
-export const ALL_STATUS_FETCH_CAP = 100
+export const ALL_STATUS_FETCH_CAP = 500
 
 export const REQUEST_TYPES: RequestType[] = ['leave', 'document', 'salary-advance', 'loan']
 
