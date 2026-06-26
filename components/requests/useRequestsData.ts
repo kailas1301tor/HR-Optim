@@ -36,6 +36,9 @@ interface FetchResult {
   isListCapped: boolean
   usesServerPagination: boolean
   totalPages: number
+  realTotalCount: number
+  /** Per-status counts already available from this fetch (avoids duplicate calls) */
+  statusCountsFromFetch: Partial<Record<RequestStatus, number>>
 }
 
 async function fetchRequests(
@@ -61,10 +64,14 @@ async function fetchRequests(
       isListCapped: res.total_count > res.data.length,
       usesServerPagination: true,
       totalPages: res.total_pages,
+      realTotalCount: res.total_count,
+      statusCountsFromFetch: { [status]: res.total_count },
     }
   }
 
   let isListCapped = false
+  let realTotalCount = 0
+  const statusCountsFromFetch: Partial<Record<RequestStatus, number>> = {}
   type RawItem = { created_at: string; request: Request }
   const rawItems: RawItem[] = []
 
@@ -81,6 +88,8 @@ async function fetchRequests(
     const batches = await Promise.all(
       types.map(async (type) => {
         const res = await fetchRequestsByType(type, params, signal)
+        realTotalCount += res.total_count
+        statusCountsFromFetch[statusKey] = (statusCountsFromFetch[statusKey] ?? 0) + res.total_count
         if (res.total_count > res.data.length) isListCapped = true
         return res.data.map((record) => ({
           created_at: (record as { created_at: string }).created_at,
@@ -107,6 +116,8 @@ async function fetchRequests(
     isListCapped,
     usesServerPagination: false,
     totalPages: 1,
+    realTotalCount,
+    statusCountsFromFetch,
   }
 }
 
@@ -125,6 +136,8 @@ export interface UseRequestsDataReturn {
   hasError: boolean
   isListCapped: boolean
   totalPages: number
+  /** Counts already obtained from the data fetch — avoids redundant count-only API calls */
+  statusCountsFromFetch: Partial<Record<RequestStatus, number>>
 }
 
 export function useRequestsData({
@@ -139,6 +152,8 @@ export function useRequestsData({
   const [isListCapped, setIsListCapped] = useState(false)
   const [usesServerPagination, setUsesServerPagination] = useState(false)
   const [serverTotalPages, setServerTotalPages] = useState(1)
+  const [realTotalCount, setRealTotalCount] = useState(0)
+  const [statusCountsFromFetch, setStatusCountsFromFetch] = useState<Partial<Record<RequestStatus, number>>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const fetchIdRef = useRef(0)
@@ -163,6 +178,8 @@ export function useRequestsData({
         setIsListCapped(result.isListCapped)
         setUsesServerPagination(result.usesServerPagination)
         setServerTotalPages(result.totalPages)
+        setRealTotalCount(result.realTotalCount)
+        setStatusCountsFromFetch(result.statusCountsFromFetch)
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') return
         if (fetchId !== fetchIdRef.current) return
@@ -193,8 +210,12 @@ export function useRequestsData({
 
   const totalPages = useMemo(() => {
     if (usesServerPagination) return serverTotalPages
-    return Math.max(1, Math.ceil(filteredRequests.length / REQUEST_PAGE_SIZE))
-  }, [usesServerPagination, serverTotalPages, filteredRequests.length])
+    // When searching client-side, use filtered count; otherwise use real API total
+    const effectiveCount = searchQuery.trim()
+      ? filteredRequests.length
+      : Math.max(filteredRequests.length, realTotalCount)
+    return Math.max(1, Math.ceil(effectiveCount / REQUEST_PAGE_SIZE))
+  }, [usesServerPagination, serverTotalPages, filteredRequests.length, realTotalCount, searchQuery])
 
   const paginatedRequests = useMemo(() => {
     if (usesServerPagination) return filteredRequests
@@ -208,5 +229,6 @@ export function useRequestsData({
     hasError,
     isListCapped,
     totalPages,
+    statusCountsFromFetch,
   }
 }

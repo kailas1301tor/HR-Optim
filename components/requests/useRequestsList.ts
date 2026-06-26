@@ -79,18 +79,13 @@ export function useRequestsList(): UseRequestsListReturn {
   const [reloadToken, setReloadToken] = useState(0)
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null)
 
-  const { statusCounts, isCountsLoading, countsHasError } = useRequestStatusCounts({
-    typesToFetch,
-    employeeFilter,
-    reloadToken,
-  })
-
   const {
     paginatedRequests,
     isLoading,
     hasError,
     isListCapped,
     totalPages,
+    statusCountsFromFetch,
   } = useRequestsData({
     statusFilter,
     typesToFetch,
@@ -98,6 +93,15 @@ export function useRequestsList(): UseRequestsListReturn {
     pageParam,
     searchQuery,
     reloadToken,
+  })
+
+  const { statusCounts, isCountsLoading, countsHasError } = useRequestStatusCounts({
+    statusFilter,
+    typesToFetch,
+    employeeFilter,
+    reloadToken,
+    preloadedCounts: statusCountsFromFetch,
+    isDataLoading: isLoading,
   })
 
   const refreshList = useCallback(() => {
