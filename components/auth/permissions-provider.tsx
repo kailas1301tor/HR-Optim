@@ -37,6 +37,8 @@ interface PermissionsContextValue {
   hasError: boolean
   permissions: Set<string>
   employeeProfileId: number | null
+  fullName: string | null
+  designation: string | null
   isManualAttendanceEnabled: boolean
   isPunchIn: boolean
   hasAnyModuleAccess: boolean
@@ -59,6 +61,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
   const [hasError, setHasError] = useState(false)
   const [permissions, setPermissions] = useState<Set<string>>(new Set())
   const [employeeProfileId, setEmployeeProfileId] = useState<number | null>(null)
+  const [fullName, setFullName] = useState<string | null>(null)
+  const [designation, setDesignation] = useState<string | null>(null)
   const [isManualAttendanceEnabled, setIsManualAttendanceEnabled] = useState(false)
   const [isPunchIn, setIsPunchIn] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
@@ -84,6 +88,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
         )
         setPermissions(codenames)
         setEmployeeProfileId(profile.employee_profile_id ?? null)
+        setFullName(profile.fullName ?? null)
+        setDesignation(profile.designation ?? null)
         setIsManualAttendanceEnabled(profile.isManualAttendanceEnabled)
         setIsPunchIn(profile.isPunchIn)
       } catch {
@@ -91,6 +97,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
         setHasError(true)
         setPermissions(new Set())
         setEmployeeProfileId(null)
+        setFullName(null)
+        setDesignation(null)
         setIsManualAttendanceEnabled(false)
         setIsPunchIn(false)
       } finally {
@@ -165,6 +173,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
       hasError,
       permissions,
       employeeProfileId,
+      fullName,
+      designation,
       isManualAttendanceEnabled,
       isPunchIn,
       hasAnyModuleAccess,
@@ -180,6 +190,8 @@ export function PermissionsProvider({ children }: PermissionsProviderProps) {
       hasError,
       permissions,
       employeeProfileId,
+      fullName,
+      designation,
       isManualAttendanceEnabled,
       isPunchIn,
       hasAnyModuleAccess,

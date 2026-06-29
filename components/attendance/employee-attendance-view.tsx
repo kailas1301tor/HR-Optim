@@ -14,8 +14,9 @@ import { usePermissions } from '@/components/auth/permissions-provider'
 import { CommonEmptyState, CommonErrorBanner, MonthYearPicker } from '@/components/common'
 import { uiCard } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { AttendanceStatus } from '@/types/attendance'
+import type { AttendanceStatus, AttendanceRecord, EmployeeAttendanceDay } from '@/types/attendance'
 import { AttendanceSkeleton } from './attendance-skeleton'
+import { AttendanceDetailDrawer } from './attendance-detail-drawer'
 import { useEmployeeAttendance } from './useEmployeeAttendance'
 
 const statusConfig: Record<
@@ -36,8 +37,9 @@ function getCurrentMonthYear() {
 }
 
 export function EmployeeAttendanceView({ embedded = false }: { embedded?: boolean }) {
-  const { employeeProfileId, isLoading: isAuthLoading } = usePermissions()
+  const { employeeProfileId, fullName, designation, isLoading: isAuthLoading } = usePermissions()
   const [{ month, year }, setMonthYear] = useState(getCurrentMonthYear)
+  const [selectedDay, setSelectedDay] = useState<EmployeeAttendanceDay | null>(null)
 
   const { data, isLoading, hasError, errorMessage, reload } = useEmployeeAttendance({
     employeeProfileId,
@@ -163,7 +165,11 @@ export function EmployeeAttendanceView({ embedded = false }: { embedded?: boolea
                 {days.map((day) => {
                   const status = statusConfig[day.status] ?? statusConfig.absent
                   return (
-                    <tr key={day.date} className="hover:bg-muted/10 transition-colors">
+                    <tr
+                      key={day.date}
+                      className="hover:bg-muted/10 transition-colors cursor-pointer"
+                      onClick={() => setSelectedDay(day)}
+                    >
                       <td className="py-3.5 font-semibold text-cloud">
                         {day.date
                           ? new Date(day.date).toLocaleDateString('en-US', {
@@ -194,6 +200,29 @@ export function EmployeeAttendanceView({ embedded = false }: { embedded?: boolea
           description="No attendance records are available for the selected month."
         />
       ) : null}
+
+      {selectedDay && (
+        <AttendanceDetailDrawer
+          record={{
+            id: selectedDay.date,
+            employeeProfileId: employeeProfileId,
+            employeeId: 'ME',
+            employeeName: fullName || 'Me',
+            initials: fullName ? fullName.substring(0, 2).toUpperCase() : 'ME',
+            department: designation || 'Employee',
+            shiftName: 'Regular', // Fallback as it's not provided in the ME response
+            date: selectedDay.date,
+            timeIn: selectedDay.timeIn ?? null,
+            timeOut: selectedDay.timeOut ?? null,
+            status: selectedDay.status,
+            workHours: selectedDay.workHours ?? null,
+            breakHours: selectedDay.breakHours ?? null,
+            totalHours: selectedDay.totalHours ?? null,
+            timings: selectedDay.timings ?? [],
+          } as AttendanceRecord}
+          onClose={() => setSelectedDay(null)}
+        />
+      )}
     </div>
   )
 }
