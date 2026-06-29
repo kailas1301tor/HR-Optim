@@ -48,6 +48,14 @@ export interface BackendEmployeeAttendanceDay {
   date?: string
   day_of_week?: string
   status?: string
+  excused_reason?: string
+  time_in?: string | null
+  time_out?: string | null
+  work_hours?: string
+  break_hours?: string
+  total_hours?: string
+  timings?: { in: string | null; out: string | null }[]
+  is_biometric?: boolean
 }
 
 export interface BackendEmployeeAttendanceSummary {
@@ -71,6 +79,14 @@ export interface EmployeeAttendanceDay {
   date: string
   dayOfWeek: string
   status: AttendanceStatus
+  excusedReason?: string
+  timeIn?: string | null
+  timeOut?: string | null
+  workHours?: string
+  breakHours?: string
+  totalHours?: string
+  timings?: AttendanceTiming[]
+  isBiometric?: boolean
 }
 
 export interface EmployeeAttendanceData {

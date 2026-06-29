@@ -67,6 +67,14 @@ export function mapEmployeeAttendanceData(data: BackendEmployeeAttendanceData): 
     date: day.date ?? '',
     dayOfWeek: day.day_of_week ?? '',
     status: normalizeAttendanceStatus(day.status ?? 'Absent'),
+    excusedReason: day.excused_reason ?? '',
+    timeIn: day.time_in ?? null,
+    timeOut: day.time_out ?? null,
+    workHours: day.work_hours ?? '',
+    breakHours: day.break_hours ?? '',
+    totalHours: day.total_hours ?? '',
+    timings: (day.timings ?? []).map((t) => ({ in: t.in ?? null, out: t.out ?? null })),
+    isBiometric: day.is_biometric ?? false,
   }))
 
   return { summary, days }
