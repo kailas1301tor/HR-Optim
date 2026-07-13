@@ -1,7 +1,7 @@
 // components/settings/leave-rule-form.tsx
 'use client'
 
-import { useEffect } from 'react'
+
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Loader2 } from 'lucide-react'
@@ -54,6 +54,10 @@ export function LeaveRuleForm({
 }: LeaveRuleFormProps): React.JSX.Element {
   const isEditing = Boolean(editingRule)
 
+  const initialValues = editingRule
+    ? mapLeaveRuleToFormValues(editingRule)
+    : DEFAULT_FORM_VALUES
+
   const {
     register,
     handleSubmit,
@@ -63,12 +67,9 @@ export function LeaveRuleForm({
     formState: { errors },
   } = useForm<LeaveRuleInput>({
     resolver: zodResolver(leaveRuleSchema),
-    defaultValues: DEFAULT_FORM_VALUES,
+    defaultValues: initialValues,
+    values: initialValues,
   })
-
-  useEffect(() => {
-    reset(editingRule ? mapLeaveRuleToFormValues(editingRule) : DEFAULT_FORM_VALUES)
-  }, [editingRule, reset])
 
   const isCarryForward = watch('is_carry_forward')
   const isPaidLeave = watch('is_paid_leave')
@@ -101,7 +102,6 @@ export function LeaveRuleForm({
           <Select
             value={leaveTypeValue ? String(leaveTypeValue) : ''}
             onValueChange={(val) => setValue('leave_type', Number(val), { shouldValidate: true })}
-            disabled={isEditing}
           >
             <SelectTrigger className={uiSelect}>
               <SelectValue placeholder="Select leave type" />
