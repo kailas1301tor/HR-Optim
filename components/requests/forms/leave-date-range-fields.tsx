@@ -1,10 +1,13 @@
 // components/requests/forms/leave-date-range-fields.tsx
 'use client'
 
-import { parseISO, startOfToday } from 'date-fns'
+import { parseISO, startOfToday, subDays } from 'date-fns'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { DatePicker } from '@/components/ui/date-picker'
+
+/** Maximum number of days in the past an employee can backdate a leave request. */
+const LEAVE_BACKDATE_LIMIT_DAYS = 30
 
 interface LeaveDateRangeFieldsProps {
   fromDate: string
@@ -22,6 +25,7 @@ export function LeaveDateRangeFields({
   className,
 }: LeaveDateRangeFieldsProps) {
   const today = startOfToday()
+  const earliestAllowedDate = subDays(today, LEAVE_BACKDATE_LIMIT_DAYS)
 
   // Parse strings to Dates safely
   const parsedFromDate = fromDate ? parseISO(fromDate) : undefined
@@ -36,7 +40,7 @@ export function LeaveDateRangeFields({
           id="leave-start-date"
           value={fromDate}
           onChange={onFromDateChange}
-          disabledDays={{ before: today }}
+          disabledDays={{ before: earliestAllowedDate }}
         />
       </div>
 
@@ -48,7 +52,7 @@ export function LeaveDateRangeFields({
           id="leave-end-date"
           value={toDate}
           onChange={onToDateChange}
-          disabledDays={{ before: parsedFromDate || today }}
+          disabledDays={{ before: parsedFromDate || earliestAllowedDate }}
         />
       </div>
     </div>
