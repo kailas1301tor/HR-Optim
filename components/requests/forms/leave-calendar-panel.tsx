@@ -3,7 +3,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { addMonths, format, startOfMonth, startOfToday } from 'date-fns'
+import { addMonths, format, startOfMonth, startOfToday, subDays } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { parseApiDate } from '@/lib/helpers/format-api-date'
@@ -108,7 +108,7 @@ export function LeaveCalendarPanel({
           fromDate={fromDate}
           toDate={toDate}
           onRangeChange={onRangeChange}
-          disabledBefore={disabled ? undefined : startOfToday()}
+          disabledBefore={disabled ? undefined : subDays(startOfToday(), 30)}
           events={resolvedEvents}
           existingLeaveDates={existingLeaveDates}
           disabled={disabled}
