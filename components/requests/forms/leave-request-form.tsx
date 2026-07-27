@@ -24,7 +24,7 @@ import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { leaveRequestSchema, type LeaveRequestInput } from '@/validations/request.schema'
 import { LIMIT_REASON } from '@/validations/field-limits'
 import type { LeaveBalanceRecord, LeaveCalendarEvent } from '@/types/request'
-import { findBalanceForLeaveType, formatLeaveBalance } from '@/lib/helpers/leave-balance'
+import { findBalanceForLeaveType, formatLeaveBalance, shouldEnforceLeaveBalance } from '@/lib/helpers/leave-balance'
 import { LeaveCalendarPanel } from './leave-calendar-panel'
 import { LeaveDateRangeFields } from './leave-date-range-fields'
 import { LeaveBalanceVisualizer } from './leave-balance-visualizer'
@@ -32,7 +32,7 @@ import { LeaveDaysVisualizer } from './leave-days-visualizer'
 import { LeaveDocumentUploader } from './leave-document-uploader'
 
 interface LeaveRequestFormProps {
-  leaveTypes: (LeaveType & { is_document_required?: boolean })[]
+  leaveTypes: (LeaveType & { is_document_required?: boolean; is_paid_leave?: boolean })[]
   leaveBalances?: LeaveBalanceRecord[]
   isBalancesLoading?: boolean
   hasBalancesError?: boolean
@@ -118,9 +118,14 @@ export function LeaveRequestForm({
       ? findBalanceForLeaveType(selectedLeaveType.name, leaveBalances)
       : null
 
-  const hasInsufficientBalance = selectedBalance !== null && selectedBalance <= 0
+  const isBalanceEnforced = shouldEnforceLeaveBalance(selectedLeaveType)
+  const hasInsufficientBalance =
+    isBalanceEnforced && selectedBalance !== null && selectedBalance <= 0
   const exceedsBalance =
-    selectedBalance !== null && numberOfDays > 0 && numberOfDays > selectedBalance
+    isBalanceEnforced &&
+    selectedBalance !== null &&
+    numberOfDays > 0 &&
+    numberOfDays > selectedBalance
 
   const getBalanceHint = (leaveTypeName: string): string | null => {
     if (isBalancesLoading || hasBalancesError || leaveBalances.length === 0) return null
@@ -394,12 +399,15 @@ export function LeaveRequestForm({
                 calculateState === 'error' ||
                 calculateState === 'invalid' ||
                 calculateState === 'zero' ||
-                isBalancesLoading ||
-                hasBalancesError ||
+                (isBalanceEnforced && isBalancesLoading) ||
+                (isBalanceEnforced && hasBalancesError) ||
                 leaveTypeValue <= 0 ||
                 hasInsufficientBalance ||
                 exceedsBalance ||
-                (selectedBalance === null && leaveTypeValue > 0 && !isBalancesLoading)
+                (isBalanceEnforced &&
+                  selectedBalance === null &&
+                  leaveTypeValue > 0 &&
+                  !isBalancesLoading)
               }
               className="text-xs h-10"
             >

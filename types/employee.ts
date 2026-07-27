@@ -12,7 +12,7 @@ export interface DropdownData {
   nationalities: DropdownItem[]
   status_choices: DropdownItem[]
   accommodation_choices: DropdownItem[]
-  leave_types: (DropdownItem & { is_document_required?: boolean })[]
+  leave_types: (DropdownItem & { is_document_required?: boolean; is_paid_leave?: boolean })[]
   onboarding_document_types: DropdownItem[]
   offboarding_document_types: DropdownItem[]
   frequency_choices: StringDropdownItem[]

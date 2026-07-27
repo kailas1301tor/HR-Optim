@@ -167,7 +167,7 @@ export const employeeService = {
   /**
    * Leave types from employee dropdowns — avoids master leave-type permissions.
    */
-  async getLeaveTypesFromDropdowns(signal?: AbortSignal): Promise<(DropdownItem & { is_document_required?: boolean })[]> {
+  async getLeaveTypesFromDropdowns(signal?: AbortSignal): Promise<(DropdownItem & { is_document_required?: boolean; is_paid_leave?: boolean })[]> {
     const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
     return normalizeDropdownData(response.results?.data).leave_types
   },

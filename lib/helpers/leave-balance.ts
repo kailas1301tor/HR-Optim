@@ -26,3 +26,9 @@ export function formatLeaveBalance(balance: number): string {
   if (!Number.isFinite(balance)) return '0'
   return Number.isInteger(balance) ? String(balance) : balance.toFixed(1)
 }
+
+export function shouldEnforceLeaveBalance(
+  leaveType: { is_paid_leave?: boolean } | null | undefined
+): boolean {
+  return leaveType?.is_paid_leave !== false
+}

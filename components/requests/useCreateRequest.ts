@@ -17,7 +17,7 @@ import type {
   LoanRequestInput,
   DocumentRequestInput,
 } from '@/validations/request.schema'
-import { findBalanceForLeaveType } from '@/lib/helpers/leave-balance'
+import { findBalanceForLeaveType, shouldEnforceLeaveBalance } from '@/lib/helpers/leave-balance'
 import type { RequestType } from './requests-constants'
 
 export type CreateRequestType = RequestType
@@ -74,10 +74,11 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
         setSessionChoices(choices.session_choices)
         setDocumentTypeChoices(choices.document_request_type_choices)
         setLeaveTypes(
-          typeItems.map(({ id, name, is_document_required }) => ({
+          typeItems.map(({ id, name, is_document_required, is_paid_leave }) => ({
             id,
             name,
             is_document_required,
+            is_paid_leave,
           }))
         )
       } catch (error: unknown) {
@@ -195,29 +196,33 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
       const employeeId = requireEmployeeId()
       if (!employeeId) return
 
-      if (hasBalancesError || isBalancesLoading) {
-        toast.error('Leave balances are not available. Please try again.')
-        return
-      }
-
       const selectedLeaveType = leaveTypes.find((type) => type.id === data.leave_type)
       if (!selectedLeaveType) {
         toast.error('Please select a valid leave type')
         return
       }
 
-      const balance = findBalanceForLeaveType(selectedLeaveType.name, leaveBalances)
-      if (balance === null) {
-        toast.error('No leave balance found for the selected leave type')
+      const isBalanceEnforced = shouldEnforceLeaveBalance(selectedLeaveType)
+
+      if (isBalanceEnforced && (hasBalancesError || isBalancesLoading)) {
+        toast.error('Leave balances are not available. Please try again.')
         return
       }
-      if (balance <= 0) {
-        toast.error('No leave balance available for this leave type')
-        return
-      }
-      if (data.number_of_days > balance) {
-        toast.error('Requested days exceed your available leave balance')
-        return
+
+      if (isBalanceEnforced) {
+        const balance = findBalanceForLeaveType(selectedLeaveType.name, leaveBalances)
+        if (balance === null) {
+          toast.error('No leave balance found for the selected leave type')
+          return
+        }
+        if (balance <= 0) {
+          toast.error('No leave balance available for this leave type')
+          return
+        }
+        if (data.number_of_days > balance) {
+          toast.error('Requested days exceed your available leave balance')
+          return
+        }
       }
 
       setIsSubmitting(true)
