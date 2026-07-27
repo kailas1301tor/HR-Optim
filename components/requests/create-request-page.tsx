@@ -188,7 +188,7 @@ function CreateRequestPageContent() {
               )}
               {hasBalancesError && (
                 <CommonErrorBanner
-                  message="Leave balances could not be loaded. You cannot submit until balances are available."
+                  message="Leave balances could not be loaded. Paid leave types may be unavailable."
                   onRetry={reloadMetadata}
                   className="mb-4"
                 />

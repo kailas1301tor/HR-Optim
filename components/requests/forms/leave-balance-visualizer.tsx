@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import type { LeaveType } from '@/services/leave-type-service'
 import type { LeaveBalanceRecord } from '@/types/request'
-import { formatLeaveBalance } from '@/lib/helpers/leave-balance'
+import { formatLeaveBalance, shouldEnforceLeaveBalance } from '@/lib/helpers/leave-balance'
 
 interface LeaveBalanceVisualizerProps {
-  selectedLeaveType: (LeaveType & { is_document_required?: boolean }) | null
+  selectedLeaveType: (LeaveType & { is_document_required?: boolean; is_paid_leave?: boolean }) | null
   leaveBalances: LeaveBalanceRecord[]
   isBalancesLoading: boolean
   hasBalancesError: boolean
@@ -26,7 +26,7 @@ export function LeaveBalanceVisualizer({
   hasInsufficientBalance,
   exceedsBalance,
 }: LeaveBalanceVisualizerProps): React.JSX.Element {
-  if (!selectedLeaveType) return <></>
+  if (!selectedLeaveType || !shouldEnforceLeaveBalance(selectedLeaveType)) return <></>
 
   return (
     <div

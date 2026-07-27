@@ -9,6 +9,7 @@ export interface LeaveType {
   created_at?: string;
   updated_at?: string;
   is_document_required?: boolean;
+  is_paid_leave?: boolean;
 }
 
 interface LeaveTypeListResponse {
