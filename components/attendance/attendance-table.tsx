@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { uiTableShell } from '@/lib/ui/design-system'
 import { STATUS_CONFIG, getShiftBadgeClassName } from './attendance-constants'
-import { buildAttendanceSummaryLabel } from './attendance-day-summary'
+import { AttendanceSummary } from './attendance-summary'
 import type { TeamAttendanceDay, TeamAttendanceEmployee } from '@/types/attendance'
 
 interface AttendanceTableProps {
@@ -60,7 +60,6 @@ export function AttendanceTable({ records, isRangeMode = false, onDayClick }: At
           </thead>
           <tbody>
             {records.map((employee) => {
-              const summaryLabel = buildAttendanceSummaryLabel(employee.attendanceData)
               const canExpand = isRangeMode
                 ? employee.attendanceData.length > 0
                 : employee.attendanceData.length > 1
@@ -131,7 +130,7 @@ export function AttendanceTable({ records, isRangeMode = false, onDayClick }: At
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-slate-300">{summaryLabel}</span>
+                      <AttendanceSummary days={employee.attendanceData} />
                     </td>
                   </tr>
 

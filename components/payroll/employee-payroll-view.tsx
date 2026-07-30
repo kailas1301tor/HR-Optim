@@ -9,7 +9,6 @@ import { uiCard } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { PayrollSkeleton } from './payroll-skeleton'
 import { useEmployeePayroll } from './useEmployeePayroll'
-import { PayrollPayslipActions } from './payroll-payslip-actions'
 
 function getCurrentMonthYear() {
   const now = new Date()
@@ -65,7 +64,7 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
           <div>
             <h1 className="text-2xl font-bold text-cloud">My Payroll</h1>
             <p className="text-xs text-muted-foreground mt-1">
-              View your monthly salary statements and download payslips
+              View your monthly salary statements
             </p>
           </div>
         ) : null}
@@ -133,7 +132,6 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
                   <th className="pb-3 font-semibold font-mono">Deductions</th>
                   <th className="pb-3 font-semibold font-mono">Net Payout</th>
                   <th className="pb-3 font-semibold">Status</th>
-                  <th className="pb-3 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/20">
@@ -156,9 +154,6 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-lime-500/10 text-lime-400">
                         {item.status}
                       </span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <PayrollPayslipActions payslipUrl={item.payslipUrl} record={item} size="sm" />
                     </td>
                   </tr>
                 ))}

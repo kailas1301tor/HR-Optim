@@ -12,7 +12,7 @@ export function buildAttendanceSummaryLabel(days: TeamAttendanceDay[]): string {
   const presentCount = days.filter((day) => isPresentDay(day.status)).length
 
   if (days.length === 1) {
-    return isPresentDay(days[0].status) ? STATUS_CONFIG.present.label : '—'
+    return STATUS_CONFIG[days[0].status].label
   }
 
   if (presentCount === 0) {
