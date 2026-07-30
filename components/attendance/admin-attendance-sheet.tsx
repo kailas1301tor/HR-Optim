@@ -1,6 +1,7 @@
 // components/attendance/admin-attendance-sheet.tsx
 'use client'
 
+import { useState } from 'react'
 import { Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -10,7 +11,7 @@ import {
 } from '@/components/common'
 import { uiOutlineBtn } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import { AttendanceDateNav } from './attendance-date-nav'
+import { AttendanceDateRangeNav } from './attendance-date-range-nav'
 import { AttendanceStatsCards } from './attendance-stats-cards'
 import { AttendanceToolbar } from './attendance-toolbar'
 import { AttendanceTable } from './attendance-table'
@@ -22,9 +23,9 @@ import { AttendanceDetailDrawer } from './attendance-detail-drawer'
 import { useAttendanceSheet } from './useAttendanceSheet'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { isInitialDataLoading } from '@/lib/helpers/is-initial-data-loading'
-import { formatApiDate } from '@/lib/helpers/format-api-date'
-import { useState } from 'react'
-import type { AttendanceRecord } from '@/types/attendance'
+import { formatDisplayDate } from '@/lib/helpers/format-api-date'
+import { toAttendanceRecord } from '@/lib/mappers/attendance-mapper'
+import type { AttendanceRecord, TeamAttendanceDay, TeamAttendanceEmployee } from '@/types/attendance'
 
 export function AdminAttendanceSheet() {
   const { canManage } = usePermissions()
@@ -34,8 +35,11 @@ export function AdminAttendanceSheet() {
   const {
     searchQuery,
     setSearchQuery,
-    selectedDate,
-    setSelectedDate,
+    startDate,
+    endDate,
+    isRangeMode,
+    setDateRange,
+    setToday,
     shiftFilter,
     setShiftFilter,
     records,
@@ -46,13 +50,20 @@ export function AdminAttendanceSheet() {
     isLoading,
     isExporting,
     hasError,
-    formatDate,
-    navigateDate,
+    formatDateRangeLabel,
+    navigatePeriod,
     handleExport,
     handleDeptExport,
     handleRetry,
     handleClearFilters,
   } = useAttendanceSheet()
+
+  const handleDayClick = (
+    employee: TeamAttendanceEmployee,
+    day: TeamAttendanceDay,
+  ): void => {
+    setSelectedRecord(toAttendanceRecord(employee, day))
+  }
 
   if (isInitialDataLoading(isLoading, records.length, hasError)) {
     return (
@@ -67,13 +78,15 @@ export function AdminAttendanceSheet() {
 
   return (
     <div className="space-y-6">
-      <AttendanceDateNav
-        selectedDate={selectedDate}
-        formattedDate={formatDate(selectedDate)}
-        onPrevious={() => navigateDate(-1)}
-        onNext={() => navigateDate(1)}
-        onToday={() => setSelectedDate(new Date())}
-        onDateSelect={setSelectedDate}
+      <AttendanceDateRangeNav
+        startDate={startDate}
+        endDate={endDate}
+        rangeLabel={formatDateRangeLabel()}
+        isRangeMode={isRangeMode}
+        onPrevious={() => navigatePeriod(-1)}
+        onNext={() => navigatePeriod(1)}
+        onToday={setToday}
+        onDateRangeChange={setDateRange}
       />
 
       {shiftsError && (
@@ -118,7 +131,7 @@ export function AdminAttendanceSheet() {
         <CommonEmptyState
           icon={Users}
           title="No attendance records found"
-          description="Try adjusting the date, shift filter, or search query."
+          description="Try adjusting the date range, shift filter, or search query."
           actions={
             <Button
               type="button"
@@ -133,23 +146,32 @@ export function AdminAttendanceSheet() {
       ) : (
         <>
           <CommonMobileCardGrid>
-            {records.map((record, index) => (
-              <AttendanceCard 
-                key={record.id} 
-                record={record} 
-                index={index} 
-                onClick={() => setSelectedRecord(record)} 
+            {records.map((employee, index) => (
+              <AttendanceCard
+                key={employee.id}
+                employee={employee}
+                index={index}
+                isRangeMode={isRangeMode}
+                onDayClick={handleDayClick}
               />
             ))}
           </CommonMobileCardGrid>
-          <AttendanceTable records={records} onRowClick={setSelectedRecord} />
+          <AttendanceTable
+            records={records}
+            isRangeMode={isRangeMode}
+            onDayClick={handleDayClick}
+          />
         </>
       )}
 
       <AttendanceDetailDrawer
         record={selectedRecord}
-        attendanceDate={formatApiDate(selectedDate)}
-        date={formatDate(selectedDate)}
+        attendanceDate={selectedRecord?.date}
+        date={
+          selectedRecord?.date
+            ? formatDisplayDate(selectedRecord.date)
+            : undefined
+        }
         canManage={canManageAttendance}
         onLateReasonSubmitted={handleRetry}
         onClose={() => setSelectedRecord(null)}

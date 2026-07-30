@@ -1,28 +1,30 @@
 // services/attendance-service.ts
 import { api } from '@/lib/api'
 import {
-  mapBackendAttendanceRecord,
   mapBackendStatusCounts,
-  type BackendAttendanceRecord,
+  mapBackendTeamAttendanceRecord,
+  mergeTeamAttendanceEmployees,
   type BackendAttendanceStatusCount,
+  type BackendTeamAttendanceRecord,
 } from '@/lib/mappers/attendance-mapper'
 import { parseContentDispositionFilename } from '@/lib/helpers/download-blob'
 import { cleanParams } from '@/lib/types'
 import { parseApiDate } from '@/lib/helpers/format-api-date'
 import {
   EMPTY_ATTENDANCE_STATUS_COUNTS,
-  type AttendanceRecord,
   type AttendanceStatusCounts,
   type DepartmentAttendanceExportParams,
   type ManualPunchPayload,
   type ManualPunchResponse,
   type LateReasonPayload,
   type LateReasonResponse,
+  type TeamAttendanceEmployee,
 } from '@/types/attendance'
 import type { ApiSimpleListResponse, ApiSingleResponse } from '@/lib/types'
 
 export interface AttendanceListParams {
-  date: string
+  start_date: string
+  end_date: string
   shift?: number
   search?: string
   [key: string]: string | number | boolean | undefined | null
@@ -33,13 +35,13 @@ export interface AttendanceExportResult {
   filename: string
 }
 
-/** Daily dept export for the attendance sheet's selected date (V14 Postman). */
+/** Daily dept export for the attendance sheet's selected start date (V14 Postman). */
 export function buildDepartmentAttendanceExportParams(
-  date: string,
+  startDate: string,
 ): DepartmentAttendanceExportParams {
   return {
     export_format: 'excel',
-    date,
+    date: startDate,
   }
 }
 
@@ -59,8 +61,8 @@ export const attendanceService = {
   async getList(
     params: AttendanceListParams,
     signal?: AbortSignal,
-  ): Promise<AttendanceRecord[]> {
-    const response = await api.get<ApiSimpleListResponse<BackendAttendanceRecord>>(
+  ): Promise<TeamAttendanceEmployee[]> {
+    const response = await api.get<ApiSimpleListResponse<BackendTeamAttendanceRecord>>(
       '/api/employee/attendance/',
       {
         params: cleanParams(params),
@@ -68,7 +70,8 @@ export const attendanceService = {
       },
     )
 
-    return (response.results?.data ?? []).map(mapBackendAttendanceRecord)
+    const mapped = (response.results?.data ?? []).map(mapBackendTeamAttendanceRecord)
+    return mergeTeamAttendanceEmployees(mapped)
   },
 
   async getStatusCounts(
@@ -99,7 +102,10 @@ export const attendanceService = {
       },
     )
 
-    const fallbackFilename = `attendance_${params.date}.xlsx`
+    const fallbackFilename =
+      params.start_date === params.end_date
+        ? `attendance_${params.start_date}.xlsx`
+        : `attendance_${params.start_date}_to_${params.end_date}.xlsx`
     const filename = parseContentDispositionFilename(contentDisposition, fallbackFilename)
 
     return { blob, filename }

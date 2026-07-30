@@ -3,21 +3,37 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { isValid } from 'date-fns'
 import { formatApiDate, parseApiDate } from '@/lib/helpers/format-api-date'
+import { isAttendanceRangeMode } from '@/types/attendance'
 import type { AttendanceListParams } from '@/services/attendance-service'
 
 const SEARCH_DEBOUNCE_MS = 300
 
+function resolveDateParam(param: string): Date {
+  const parsed = parseApiDate(param)
+  return parsed && isValid(parsed) ? parsed : new Date()
+}
+
+function clampDateRange(start: Date, end: Date): { start: Date; end: Date } {
+  if (end < start) return { start, end: start }
+  return { start, end }
+}
+
 export interface UseAttendanceFiltersReturn {
   searchQuery: string
   setSearchQuery: (query: string) => void
-  selectedDate: Date
+  startDate: Date
+  endDate: Date
+  isRangeMode: boolean
   shiftFilter: string
   setShiftFilter: (value: string) => void
   listParams: AttendanceListParams
   formatDisplayDate: (date: Date) => string
-  navigateDate: (days: number) => void
-  setSelectedDate: (date: Date) => void
+  formatDateRangeLabel: () => string
+  navigatePeriod: (direction: -1 | 1) => void
+  setDateRange: (start: Date, end: Date) => void
+  setToday: () => void
   handleClearFilters: () => void
 }
 
@@ -26,7 +42,11 @@ export function useAttendanceFilters(): UseAttendanceFiltersReturn {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const dateParam = searchParams.get('date') || formatApiDate(new Date())
+  const legacyDateParam = searchParams.get('date')
+  const startDateParam =
+    searchParams.get('start_date') || legacyDateParam || formatApiDate(new Date())
+  const endDateParam =
+    searchParams.get('end_date') || legacyDateParam || formatApiDate(new Date())
   const rawShiftParam = searchParams.get('shift') || 'all'
   const urlSearchQuery = searchParams.get('search') || ''
 
@@ -36,7 +56,9 @@ export function useAttendanceFilters(): UseAttendanceFiltersReturn {
     return Number.isFinite(shiftId) ? rawShiftParam : 'all'
   }, [rawShiftParam])
 
-  const selectedDate = useMemo(() => parseApiDate(dateParam) ?? new Date(), [dateParam])
+  const startDate = useMemo(() => resolveDateParam(startDateParam), [startDateParam])
+  const endDate = useMemo(() => resolveDateParam(endDateParam), [endDateParam])
+  const isRangeMode = isAttendanceRangeMode(startDateParam, endDateParam)
   const [localSearch, setLocalSearch] = useState(urlSearchQuery)
 
   const updateQueryParams = useCallback(
@@ -49,6 +71,7 @@ export function useAttendanceFilters(): UseAttendanceFiltersReturn {
           nextParams.set(key, value)
         }
       })
+      nextParams.delete('date')
       router.replace(`${pathname}?${nextParams.toString()}`)
     },
     [pathname, router, searchParams],
@@ -57,11 +80,12 @@ export function useAttendanceFilters(): UseAttendanceFiltersReturn {
   const listParams = useMemo<AttendanceListParams>(() => {
     const shiftId = shiftParam !== 'all' ? Number(shiftParam) : undefined
     return {
-      date: dateParam,
+      start_date: startDateParam,
+      end_date: endDateParam,
       ...(shiftId !== undefined && Number.isFinite(shiftId) ? { shift: shiftId } : {}),
       ...(urlSearchQuery ? { search: urlSearchQuery } : {}),
     }
-  }, [dateParam, shiftParam, urlSearchQuery])
+  }, [startDateParam, endDateParam, shiftParam, urlSearchQuery])
 
   useEffect(() => {
     setLocalSearch(urlSearchQuery)
@@ -85,14 +109,52 @@ export function useAttendanceFilters(): UseAttendanceFiltersReturn {
       day: 'numeric',
     })
 
-  const setSelectedDate = (date: Date): void => {
-    updateQueryParams({ date: formatApiDate(date) })
+  const formatDateRangeLabel = (): string => {
+    if (!isRangeMode) return formatDisplayDate(startDate)
+
+    const startLabel = startDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })
+    const endLabel = endDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+    const dayCount =
+      Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1
+
+    return `${startLabel} – ${endLabel} (${dayCount} days)`
   }
 
-  const navigateDate = (days: number): void => {
-    const nextDate = new Date(selectedDate)
-    nextDate.setDate(nextDate.getDate() + days)
-    setSelectedDate(nextDate)
+  const setDateRange = (start: Date, end: Date): void => {
+    if (!isValid(start) || !isValid(end)) return
+
+    const clamped = clampDateRange(start, end)
+    updateQueryParams({
+      start_date: formatApiDate(clamped.start),
+      end_date: formatApiDate(clamped.end),
+    })
+  }
+
+  const setToday = (): void => {
+    const today = new Date()
+    setDateRange(today, today)
+  }
+
+  const navigatePeriod = (direction: -1 | 1): void => {
+    const rangeDays = isRangeMode
+      ? Math.max(
+          1,
+          Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,
+        )
+      : 1
+
+    const nextStart = new Date(startDate)
+    const nextEnd = new Date(endDate)
+    nextStart.setDate(nextStart.getDate() + direction * rangeDays)
+    nextEnd.setDate(nextEnd.getDate() + direction * rangeDays)
+    setDateRange(nextStart, nextEnd)
   }
 
   const setShiftFilter = (value: string): void => {
@@ -107,13 +169,17 @@ export function useAttendanceFilters(): UseAttendanceFiltersReturn {
   return {
     searchQuery: localSearch,
     setSearchQuery: setLocalSearch,
-    selectedDate,
+    startDate,
+    endDate,
+    isRangeMode,
     shiftFilter: shiftParam,
     setShiftFilter,
     listParams,
     formatDisplayDate,
-    navigateDate,
-    setSelectedDate,
+    formatDateRangeLabel,
+    navigatePeriod,
+    setDateRange,
+    setToday,
     handleClearFilters,
   }
 }

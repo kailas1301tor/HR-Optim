@@ -9,7 +9,7 @@ import {
   buildDepartmentAttendanceExportParams,
 } from '@/services/attendance-service'
 import { ApiError } from '@/lib/api'
-import type { AttendanceRecord, AttendanceStatusCounts } from '@/types/attendance'
+import type { AttendanceStatusCounts, TeamAttendanceEmployee } from '@/types/attendance'
 import { EMPTY_ATTENDANCE_STATUS_COUNTS } from '@/types/attendance'
 import { useAttendanceFilters } from './useAttendanceFilters'
 import { useAttendanceShifts } from './useAttendanceShifts'
@@ -17,10 +17,12 @@ import { useAttendanceShifts } from './useAttendanceShifts'
 export interface UseAttendanceSheetReturn {
   searchQuery: string
   setSearchQuery: (query: string) => void
-  selectedDate: Date
+  startDate: Date
+  endDate: Date
+  isRangeMode: boolean
   shiftFilter: string
   setShiftFilter: (value: string) => void
-  records: AttendanceRecord[]
+  records: TeamAttendanceEmployee[]
   statusCounts: AttendanceStatusCounts
   shifts: ReturnType<typeof useAttendanceShifts>['shifts']
   shiftsError: boolean
@@ -29,8 +31,10 @@ export interface UseAttendanceSheetReturn {
   isExporting: boolean
   hasError: boolean
   formatDate: (date: Date) => string
-  navigateDate: (days: number) => void
-  setSelectedDate: (date: Date) => void
+  formatDateRangeLabel: () => string
+  navigatePeriod: (direction: -1 | 1) => void
+  setDateRange: (start: Date, end: Date) => void
+  setToday: () => void
   handleExport: () => Promise<void>
   handleDeptExport: () => Promise<void>
   handleRetry: () => void
@@ -41,19 +45,23 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
   const {
     searchQuery,
     setSearchQuery,
-    selectedDate,
+    startDate,
+    endDate,
+    isRangeMode,
     shiftFilter,
     setShiftFilter,
     listParams,
     formatDisplayDate,
-    navigateDate,
-    setSelectedDate,
+    formatDateRangeLabel,
+    navigatePeriod,
+    setDateRange,
+    setToday,
     handleClearFilters,
   } = useAttendanceFilters()
 
   const { shifts, hasError: shiftsError, reload: reloadShifts } = useAttendanceShifts()
 
-  const [records, setRecords] = useState<AttendanceRecord[]>([])
+  const [records, setRecords] = useState<TeamAttendanceEmployee[]>([])
   const [statusCounts, setStatusCounts] = useState<AttendanceStatusCounts>(EMPTY_ATTENDANCE_STATUS_COUNTS)
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
@@ -116,7 +124,7 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
     setIsExporting(true)
     try {
       const { blob, filename } = await attendanceService.exportDepartmentAttendance(
-        buildDepartmentAttendanceExportParams(listParams.date),
+        buildDepartmentAttendanceExportParams(listParams.start_date),
       )
       downloadBlob(blob, filename)
       toast.success('Department attendance exported')
@@ -141,7 +149,9 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
   return {
     searchQuery,
     setSearchQuery,
-    selectedDate,
+    startDate,
+    endDate,
+    isRangeMode,
     shiftFilter,
     setShiftFilter,
     records,
@@ -153,8 +163,10 @@ export function useAttendanceSheet(): UseAttendanceSheetReturn {
     isExporting,
     hasError,
     formatDate: formatDisplayDate,
-    navigateDate,
-    setSelectedDate,
+    formatDateRangeLabel,
+    navigatePeriod,
+    setDateRange,
+    setToday,
     handleExport,
     handleDeptExport,
     handleRetry,
