@@ -20,25 +20,18 @@ export const payrollAdjustmentSchema = z.object({
   reason: requiredTrimmedString('Reason', LIMIT_REASON),
 })
 
-export const generatePayrollSchema = z
-  .object({
-    month: z.coerce
-      .number()
-      .int({ message: 'Month must be a whole number' })
-      .min(1, { message: 'Month must be between 1 and 12' })
-      .max(12, { message: 'Month must be between 1 and 12' }),
-    year: z.coerce
-      .number()
-      .int({ message: 'Year must be a whole number' })
-      .min(2000, { message: 'Year must be between 2000 and 2100' })
-      .max(2100, { message: 'Year must be between 2000 and 2100' }),
-    start_date: z.string().trim().min(1, { message: 'Start date is required' }),
-    end_date: z.string().trim().min(1, { message: 'End date is required' }),
-  })
-  .refine((data) => data.end_date >= data.start_date, {
-    message: 'End date must be on or after start date',
-    path: ['end_date'],
-  })
+export const generatePayrollSchema = z.object({
+  month: z.coerce
+    .number()
+    .int({ message: 'Month must be a whole number' })
+    .min(1, { message: 'Month must be between 1 and 12' })
+    .max(12, { message: 'Month must be between 1 and 12' }),
+  year: z.coerce
+    .number()
+    .int({ message: 'Year must be a whole number' })
+    .min(2000, { message: 'Year must be between 2000 and 2100' })
+    .max(2100, { message: 'Year must be between 2000 and 2100' }),
+})
 
 export type PayrollAdjustmentFormInput = z.infer<typeof payrollAdjustmentSchema>
 export type GeneratePayrollFormInput = z.infer<typeof generatePayrollSchema>

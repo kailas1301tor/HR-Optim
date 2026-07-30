@@ -38,6 +38,8 @@ export interface BackendPayroll {
   year?: number
   start_date?: string
   end_date?: string
+  payslip_url?: string | null
+  payslip?: string | null
   adjustments?: BackendPayrollAdjustment[]
 }
 
@@ -58,6 +60,7 @@ export interface PayrollRecord {
   canFinalize: boolean
   startDate: string
   endDate: string
+  payslipUrl: string | null
   adjustments?: BackendPayrollAdjustment[]
 }
 
@@ -86,8 +89,6 @@ export interface PayrollListResult {
 export interface GeneratePayrollPayload {
   month: number
   year: number
-  start_date: string
-  end_date: string
 }
 
 export interface AddPayrollAdjustmentPayload {

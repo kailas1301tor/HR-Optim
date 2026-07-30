@@ -311,7 +311,7 @@ export function AdminPayrollDashboard() {
         />
       ) : isLoading ? (
         <>
-          <CommonMobileCardGrid>
+          <CommonMobileCardGrid className="md:grid-cols-1">
             {Array.from({ length: 4 }).map((_, index) => (
               <PayrollCardSkeleton key={index} />
             ))}
@@ -347,7 +347,7 @@ export function AdminPayrollDashboard() {
         />
       ) : (
         <>
-          <CommonMobileCardGrid>
+          <CommonMobileCardGrid className="md:grid-cols-1">
             {paginatedRecords.map((record, index) => (
               <PayrollCard
                 key={record.id}

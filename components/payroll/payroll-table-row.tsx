@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import type { PayrollRecord } from '@/types/payroll'
 import { getPayrollStatusLabel } from '@/lib/mappers/payroll-mapper'
 import { wpsStatusConfig } from './payroll-constants'
+import { PayrollPayslipActions } from './payroll-payslip-actions'
 
 interface PayrollTableRowProps {
   record: PayrollRecord
@@ -91,15 +92,18 @@ export function PayrollTableRow({
         </span>
       </td>
       <td className="px-4 py-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={() => onViewDetails(record)}
-          aria-label={`View details for ${record.employeeName}`}
-        >
-          <Eye className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center justify-end gap-1">
+          <PayrollPayslipActions payslipUrl={record.payslipUrl} record={record} size="sm" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 shrink-0"
+            onClick={() => onViewDetails(record)}
+            aria-label={`View details for ${record.employeeName}`}
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+        </div>
       </td>
     </motion.tr>
   )

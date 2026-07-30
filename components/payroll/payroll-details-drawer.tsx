@@ -10,11 +10,13 @@ import {
   User,
   Briefcase,
   X,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { uiCard, uiOutlineBtn } from '@/lib/ui/design-system'
 import type { PayrollRecord } from '@/types/payroll'
 import { PayrollAdjustmentsTable } from './payroll-adjustments-table'
+import { PayrollPayslipActions } from './payroll-payslip-actions'
 
 interface PayrollDetailsDrawerProps {
   open: boolean
@@ -118,6 +120,21 @@ export function PayrollDetailsDrawer({
                     {record.startDate} to {record.endDate}
                   </p>
                 </div>
+              </div>
+
+              <div className={cn(uiCard, 'p-4 bg-card/40 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3')}>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-semibold text-cloud flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-violet-glow" />
+                    Payslip
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {record.payslipUrl
+                      ? 'View or download the employee payslip PDF.'
+                      : 'Payslip will be available once payroll is finalized.'}
+                  </p>
+                </div>
+                <PayrollPayslipActions payslipUrl={record.payslipUrl} record={record} />
               </div>
 
               {/* Financial Breakdown Grid */}

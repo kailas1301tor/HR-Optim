@@ -8,10 +8,10 @@ export interface PayPeriod {
   end_date: string
 }
 
-/** Pay period ending on the 26th of the selected month (matches V12 Postman example). */
+/** Pay period for the selected calendar month (1st through last day). */
 export function getPayPeriodForMonth(month: number, year: number): PayPeriod {
-  const endDate = new Date(year, month - 1, 26)
-  const startDate = new Date(year, month - 2, 26)
+  const startDate = new Date(year, month - 1, 1)
+  const endDate = new Date(year, month, 0)
   return {
     month,
     year,
