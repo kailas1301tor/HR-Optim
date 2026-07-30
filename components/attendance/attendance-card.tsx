@@ -11,6 +11,7 @@ import { uiCard } from '@/lib/ui/design-system'
 import { getShiftBadgeClassName } from './attendance-constants'
 import { AttendanceDayRows } from './attendance-day-rows'
 import { buildAttendanceSummaryLabel } from './attendance-day-summary'
+import { AttendanceSummary } from './attendance-summary'
 import type { TeamAttendanceDay, TeamAttendanceEmployee } from '@/types/attendance'
 
 interface AttendanceCardProps {
@@ -22,12 +23,12 @@ interface AttendanceCardProps {
 
 function EmployeeHeader({
   employee,
-  summaryLabel,
+  days,
   canExpand,
   isOpen,
 }: {
   employee: TeamAttendanceEmployee
-  summaryLabel: string
+  days: TeamAttendanceDay[]
   canExpand: boolean
   isOpen: boolean
 }) {
@@ -81,7 +82,7 @@ function EmployeeHeader({
         </div>
       </div>
       <div className="pt-3 border-t border-border/40">
-        <p className="text-sm text-slate-300">{summaryLabel}</p>
+        <AttendanceSummary days={days} />
         {canExpand ? (
           <p className="text-[10px] text-muted-foreground mt-1">
             {isOpen ? 'Tap a day for details' : 'Tap to view daily breakdown'}
@@ -122,7 +123,7 @@ export function AttendanceCard({
       >
         <EmployeeHeader
           employee={employee}
-          summaryLabel={summaryLabel}
+          days={employee.attendanceData}
           canExpand={false}
           isOpen={false}
         />
@@ -148,7 +149,7 @@ export function AttendanceCard({
           >
             <EmployeeHeader
               employee={employee}
-              summaryLabel={summaryLabel}
+              days={employee.attendanceData}
               canExpand={canExpand}
               isOpen={isOpen}
             />

@@ -86,7 +86,7 @@ function EmployeePayrollSkeleton() {
         <div>
           <h1 className="text-2xl font-bold text-cloud">My Payroll</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            View your monthly salary statements and download payslips
+            View your monthly salary statements
           </p>
         </div>
         <div className="flex items-center gap-2">
