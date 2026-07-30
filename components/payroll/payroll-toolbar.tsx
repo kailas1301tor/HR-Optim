@@ -27,9 +27,11 @@ const STATUS_FILTER_OPTIONS: { value: PayrollStatusFilter; label: string }[] = [
   { value: 'finalized', label: payrollStatusFilterConfig.finalized.label },
 ]
 
-const payrollFilterSelectClass = 'w-full text-xs min-h-11 h-11'
-const payrollEmployeeItemClass =
-  'text-slate-200 focus:bg-violet-core/20 focus:text-white data-[highlighted]:bg-violet-core/20 data-[highlighted]:text-white'
+const payrollControlClass = 'h-10 min-h-10 text-xs'
+const payrollEmployeeSearchClass = 'w-full sm:w-44'
+const payrollEmployeeSelectClass = 'w-full sm:w-44'
+const payrollStatusSelectClass = 'w-full sm:w-40'
+const payrollActionBtnClass = 'h-10 min-h-10 gap-2 text-xs shrink-0 whitespace-nowrap'
 
 function getEmployeeFilterLabel(employee: Employee): string {
   const name = employee.full_name?.trim()
@@ -45,9 +47,9 @@ function getEmployeeFilterLabel(employee: Employee): string {
 
   return employee.employee_id ? `Employee (${employee.employee_id})` : 'Employee'
 }
-const payrollStatusSelectClass = 'w-full sm:w-40 text-xs min-h-11 h-11'
-const payrollActionBtnClass =
-  'gap-2 text-xs min-h-11 h-11 flex-1 min-w-[calc(50%-0.25rem)] sm:flex-none sm:min-w-0 justify-center'
+
+const payrollEmployeeItemClass =
+  'text-slate-200 focus:bg-violet-core/20 focus:text-white data-[highlighted]:bg-violet-core/20 data-[highlighted]:text-white'
 
 interface PayrollToolbarProps {
   searchQuery: string
@@ -102,73 +104,71 @@ export function PayrollToolbar({
       searchAriaLabel="Search payroll list"
       filters={
         <>
-          <div className="flex w-full flex-col gap-2 sm:w-52">
-            <Input
-              value={employeeSearchQuery}
-              onChange={(e) => onEmployeeSearchChange(e.target.value)}
-              placeholder="Search employees..."
-              aria-label="Search employees for filter"
-              className={cn('h-9 text-xs', uiInput)}
-              disabled={isEmployeesLoading}
-            />
-            <Select
-              value={employeeFilter !== null ? String(employeeFilter) : 'all'}
-              onValueChange={(val) => onEmployeeChange(val === 'all' ? null : Number(val))}
-              disabled={isEmployeesLoading}
+          <Input
+            value={employeeSearchQuery}
+            onChange={(e) => onEmployeeSearchChange(e.target.value)}
+            placeholder="Search employees..."
+            aria-label="Search employees for filter"
+            className={cn(payrollControlClass, payrollEmployeeSearchClass, uiInput)}
+            disabled={isEmployeesLoading}
+          />
+          <Select
+            value={employeeFilter !== null ? String(employeeFilter) : 'all'}
+            onValueChange={(val) => onEmployeeChange(val === 'all' ? null : Number(val))}
+            disabled={isEmployeesLoading}
+          >
+            <SelectTrigger
+              className={cn(payrollControlClass, payrollEmployeeSelectClass, uiSelect)}
+              aria-label="Filter by employee"
             >
-              <SelectTrigger
-                className={cn(payrollFilterSelectClass, uiSelect)}
-                aria-label="Filter by employee"
-              >
-                <SelectValue placeholder={isEmployeesLoading ? 'Loading...' : 'All employees'} />
-              </SelectTrigger>
-              <SelectContent
-                position="popper"
-                sideOffset={4}
-                className="max-h-60 w-[var(--radix-select-trigger-width)] bg-slate-900 border-slate-700 text-slate-200 shadow-xl"
-              >
+              <SelectValue placeholder={isEmployeesLoading ? 'Loading...' : 'All employees'} />
+            </SelectTrigger>
+            <SelectContent
+              position="popper"
+              sideOffset={4}
+              className="max-h-60 w-[var(--radix-select-trigger-width)] bg-slate-900 border-slate-700 text-slate-200 shadow-xl"
+            >
+              <SelectGroup>
+                <SelectItem value="all" className={payrollEmployeeItemClass}>
+                  All employees
+                </SelectItem>
+              </SelectGroup>
+              {isEmployeesLoading ? (
                 <SelectGroup>
-                  <SelectItem value="all" className={payrollEmployeeItemClass}>
-                    All employees
-                  </SelectItem>
+                  <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
+                    Loading employees...
+                  </SelectLabel>
                 </SelectGroup>
-                {isEmployeesLoading ? (
-                  <SelectGroup>
-                    <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
-                      Loading employees...
-                    </SelectLabel>
-                  </SelectGroup>
-                ) : employeesHasError ? (
-                  <SelectGroup>
-                    <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
-                      Could not load employees
-                    </SelectLabel>
-                  </SelectGroup>
-                ) : employees.length === 0 ? (
-                  <SelectGroup>
-                    <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
-                      No employees found
-                    </SelectLabel>
-                  </SelectGroup>
-                ) : (
-                  <SelectGroup>
-                    {employees.map((employee) => (
-                      <SelectItem
-                        key={employee.id}
-                        value={String(employee.id)}
-                        className={payrollEmployeeItemClass}
-                      >
-                        <span className="truncate">{getEmployeeFilterLabel(employee)}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+              ) : employeesHasError ? (
+                <SelectGroup>
+                  <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
+                    Could not load employees
+                  </SelectLabel>
+                </SelectGroup>
+              ) : employees.length === 0 ? (
+                <SelectGroup>
+                  <SelectLabel className="px-2 py-2 text-slate-500 font-normal">
+                    No employees found
+                  </SelectLabel>
+                </SelectGroup>
+              ) : (
+                <SelectGroup>
+                  {employees.map((employee) => (
+                    <SelectItem
+                      key={employee.id}
+                      value={String(employee.id)}
+                      className={payrollEmployeeItemClass}
+                    >
+                      <span className="truncate">{getEmployeeFilterLabel(employee)}</span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
+            </SelectContent>
+          </Select>
           <Select value={statusFilter} onValueChange={(val) => onStatusChange(val as PayrollStatusFilter)}>
             <SelectTrigger
-              className={cn(payrollStatusSelectClass, uiSelect)}
+              className={cn(payrollControlClass, payrollStatusSelectClass, uiSelect)}
               aria-label="Filter by status"
             >
               <SelectValue placeholder="Status" />
@@ -185,52 +185,48 @@ export function PayrollToolbar({
       }
       actions={
         canManage ? (
-        <>
-          {selectedCount > 0 ? (
-            <PrimaryButton
+          <>
+            {selectedCount > 0 ? (
+              <PrimaryButton
+                type="button"
+                onClick={onFinalizeSelected}
+                disabled={isFinalizing}
+                isLoading={isFinalizing}
+                className={payrollActionBtnClass}
+              >
+                Finalize ({selectedCount})
+              </PrimaryButton>
+            ) : null}
+            <Button
               type="button"
-              onClick={onFinalizeSelected}
-              disabled={isFinalizing}
-              isLoading={isFinalizing}
-              className={cn(payrollActionBtnClass, 'w-full sm:w-auto')}
+              variant="outline"
+              className={cn(uiOutlineBtn, payrollActionBtnClass)}
+              onClick={onExportExcel}
+              disabled={isExporting || !canExport}
+              aria-label="Export payroll to Excel"
             >
-              Finalize ({selectedCount})
+              <Download className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">{isExporting ? 'Exporting…' : 'Export Excel'}</span>
+              <span className="sm:hidden">Export</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(uiOutlineBtn, payrollActionBtnClass)}
+              onClick={onExportDepartmentSummary}
+              disabled={isExporting || !canExport}
+              aria-label="Export department payroll summary"
+            >
+              <Download className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Dept Summary</span>
+              <span className="sm:hidden">Dept</span>
+            </Button>
+            <PrimaryButton type="button" onClick={onGeneratePayroll} className={payrollActionBtnClass}>
+              <FileText className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">Generate Payroll</span>
+              <span className="sm:hidden">Generate</span>
             </PrimaryButton>
-          ) : null}
-          <Button
-            type="button"
-            variant="outline"
-            className={cn(uiOutlineBtn, payrollActionBtnClass)}
-            onClick={onExportExcel}
-            disabled={isExporting || !canExport}
-            aria-label="Export payroll to Excel"
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">{isExporting ? 'Exporting…' : 'Export Excel'}</span>
-            <span className="sm:hidden">Export</span>
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            className={cn(uiOutlineBtn, payrollActionBtnClass)}
-            onClick={onExportDepartmentSummary}
-            disabled={isExporting || !canExport}
-            aria-label="Export department payroll summary"
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Dept Summary</span>
-            <span className="sm:hidden">Dept</span>
-          </Button>
-          <PrimaryButton
-            type="button"
-            onClick={onGeneratePayroll}
-            className={cn(payrollActionBtnClass, 'w-full sm:w-auto')}
-          >
-            <FileText className="w-4 h-4" />
-            <span className="hidden sm:inline">Generate Payroll</span>
-            <span className="sm:hidden">Generate</span>
-          </PrimaryButton>
-        </>
+          </>
         ) : null
       }
     />

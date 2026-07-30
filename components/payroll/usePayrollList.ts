@@ -60,7 +60,12 @@ async function fetchAllPayrollPages(
 }
 
 function matchesPayPeriod(record: PayrollRecord, payPeriod: PayPeriod): boolean {
-  return record.startDate === payPeriod.start_date && record.endDate === payPeriod.end_date
+  if (record.startDate === payPeriod.start_date && record.endDate === payPeriod.end_date) {
+    return true
+  }
+  if (!record.startDate) return false
+  const [year, month] = record.startDate.split('-').map(Number)
+  return month === payPeriod.month && year === payPeriod.year
 }
 
 export function usePayrollList({

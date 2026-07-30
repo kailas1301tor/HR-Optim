@@ -11,6 +11,7 @@ import { uiCard } from '@/lib/ui/design-system'
 import type { PayrollRecord } from '@/types/payroll'
 import { getPayrollStatusLabel } from '@/lib/mappers/payroll-mapper'
 import { wpsStatusConfig } from './payroll-constants'
+import { PayrollPayslipActions } from './payroll-payslip-actions'
 
 interface PayrollCardProps {
   record: PayrollRecord
@@ -42,7 +43,7 @@ export function PayrollCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.25 }}
-      className={cn(uiCard, 'p-5')}
+      className={cn(uiCard, 'p-5 min-w-0 overflow-hidden')}
       aria-label={`${record.employeeName} payroll — ${statusLabel}`}
     >
       <div className="flex items-start justify-between gap-3 mb-4">
@@ -89,23 +90,31 @@ export function PayrollCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between pt-3 mt-4 border-t border-border/40">
+      <div className="flex flex-col gap-3 pt-3 mt-4 border-t border-border/40">
         <div>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Net Salary</p>
           <p className="text-base font-mono font-semibold text-cloud tabular-nums">
             {formatAmount(record.netSalary)}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-10 min-h-10 gap-2 text-xs shrink-0"
-          onClick={() => onViewDetails(record)}
-          aria-label={`View details for ${record.employeeName}`}
-        >
-          <Eye className="w-4 h-4" />
-          Details
-        </Button>
+        <div className="flex flex-col gap-2 w-full">
+          <PayrollPayslipActions
+            payslipUrl={record.payslipUrl}
+            record={record}
+            size="sm"
+            layout="card"
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 min-h-10 w-full gap-2 text-xs justify-center"
+            onClick={() => onViewDetails(record)}
+            aria-label={`View details for ${record.employeeName}`}
+          >
+            <Eye className="w-4 h-4 shrink-0" />
+            Details
+          </Button>
+        </div>
       </div>
     </motion.article>
   )

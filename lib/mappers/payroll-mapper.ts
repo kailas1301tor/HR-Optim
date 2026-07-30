@@ -160,6 +160,7 @@ export function mapBackendPayroll(record: BackendPayroll): PayrollRecord {
     canFinalize: canFinalizePayroll(status),
     startDate: record.start_date ?? '',
     endDate: record.end_date ?? '',
+    payslipUrl: record.payslip_url?.trim() || record.payslip?.trim() || null,
     adjustments: record.adjustments ?? [],
   }
 }

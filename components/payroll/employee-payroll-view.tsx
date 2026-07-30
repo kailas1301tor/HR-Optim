@@ -2,16 +2,14 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { DollarSign, FileText, Download, TrendingUp, ShieldAlert } from 'lucide-react'
+import { DollarSign, FileText, TrendingUp, ShieldAlert } from 'lucide-react'
 import { usePermissions } from '@/components/auth/permissions-provider'
 import { CommonEmptyState, CommonErrorBanner, MonthYearPicker } from '@/components/common'
-import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
-import { uiCard, uiOutlineBtn } from '@/lib/ui/design-system'
+import { uiCard } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
-import type { PayrollRecord } from '@/types/payroll'
 import { PayrollSkeleton } from './payroll-skeleton'
 import { useEmployeePayroll } from './useEmployeePayroll'
+import { PayrollPayslipActions } from './payroll-payslip-actions'
 
 function getCurrentMonthYear() {
   const now = new Date()
@@ -38,20 +36,6 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
     const latestPay = count > 0 ? payrollHistory[0].netSalary : 0
     return { totalEarnings, count, latestPay }
   }, [payrollHistory])
-
-  const handleDownloadPayslip = (record: PayrollRecord) => {
-    toast.info(`Downloading payslip for ${new Date(record.startDate).toLocaleString('default', { month: 'long', year: 'numeric' })}...`)
-    const fileContent = `HRMS PAYSLIP - ${record.employeeName}\nID: ${record.employeeId}\nPeriod: ${record.startDate} to ${record.endDate}\nBasic Salary: ₹${record.baseSalary}\nAllowances: ₹${record.allowances}\nOvertime: ₹${record.overtime}\nDeductions: ₹${record.deductions}\nNet Pay: ₹${record.netSalary}`
-    const blob = new Blob([fileContent], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `payslip_${record.startDate}_${record.endDate}.txt`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-  }
 
   if (isAuthLoading || isLoading) {
     return <PayrollSkeleton variant="employee" />
@@ -174,14 +158,7 @@ export function EmployeePayrollView({ embedded = false }: { embedded?: boolean }
                       </span>
                     </td>
                     <td className="py-4 text-right">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleDownloadPayslip(item)}
-                        className={cn(uiOutlineBtn, 'h-8 text-[10px] gap-1 px-2')}
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        Payslip
-                      </Button>
+                      <PayrollPayslipActions payslipUrl={item.payslipUrl} record={item} size="sm" />
                     </td>
                   </tr>
                 ))}
