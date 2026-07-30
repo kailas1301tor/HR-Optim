@@ -1,7 +1,7 @@
 // components/attendance/attendance-constants.ts
 import type { AttendanceStatus } from '@/types/attendance'
 
-export type { AttendanceRecord, AttendanceStatus, AttendanceStatusCounts } from '@/types/attendance'
+export type { AttendanceRecord, AttendanceStatus, AttendanceStatusCounts, TeamAttendanceEmployee, TeamAttendanceDay } from '@/types/attendance'
 export { EMPTY_ATTENDANCE_STATUS_COUNTS as EMPTY_STATUS_COUNTS } from '@/types/attendance'
 
 export const STATUS_CONFIG: Record<
@@ -12,7 +12,7 @@ export const STATUS_CONFIG: Record<
   late: { label: 'Late', color: 'bg-amber-400', dotColor: 'bg-amber-400' },
   absent: { label: 'Absent', color: 'bg-red-400', dotColor: 'bg-red-400' },
   leave: { label: 'On Leave', color: 'bg-slate-400', dotColor: 'bg-slate-400' },
-  weekend: { label: 'Weekend', color: 'bg-slate-600', dotColor: 'bg-slate-600' },
+  weekend: { label: 'Holiday/Weekend', color: 'bg-slate-600', dotColor: 'bg-slate-600' },
   holiday: { label: 'Holiday', color: 'bg-teal-400', dotColor: 'bg-teal-400' },
 }
 

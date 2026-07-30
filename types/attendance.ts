@@ -28,6 +28,40 @@ export interface AttendanceRecord {
   phoneNumber?: string | null
 }
 
+/** One day entry within a team attendance employee record. */
+export interface TeamAttendanceDay {
+  date: string
+  dayOfWeek: string
+  status: AttendanceStatus
+  excusedReason?: string
+  timeIn: string | null
+  timeOut: string | null
+  workHours: string | null
+  breakHours: string | null
+  totalHours: string | null
+  timings: AttendanceTiming[]
+  isBiometric?: boolean
+}
+
+/** Team attendance list item — employee shell with per-day breakdown. */
+export interface TeamAttendanceEmployee {
+  id: string
+  employeeProfileId: number | null
+  employeeId: string
+  employeeName: string
+  initials: string
+  department: string
+  shiftName: string
+  role?: string
+  email?: string
+  phoneNumber?: string | null
+  attendanceData: TeamAttendanceDay[]
+}
+
+export function isAttendanceRangeMode(startDate: string, endDate: string): boolean {
+  return startDate !== endDate
+}
+
 export interface AttendanceStatusCounts {
   present: number
   late: number
