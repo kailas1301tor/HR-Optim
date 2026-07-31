@@ -1,5 +1,5 @@
 // components/requests/requests-constants.ts
-import { Calendar, FileText, DollarSign, Landmark } from 'lucide-react'
+import { Calendar, FileText, DollarSign, Landmark, Home } from 'lucide-react'
 
 export type {
   Request,
@@ -46,6 +46,15 @@ export const typeConfig = {
     gradientClass: 'from-teal-400/10',
     hoverBorder: 'hover:border-teal-500/55 hover:shadow-[0_8px_32px_rgba(20,184,166,0.12)]',
     iconSurface: 'bg-teal-500/12 text-teal-700 dark:text-teal-400 ring-teal-500/15',
+  },
+  wfh: {
+    label: 'Work From Home',
+    icon: Home,
+    color: 'text-sky-400 bg-sky-400/20',
+    borderColor: 'border-l-sky-400',
+    gradientClass: 'from-sky-400/10',
+    hoverBorder: 'hover:border-sky-500/55 hover:shadow-[0_8px_32px_rgba(56,189,248,0.12)]',
+    iconSurface: 'bg-sky-500/12 text-sky-700 dark:text-sky-400 ring-sky-500/15',
   },
 } as const
 

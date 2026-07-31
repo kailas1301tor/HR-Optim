@@ -41,7 +41,20 @@ export const documentRequestSchema = z.object({
   purpose: minTrimmedString('Purpose', 3, LIMIT_PURPOSE),
 })
 
+export const wfhRequestSchema = z
+  .object({
+    from_date: dateStringSchema,
+    to_date: dateStringSchema,
+    number_of_days: z.coerce.number().min(0.5, { message: 'Calculate WFH days first' }),
+    reason: minTrimmedString('Reason', 3, LIMIT_REASON),
+  })
+  .refine((data) => data.to_date >= data.from_date, {
+    message: 'End date must be on or after start date',
+    path: ['to_date'],
+  })
+
 export type LeaveRequestInput = z.infer<typeof leaveRequestSchema>
 export type SalaryAdvanceRequestInput = z.infer<typeof salaryAdvanceRequestSchema>
 export type LoanRequestInput = z.infer<typeof loanRequestSchema>
 export type DocumentRequestInput = z.infer<typeof documentRequestSchema>
+export type WfhRequestInput = z.infer<typeof wfhRequestSchema>

@@ -8,6 +8,7 @@ import {
   mapLeaveRequest,
   mapLoanRequest,
   mapSalaryAdvanceRequest,
+  mapWfhRequest,
 } from '@/lib/mappers/request-mapper'
 import { statusConfig } from '@/components/requests/requests-constants'
 import type { Request, RequestType } from '@/types/request'
@@ -26,6 +27,8 @@ function mapRecordToRequest(type: RequestType, record: unknown): Request {
       return mapLoanRequest(record as Parameters<typeof mapLoanRequest>[0])
     case 'document':
       return mapDocumentRequest(record as Parameters<typeof mapDocumentRequest>[0])
+    case 'wfh':
+      return mapWfhRequest(record as Parameters<typeof mapWfhRequest>[0])
     default:
       throw new Error(`Unknown request type: ${type}`)
   }

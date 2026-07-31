@@ -16,6 +16,7 @@ import type {
   SalaryAdvanceRequestInput,
   LoanRequestInput,
   DocumentRequestInput,
+  WfhRequestInput,
 } from '@/validations/request.schema'
 import { findBalanceForLeaveType, shouldEnforceLeaveBalance } from '@/lib/helpers/leave-balance'
 import type { RequestType } from './requests-constants'
@@ -191,6 +192,24 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     []
   )
 
+  const wfhStartSessionId = sessionChoices[0]?.id ?? ''
+  const wfhEndSessionId = sessionChoices[1]?.id ?? ''
+
+  const handleCalculateWfhDays = useCallback(
+    async (values: Pick<WfhRequestInput, 'from_date' | 'to_date'>): Promise<number> => {
+      if (!wfhStartSessionId || !wfhEndSessionId) {
+        throw new Error('Session choices are not available')
+      }
+      return employeeRequestService.calculateLeaveDays({
+        from_date: values.from_date,
+        to_date: values.to_date,
+        start_session: wfhStartSessionId,
+        end_session: wfhEndSessionId,
+      })
+    },
+    [wfhStartSessionId, wfhEndSessionId]
+  )
+
   const handleSubmitLeave = useCallback(
     async (data: LeaveRequestInput, files?: File[]): Promise<void> => {
       const employeeId = requireEmployeeId()
@@ -253,6 +272,31 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
       }
     },
     [requireEmployeeId, handleSuccess, hasBalancesError, isBalancesLoading, leaveTypes, leaveBalances]
+  )
+
+  const handleSubmitWfh = useCallback(
+    async (data: WfhRequestInput): Promise<void> => {
+      const employeeId = requireEmployeeId()
+      if (!employeeId) return
+
+      setIsSubmitting(true)
+      try {
+        await employeeRequestService.createWfhRequest({
+          employee: employeeId,
+          number_of_days: data.number_of_days,
+          from_date: data.from_date,
+          to_date: data.to_date,
+          reason: data.reason,
+        })
+        toast.success('Work from home request submitted successfully')
+        handleSuccess()
+      } catch (error: unknown) {
+        toast.error(getApiErrorMessage(error, 'Failed to submit work from home request'))
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [requireEmployeeId, handleSuccess]
   )
 
   const handleSubmitSalaryAdvance = useCallback(
@@ -342,6 +386,8 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     isBalancesLoading,
     hasBalancesError,
     sessionChoices,
+    wfhStartSessionId,
+    wfhEndSessionId,
     documentTypeChoices,
     isLoadingMetadata,
     hasMetadataError,
@@ -350,7 +396,9 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
+    handleCalculateWfhDays,
     handleSubmitLeave,
+    handleSubmitWfh,
     handleSubmitSalaryAdvance,
     handleSubmitLoan,
     handleSubmitDocument,
