@@ -29,6 +29,12 @@ const statusConfig: Record<
   leave: { label: 'On Leave', dotColor: 'bg-violet-glow', textColor: 'text-violet-glow' },
   weekend: { label: 'Weekend', dotColor: 'bg-slate-400', textColor: 'text-slate-400' },
   holiday: { label: 'Holiday', dotColor: 'bg-teal-400', textColor: 'text-teal-400' },
+  wfh: { label: 'Work From Home', dotColor: 'bg-sky-400', textColor: 'text-sky-400' },
+  late_wfh: {
+    label: 'Late & Work From Home',
+    dotColor: 'bg-amber-400',
+    textColor: 'text-amber-300',
+  },
 }
 
 function getCurrentMonthYear() {
