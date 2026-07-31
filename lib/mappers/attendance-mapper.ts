@@ -112,6 +112,15 @@ function formatWorkHours(value: string | null | undefined): string | null {
 
 export function normalizeAttendanceStatus(status: string): AttendanceStatus {
   const normalized = status.trim().toLowerCase()
+  const hasLate = normalized.includes('late')
+  const hasWfh =
+    normalized.includes('work from home') ||
+    normalized.includes('work-from-home') ||
+    normalized === 'wfh' ||
+    normalized.includes(' wfh')
+
+  if (hasLate && hasWfh) return 'late_wfh'
+  if (hasWfh) return 'wfh'
   if (normalized === 'present') return 'present'
   if (normalized === 'late') return 'late'
   if (normalized === 'absent') return 'absent'

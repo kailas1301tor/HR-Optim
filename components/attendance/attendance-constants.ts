@@ -44,6 +44,18 @@ export const STATUS_CONFIG: Record<
     dotColor: 'bg-teal-400',
     pillClassName: 'bg-teal-400/15 text-teal-400 border border-teal-400/30',
   },
+  wfh: {
+    label: 'Work From Home',
+    color: 'bg-sky-400',
+    dotColor: 'bg-sky-400',
+    pillClassName: 'bg-sky-400/15 text-sky-400 border border-sky-400/30',
+  },
+  late_wfh: {
+    label: 'Late & Work From Home',
+    color: 'bg-amber-400',
+    dotColor: 'bg-amber-400',
+    pillClassName: 'bg-sky-400/10 text-amber-300 border border-sky-400/30',
+  },
 }
 
 const SHIFT_BADGE_CLASSES = [

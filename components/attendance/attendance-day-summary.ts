@@ -3,7 +3,12 @@ import type { TeamAttendanceDay } from '@/types/attendance'
 import { STATUS_CONFIG } from './attendance-constants'
 
 function isPresentDay(status: TeamAttendanceDay['status']): boolean {
-  return status === 'present' || status === 'late'
+  return (
+    status === 'present' ||
+    status === 'late' ||
+    status === 'wfh' ||
+    status === 'late_wfh'
+  )
 }
 
 export function buildAttendanceSummaryLabel(days: TeamAttendanceDay[]): string {

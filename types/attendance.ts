@@ -1,6 +1,14 @@
 // types/attendance.ts
 
-export type AttendanceStatus = 'present' | 'late' | 'absent' | 'leave' | 'weekend' | 'holiday'
+export type AttendanceStatus =
+  | 'present'
+  | 'late'
+  | 'absent'
+  | 'leave'
+  | 'weekend'
+  | 'holiday'
+  | 'wfh'
+  | 'late_wfh'
 
 export interface AttendanceTiming {
   in: string | null
