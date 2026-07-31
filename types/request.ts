@@ -1,6 +1,6 @@
 // types/request.ts
 
-export type RequestType = 'leave' | 'document' | 'salary-advance' | 'loan'
+export type RequestType = 'leave' | 'document' | 'salary-advance' | 'loan' | 'wfh'
 
 export type RequestTypeFilter = 'all' | RequestType
 
@@ -126,6 +126,33 @@ export interface DocumentRequestRecord {
   file: string | null
 }
 
+export interface WfhRequestEmployee {
+  id: number
+  full_name: string
+  employee_id: string
+  email: string
+  department: string
+  designation: string
+}
+
+export interface WfhRequestRecord {
+  id: number
+  employee: WfhRequestEmployee
+  action_done_by_name: string | null
+  created_at: string
+  updated_at: string
+  is_active: boolean
+  deleted: boolean
+  from_date: string
+  to_date: string
+  reason: string
+  status: string
+  rejected_reason: string | null
+  approved_date: string | null
+  rejected_date: string | null
+  action_done_by: number | null
+}
+
 export interface DashboardAllRequestItem {
   id: number
   created_at: string
@@ -204,6 +231,14 @@ export interface CreateDocumentPayload {
   purpose: string
 }
 
+export interface CreateWfhRequestPayload {
+  employee: number
+  number_of_days: number
+  from_date: string
+  to_date: string
+  reason: string
+}
+
 export type RequestActionType = RequestType
 
 export interface PaginatedRequestResult<T> {
@@ -217,7 +252,7 @@ export const REQUEST_PAGE_SIZE = 20
 
 export const ALL_STATUS_FETCH_CAP = 500
 
-export const REQUEST_TYPES: RequestType[] = ['leave', 'document', 'salary-advance', 'loan']
+export const REQUEST_TYPES: RequestType[] = ['leave', 'document', 'salary-advance', 'loan', 'wfh']
 
 export function getTypesToFetch(typeFilter: RequestTypeFilter): RequestType[] {
   if (typeFilter === 'all') return REQUEST_TYPES

@@ -20,6 +20,7 @@ const TAB_OPTIONS = [
   { value: 'salary-advance', label: 'Salary Advance' },
   { value: 'loan', label: 'Loan' },
   { value: 'document', label: 'Document' },
+  { value: 'wfh', label: 'Work From Home' },
 ]
 
 export function EmployeeRequestsView({ embedded = false }: { embedded?: boolean }) {

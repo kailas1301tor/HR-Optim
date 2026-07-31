@@ -12,6 +12,7 @@ import type { DashboardAllRequestItem, Request, RequestType } from '@/types/requ
 function mapRequestTypeFromLabel(label: string): RequestType {
   const normalized = label.trim().toLowerCase()
   if (normalized.includes('leave')) return 'leave'
+  if (normalized.includes('wfh') || normalized.includes('work from home')) return 'wfh'
   if (normalized.includes('loan')) return 'loan'
   if (normalized.includes('document')) return 'document'
   if (normalized.includes('advance') || normalized.includes('salary')) return 'salary-advance'

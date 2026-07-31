@@ -12,6 +12,7 @@ import type {
   RequestStatusFilter,
   RequestType,
   SalaryAdvanceRequestRecord,
+  WfhRequestRecord,
 } from '@/types/request'
 
 function mapApiStatus(status: string): RequestStatus {
@@ -61,13 +62,13 @@ function buildTimeline(
   ]
 }
 
-function baseRequester(employeeName: string): Request['requester'] {
+function baseRequester(employeeName: string, department = ''): Request['requester'] {
   const name = formatPersonName(employeeName)
   return {
     id: employeeName,
     name,
     initials: initialsFromName(name),
-    department: '',
+    department,
   }
 }
 
@@ -141,6 +142,28 @@ export function mapDocumentRequest(record: DocumentRequestRecord): Request {
     title: 'Document Request',
     description: `${record.document_type} — ${record.purpose}`,
     requester: baseRequester(record.employee),
+    submittedAt: formatSubmittedAt(record.created_at),
+    status,
+    timeline: buildTimeline(status, record.created_at, record.approved_date, record.rejected_date),
+  }
+}
+
+export function mapWfhRequest(record: WfhRequestRecord): Request {
+  const status = mapApiStatus(record.status)
+  const employeeName = formatPersonName(record.employee.full_name)
+  return {
+    id: `wfh-${record.id}`,
+    backendId: record.id,
+    displayId: formatDisplayId(record.id),
+    type: 'wfh',
+    title: 'Work From Home Request',
+    description: `${record.from_date} → ${record.to_date} — ${record.reason}`,
+    requester: {
+      id: record.employee.employee_id || String(record.employee.id),
+      name: employeeName,
+      initials: initialsFromName(employeeName),
+      department: formatPersonName(record.employee.department),
+    },
     submittedAt: formatSubmittedAt(record.created_at),
     status,
     timeline: buildTimeline(status, record.created_at, record.approved_date, record.rejected_date),

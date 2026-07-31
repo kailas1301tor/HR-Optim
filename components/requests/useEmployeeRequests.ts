@@ -3,6 +3,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { employeeSelfService } from '@/services/employee-self-service'
+import { employeeRequestService } from '@/services/employee-request-service'
 import { invalidateClientFetch } from '@/lib/helpers/client-fetch-lifecycle'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import {
@@ -10,11 +11,13 @@ import {
   mapSalaryAdvanceRequest,
   mapLoanRequest,
   mapDocumentRequest,
+  mapWfhRequest,
 } from '@/lib/mappers/request-mapper'
 import { mapDashboardAllRequest } from '@/lib/mappers/employee-self-service-mapper'
 import type { Request } from '@/types/request'
+import { ALL_STATUS_FETCH_CAP } from '@/types/request'
 
-export type EmployeeRequestTab = 'all' | 'leave' | 'salary-advance' | 'loan' | 'document'
+export type EmployeeRequestTab = 'all' | 'leave' | 'salary-advance' | 'loan' | 'document' | 'wfh'
 
 export interface UseEmployeeRequestsReturn {
   requests: Request[]
@@ -100,6 +103,16 @@ export function useEmployeeRequests(options: {
           const res = await employeeSelfService.getDocumentRequests(scopedParams)
           if (fetchId !== fetchIdRef.current) return
           setRequests((Array.isArray(res) ? res : []).map(mapDocumentRequest))
+          return
+        }
+
+        if (activeTab === 'wfh') {
+          const res = await employeeRequestService.getWfhRequests(
+            { employee_id: profileId, page_size: ALL_STATUS_FETCH_CAP, page: 1 },
+            controller.signal,
+          )
+          if (fetchId !== fetchIdRef.current) return
+          setRequests(res.data.map(mapWfhRequest))
         }
       } catch (error: unknown) {
         if (controller.signal.aborted) return

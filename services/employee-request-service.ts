@@ -8,6 +8,7 @@ import type {
   CreateLeaveRequestPayload,
   CreateLoanPayload,
   CreateSalaryAdvancePayload,
+  CreateWfhRequestPayload,
   DocumentRequestRecord,
   LeaveBalanceRecord,
   LeaveCalculatePayload,
@@ -20,6 +21,7 @@ import type {
   RequestListParams,
   RequestType,
   SalaryAdvanceRequestRecord,
+  WfhRequestRecord,
 } from '@/types/request'
 
 export type {
@@ -27,6 +29,7 @@ export type {
   CreateLeaveRequestPayload,
   CreateLoanPayload,
   CreateSalaryAdvancePayload,
+  CreateWfhRequestPayload,
   DocumentRequestRecord,
   LeaveCalculatePayload,
   LeaveCalendarViewModel,
@@ -37,6 +40,7 @@ export type {
   RequestChoices,
   RequestListParams,
   SalaryAdvanceRequestRecord,
+  WfhRequestRecord,
 } from '@/types/request'
 
 interface SoftDeletableRecord {
@@ -73,6 +77,7 @@ const LIST_ENDPOINTS: Record<RequestType, string> = {
   document: '/api/employee/document-requests/',
   'salary-advance': '/api/employee/salary-advance-requests/',
   loan: '/api/employee/loan-application-requests/',
+  wfh: '/api/employee/wfh-requests/',
 }
 
 const APPROVE_ENDPOINTS: Record<RequestActionType, string> = {
@@ -80,6 +85,7 @@ const APPROVE_ENDPOINTS: Record<RequestActionType, string> = {
   document: '/api/employee/document-request-approve/',
   'salary-advance': '/api/employee/salary-advance-request-approve/',
   loan: '/api/employee/loan-application-request-approve/',
+  wfh: '/api/employee/wfh-request-approve/',
 }
 
 const REJECT_ENDPOINTS: Record<RequestActionType, string> = {
@@ -87,13 +93,14 @@ const REJECT_ENDPOINTS: Record<RequestActionType, string> = {
   document: '/api/employee/document-request-reject/',
   'salary-advance': '/api/employee/salary-advance-request-reject/',
   loan: '/api/employee/loan-application-request-reject/',
+  wfh: '/api/employee/wfh-request-reject/',
 }
 
 export async function fetchRequestsByType(
   type: RequestType,
   params: RequestListParams,
   signal?: AbortSignal
-): Promise<PaginatedRequestResult<LeaveRequestRecord | SalaryAdvanceRequestRecord | LoanRequestRecord | DocumentRequestRecord>> {
+): Promise<PaginatedRequestResult<LeaveRequestRecord | SalaryAdvanceRequestRecord | LoanRequestRecord | DocumentRequestRecord | WfhRequestRecord>> {
   switch (type) {
     case 'leave':
       return fetchPaginatedList<LeaveRequestRecord>(LIST_ENDPOINTS.leave, params, signal)
@@ -103,6 +110,8 @@ export async function fetchRequestsByType(
       return fetchPaginatedList<LoanRequestRecord>(LIST_ENDPOINTS.loan, params, signal)
     case 'document':
       return fetchPaginatedList<DocumentRequestRecord>(LIST_ENDPOINTS.document, params, signal)
+    case 'wfh':
+      return fetchPaginatedList<WfhRequestRecord>(LIST_ENDPOINTS.wfh, params, signal)
     default:
       return { data: [], total_count: 0, total_pages: 1, current_page: 1 }
   }
@@ -136,6 +145,10 @@ export const employeeRequestService = {
 
   async getDocumentRequests(params: RequestListParams, signal?: AbortSignal) {
     return fetchPaginatedList<DocumentRequestRecord>(LIST_ENDPOINTS.document, params, signal)
+  },
+
+  async getWfhRequests(params: RequestListParams, signal?: AbortSignal) {
+    return fetchPaginatedList<WfhRequestRecord>(LIST_ENDPOINTS.wfh, params, signal)
   },
 
   async getRequestChoices(signal?: AbortSignal): Promise<RequestChoices> {
@@ -266,6 +279,21 @@ export const employeeRequestService = {
     )
     if (!response.results?.data) {
       throw new Error('Document request created but no data returned')
+    }
+    return response.results.data
+  },
+
+  async createWfhRequest(
+    payload: CreateWfhRequestPayload,
+    signal?: AbortSignal
+  ): Promise<WfhRequestRecord> {
+    const response = await api.post<ApiSingleResponse<WfhRequestRecord>>(
+      '/api/employee/wfh-requests/',
+      payload,
+      { signal }
+    )
+    if (!response.results?.data) {
+      throw new Error('Work from home request created but no data returned')
     }
     return response.results.data
   },

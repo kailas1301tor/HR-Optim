@@ -19,6 +19,7 @@ import { LeaveRequestFormSkeleton } from './forms/leave-request-form-skeleton'
 import { typeConfig, type RequestType } from './requests-constants'
 import { useCreateRequest, type CreateRequestType } from './useCreateRequest'
 import { LeaveRequestForm } from './forms/leave-request-form'
+import { WfhRequestForm } from './forms/wfh-request-form'
 import { SalaryAdvanceRequestForm } from './forms/salary-advance-request-form'
 import { LoanRequestForm } from './forms/loan-request-form'
 import { DocumentRequestForm } from './forms/document-request-form'
@@ -27,6 +28,7 @@ import { CreateRequestPageSkeleton } from './create-request-page-skeleton'
 
 const REQUEST_TYPE_OPTIONS: CreateRequestType[] = [
   'leave',
+  'wfh',
   'salary-advance',
   'loan',
   'document',
@@ -69,6 +71,8 @@ function CreateRequestPageContent() {
     holidayEvents,
     existingLeaveDates,
     sessionChoices,
+    wfhStartSessionId,
+    wfhEndSessionId,
     documentTypeChoices,
     isLoadingMetadata,
     hasMetadataError,
@@ -80,7 +84,9 @@ function CreateRequestPageContent() {
     reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
+    handleCalculateWfhDays,
     handleSubmitLeave,
+    handleSubmitWfh,
     handleSubmitSalaryAdvance,
     handleSubmitLoan,
     handleSubmitDocument,
@@ -156,7 +162,7 @@ function CreateRequestPageContent() {
           onRetry={reloadMetadata}
         />
       ) : isFormLoading ? (
-        selectedType === 'leave' ? (
+        selectedType === 'leave' || selectedType === 'wfh' ? (
           <LeaveRequestFormSkeleton />
         ) : (
           <div className="max-w-xl space-y-4">
@@ -210,7 +216,37 @@ function CreateRequestPageContent() {
             </>
           )}
 
-          {selectedType !== 'leave' && (
+          {selectedType === 'wfh' && (
+            <>
+              {hasCalendarError && (
+                <CommonErrorBanner
+                  message="Calendar could not be loaded. You can still submit a request."
+                  onRetry={reloadMetadata}
+                  className="mb-4"
+                />
+              )}
+              {(!wfhStartSessionId || !wfhEndSessionId) && (
+                <CommonErrorBanner
+                  message="Session choices are not available. WFH day calculation cannot run."
+                  onRetry={reloadMetadata}
+                  className="mb-4"
+                />
+              )}
+              <WfhRequestForm
+                holidayEvents={holidayEvents}
+                existingLeaveDates={existingLeaveDates}
+                isCalendarLoading={isCalendarLoading}
+                fullDaySessionId={wfhStartSessionId}
+                wfhEndSessionId={wfhEndSessionId}
+                isSubmitting={isSubmitting || !canSubmit || !wfhStartSessionId || !wfhEndSessionId}
+                onCalculate={handleCalculateWfhDays}
+                onSubmit={handleSubmitWfh}
+                onCancel={handleCancel}
+              />
+            </>
+          )}
+
+          {selectedType !== 'leave' && selectedType !== 'wfh' && (
             <div className="max-w-xl rounded-[32px] [corner-shape:squircle] border border-border/60 bg-card/40 p-6">
               {selectedType === 'salary-advance' && (
                 <SalaryAdvanceRequestForm

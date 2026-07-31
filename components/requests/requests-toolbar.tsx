@@ -21,6 +21,7 @@ const TYPE_FILTERS: { value: RequestTypeFilter; label: string }[] = [
   { value: 'salary-advance', label: 'Salary Advance' },
   { value: 'loan', label: 'Loan' },
   { value: 'document', label: 'Document' },
+  { value: 'wfh', label: 'Work From Home' },
 ]
 
 interface RequestsToolbarProps {
