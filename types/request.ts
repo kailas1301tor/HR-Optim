@@ -173,18 +173,30 @@ export interface RequestChoices {
   document_request_type_choices: RequestChoiceItem[]
 }
 
+export type LeaveCalendarEventKind =
+  | 'holiday'
+  | 'leave_pending'
+  | 'leave_approved'
+  | 'leave_rejected'
+  | 'wfh_pending'
+  | 'wfh_approved'
+  | 'wfh_rejected'
+
 export interface LeaveCalendarEvent {
   date: string
   label: string
+  kind?: LeaveCalendarEventKind
 }
 
 export interface LeaveCalendarViewModel {
   holidayEvents: LeaveCalendarEvent[]
+  requestEvents: LeaveCalendarEvent[]
   existingLeaveDates: Date[]
 }
 
 export const EMPTY_LEAVE_CALENDAR: LeaveCalendarViewModel = {
   holidayEvents: [],
+  requestEvents: [],
   existingLeaveDates: [],
 }
 

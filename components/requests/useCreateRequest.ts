@@ -1,7 +1,7 @@
 // components/requests/useCreateRequest.ts
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { employeeRequestService } from '@/services/employee-request-service'
@@ -19,6 +19,7 @@ import type {
   WfhRequestInput,
 } from '@/validations/request.schema'
 import { findBalanceForLeaveType, shouldEnforceLeaveBalance } from '@/lib/helpers/leave-balance'
+import { buildBlockedDatesFromCalendar } from '@/lib/helpers/calendar-blocked-dates'
 import type { RequestType } from './requests-constants'
 
 export type CreateRequestType = RequestType
@@ -372,6 +373,15 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
 
   const canSubmit = Boolean(employee?.id) && !isEmployeeLoading && !employeeError
 
+  const blockedDates = useMemo(
+    () =>
+      buildBlockedDatesFromCalendar(
+        leaveCalendar.existingLeaveDates,
+        leaveCalendar.holidayEvents,
+      ),
+    [leaveCalendar.existingLeaveDates, leaveCalendar.holidayEvents],
+  )
+
   return {
     selectedType,
     setSelectedType,
@@ -381,7 +391,9 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     canSubmit,
     leaveTypes,
     holidayEvents: leaveCalendar.holidayEvents,
+    requestEvents: leaveCalendar.requestEvents,
     existingLeaveDates: leaveCalendar.existingLeaveDates,
+    blockedDates,
     leaveBalances,
     isBalancesLoading,
     hasBalancesError,

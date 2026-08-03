@@ -7,7 +7,8 @@ function isPresentDay(status: TeamAttendanceDay['status']): boolean {
     status === 'present' ||
     status === 'late' ||
     status === 'wfh' ||
-    status === 'late_wfh'
+    status === 'late_wfh' ||
+    status === 'half_day_leave'
   )
 }
 

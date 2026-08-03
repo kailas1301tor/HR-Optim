@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { uiTableShell } from '@/lib/ui/design-system'
 import { STATUS_CONFIG, getShiftBadgeClassName } from './attendance-constants'
 import { AttendanceSummary } from './attendance-summary'
+import { AttendanceStatusPill } from './attendance-status-pill'
+import { AttendanceTimeValue } from './attendance-time-display'
 import type { TeamAttendanceDay, TeamAttendanceEmployee } from '@/types/attendance'
 
 interface AttendanceTableProps {
@@ -17,15 +19,30 @@ interface AttendanceTableProps {
   onDayClick?: (employee: TeamAttendanceEmployee, day: TeamAttendanceDay) => void
 }
 
-const TABLE_COLUMNS = [
+const RANGE_TABLE_COLUMNS = [
   { id: 'expand', label: '' },
   { id: 'employee', label: 'Employee' },
   { id: 'shift', label: 'Shift' },
   { id: 'summary', label: 'Summary' },
 ] as const
 
+const SINGLE_DAY_TABLE_COLUMNS = [
+  { id: 'expand', label: '' },
+  { id: 'employee', label: 'Employee' },
+  { id: 'shift', label: 'Shift' },
+  { id: 'timeIn', label: 'Check In' },
+  { id: 'timeOut', label: 'Check Out' },
+  { id: 'workHours', label: 'Time Worked' },
+  { id: 'status', label: 'Status' },
+] as const
+
+function getTimeWorked(day: TeamAttendanceDay): string | null {
+  return day.workHours || day.totalHours
+}
+
 export function AttendanceTable({ records, isRangeMode = false, onDayClick }: AttendanceTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  const tableColumns = isRangeMode ? RANGE_TABLE_COLUMNS : SINGLE_DAY_TABLE_COLUMNS
 
   const handleToggleRow = (employeeId: string): void => {
     setExpandedIds((prev) => {
@@ -45,7 +62,7 @@ export function AttendanceTable({ records, isRangeMode = false, onDayClick }: At
         <table className="w-full">
           <thead>
             <tr className="border-b border-border">
-              {TABLE_COLUMNS.map((col) => (
+              {tableColumns.map((col) => (
                 <th
                   key={col.id}
                   className={cn(
@@ -64,6 +81,7 @@ export function AttendanceTable({ records, isRangeMode = false, onDayClick }: At
                 ? employee.attendanceData.length > 0
                 : employee.attendanceData.length > 1
               const isExpanded = expandedIds.has(employee.id)
+              const singleDay = !isRangeMode ? employee.attendanceData[0] : null
 
               return (
                 <Fragment key={employee.id}>
@@ -129,14 +147,35 @@ export function AttendanceTable({ records, isRangeMode = false, onDayClick }: At
                         {employee.shiftName}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <AttendanceSummary days={employee.attendanceData} />
-                    </td>
+                    {isRangeMode ? (
+                      <td className="px-4 py-3">
+                        <AttendanceSummary days={employee.attendanceData} />
+                      </td>
+                    ) : singleDay ? (
+                      <>
+                        <td className="px-4 py-3">
+                          <AttendanceTimeValue value={singleDay.timeIn} />
+                        </td>
+                        <td className="px-4 py-3">
+                          <AttendanceTimeValue value={singleDay.timeOut} />
+                        </td>
+                        <td className="px-4 py-3 font-mono text-cloud">
+                          {getTimeWorked(singleDay) || '--'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <AttendanceStatusPill status={singleDay.status} />
+                        </td>
+                      </>
+                    ) : (
+                      <td className="px-4 py-3" colSpan={4}>
+                        <span className="text-sm text-muted-foreground">No record</span>
+                      </td>
+                    )}
                   </tr>
 
                   {isExpanded && canExpand ? (
                     <tr className="border-b border-border/50 bg-midnight/30">
-                      <td colSpan={TABLE_COLUMNS.length} className="px-4 py-3">
+                      <td colSpan={tableColumns.length} className="px-4 py-3">
                         <div className="overflow-x-auto">
                           <table className="w-full text-xs">
                             <thead>

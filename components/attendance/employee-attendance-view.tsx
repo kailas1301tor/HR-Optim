@@ -35,6 +35,11 @@ const statusConfig: Record<
     dotColor: 'bg-amber-400',
     textColor: 'text-amber-300',
   },
+  half_day_leave: {
+    label: 'On a Half Day Leave',
+    dotColor: 'bg-violet-glow',
+    textColor: 'text-violet-glow',
+  },
 }
 
 function getCurrentMonthYear() {

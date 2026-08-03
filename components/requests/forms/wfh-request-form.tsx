@@ -18,10 +18,14 @@ import { LIMIT_REASON } from '@/validations/field-limits'
 import { LeaveCalendarPanel } from './leave-calendar-panel'
 import { LeaveDateRangeFields } from './leave-date-range-fields'
 import { LeaveDaysVisualizer } from './leave-days-visualizer'
+import { useBlockedDateRange } from './use-blocked-date-range'
+import { rangeOverlapsBlocked } from '@/lib/helpers/calendar-blocked-dates'
 
 interface WfhRequestFormProps {
   holidayEvents?: LeaveCalendarEvent[]
+  requestEvents?: LeaveCalendarEvent[]
   existingLeaveDates?: Date[]
+  blockedDates?: Date[]
   isCalendarLoading?: boolean
   fullDaySessionId: string
   wfhEndSessionId: string
@@ -35,7 +39,9 @@ type CalculateState = 'idle' | 'loading' | 'success' | 'zero' | 'error' | 'inval
 
 export function WfhRequestForm({
   holidayEvents = [],
+  requestEvents = [],
   existingLeaveDates = [],
+  blockedDates = [],
   isCalendarLoading = false,
   fullDaySessionId,
   wfhEndSessionId,
@@ -48,6 +54,7 @@ export function WfhRequestForm({
   const [calculateMessage, setCalculateMessage] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const calculateIdRef = useRef(0)
+  const runCalculateRef = useRef<() => Promise<void>>(async () => {})
 
   const {
     handleSubmit,
@@ -74,10 +81,34 @@ export function WfhRequestForm({
     setCalculateMessage(null)
   }, [setValue])
 
+  const clearDates = useCallback((): void => {
+    setValue('from_date', '')
+    setValue('to_date', '')
+    resetCalculation()
+  }, [resetCalculation, setValue])
+
+  const {
+    blockedSet,
+    blockedRangeMessage,
+    validateAndApplyRange,
+    handleBlockedSelectionAttempt,
+  } = useBlockedDateRange({
+    blockedDates,
+    fromDate,
+    toDate,
+    onClearDates: clearDates,
+  })
+
   const runCalculate = useCallback(async (): Promise<void> => {
     if (!fromDate || !toDate || !fullDaySessionId || !wfhEndSessionId) {
       setCalculateState('idle')
       setCalculateMessage(null)
+      return
+    }
+    if (rangeOverlapsBlocked(fromDate, toDate, blockedSet)) {
+      setCalculateState('invalid')
+      setCalculateMessage(null)
+      setValue('number_of_days', 0)
       return
     }
 
@@ -103,51 +134,68 @@ export function WfhRequestForm({
       setCalculateMessage(getApiErrorMessage(error, 'Failed to calculate WFH days'))
       setValue('number_of_days', 0)
     }
-  }, [fromDate, toDate, fullDaySessionId, wfhEndSessionId, onCalculate, setValue])
+  }, [fromDate, toDate, fullDaySessionId, wfhEndSessionId, onCalculate, setValue, blockedSet])
+
+  runCalculateRef.current = runCalculate
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (!fromDate || !toDate || !fullDaySessionId || !wfhEndSessionId) {
       setCalculateState('idle')
-      setValue('number_of_days', 0)
       return
     }
     debounceRef.current = setTimeout(() => {
-      void runCalculate()
+      void runCalculateRef.current()
     }, 400)
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [fromDate, toDate, fullDaySessionId, wfhEndSessionId, runCalculate, setValue])
+  }, [fromDate, toDate, fullDaySessionId, wfhEndSessionId])
 
   const handleRangeChange = (from: string, to: string): void => {
-    setValue('from_date', from, { shouldValidate: true })
-    setValue('to_date', to, { shouldValidate: true })
-    resetCalculation()
+    validateAndApplyRange(from, to, (nextFrom, nextTo) => {
+      setValue('from_date', nextFrom, { shouldValidate: true })
+      setValue('to_date', nextTo, { shouldValidate: true })
+      resetCalculation()
+    })
   }
 
   const handleFromDateChange = (value: string): void => {
     if (!value) return
-    setValue('from_date', value, { shouldValidate: true })
-    if (!toDate || toDate < value) {
-      setValue('to_date', value, { shouldValidate: true })
-    }
-    resetCalculation()
+    const nextTo = !toDate || toDate < value ? value : toDate
+    validateAndApplyRange(value, nextTo, (nextFrom, nextTo) => {
+      setValue('from_date', nextFrom, { shouldValidate: true })
+      setValue('to_date', nextTo, { shouldValidate: true })
+      resetCalculation()
+    })
   }
 
   const handleToDateChange = (value: string): void => {
     if (!value) return
     if (fromDate && value < fromDate) {
-      setValue('to_date', fromDate, { shouldValidate: true })
-      setValue('from_date', value, { shouldValidate: true })
-    } else {
-      setValue('to_date', value, { shouldValidate: true })
+      validateAndApplyRange(value, fromDate, (nextFrom, nextTo) => {
+        setValue('from_date', nextFrom, { shouldValidate: true })
+        setValue('to_date', nextTo, { shouldValidate: true })
+        resetCalculation()
+      })
+      return
     }
-    resetCalculation()
+    validateAndApplyRange(fromDate, value, (nextFrom, nextTo) => {
+      setValue('from_date', nextFrom, { shouldValidate: true })
+      setValue('to_date', nextTo, { shouldValidate: true })
+      resetCalculation()
+    })
+  }
+
+  const onFormSubmit = (data: WfhRequestInput): void => {
+    if (rangeOverlapsBlocked(data.from_date, data.to_date, blockedSet)) {
+      return
+    }
+    void onSubmit(data)
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="lg:h-full">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="lg:h-full">
       <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-stretch gap-5 lg:gap-6 lg:min-h-[520px]">
         <div className="lg:col-span-3 flex flex-col h-full min-h-0">
           {isCalendarLoading ? (
@@ -164,7 +212,10 @@ export function WfhRequestForm({
               toDate={toDate}
               onRangeChange={handleRangeChange}
               holidayEvents={holidayEvents}
+              requestEvents={requestEvents}
               existingLeaveDates={existingLeaveDates}
+              blockedDates={blockedDates}
+              onBlockedSelectionAttempt={handleBlockedSelectionAttempt}
               className="h-full"
             />
           )}
@@ -176,7 +227,11 @@ export function WfhRequestForm({
             toDate={toDate}
             onFromDateChange={handleFromDateChange}
             onToDateChange={handleToDateChange}
+            blockedDates={blockedDates}
           />
+          {blockedRangeMessage ? (
+            <CommonFormFieldError message={blockedRangeMessage} />
+          ) : null}
           {(errors.from_date?.message || errors.to_date?.message) && (
             <CommonFormFieldError message={errors.from_date?.message ?? errors.to_date?.message ?? ''} />
           )}

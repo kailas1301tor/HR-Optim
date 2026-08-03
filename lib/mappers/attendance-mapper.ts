@@ -110,6 +110,14 @@ function formatWorkHours(value: string | null | undefined): string | null {
   return value
 }
 
+function hasHalfDayLeave(normalized: string): boolean {
+  return (
+    normalized.includes('half day leave') ||
+    normalized.includes('half-day leave') ||
+    normalized === 'on a half day leave'
+  )
+}
+
 export function normalizeAttendanceStatus(status: string): AttendanceStatus {
   const normalized = status.trim().toLowerCase()
   const hasLate = normalized.includes('late')
@@ -117,9 +125,11 @@ export function normalizeAttendanceStatus(status: string): AttendanceStatus {
     normalized.includes('work from home') ||
     normalized.includes('work-from-home') ||
     normalized === 'wfh' ||
+    normalized === 'workfromhome' ||
     normalized.includes(' wfh')
 
   if (hasLate && hasWfh) return 'late_wfh'
+  if (hasHalfDayLeave(normalized)) return 'half_day_leave'
   if (hasWfh) return 'wfh'
   if (normalized === 'present') return 'present'
   if (normalized === 'late') return 'late'

@@ -69,7 +69,9 @@ function CreateRequestPageContent() {
     canSubmit,
     leaveTypes,
     holidayEvents,
+    requestEvents,
     existingLeaveDates,
+    blockedDates,
     sessionChoices,
     wfhStartSessionId,
     wfhEndSessionId,
@@ -205,7 +207,9 @@ function CreateRequestPageContent() {
                 isBalancesLoading={isBalancesLoading}
                 hasBalancesError={hasBalancesError}
                 holidayEvents={holidayEvents}
+                requestEvents={requestEvents}
                 existingLeaveDates={existingLeaveDates}
+                blockedDates={blockedDates}
                 isCalendarLoading={isCalendarLoading}
                 sessionChoices={sessionChoices}
                 isSubmitting={isSubmitting || !canSubmit}
@@ -234,7 +238,9 @@ function CreateRequestPageContent() {
               )}
               <WfhRequestForm
                 holidayEvents={holidayEvents}
+                requestEvents={requestEvents}
                 existingLeaveDates={existingLeaveDates}
+                blockedDates={blockedDates}
                 isCalendarLoading={isCalendarLoading}
                 fullDaySessionId={wfhStartSessionId}
                 wfhEndSessionId={wfhEndSessionId}
