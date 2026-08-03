@@ -30,6 +30,8 @@ import { LeaveDateRangeFields } from './leave-date-range-fields'
 import { LeaveBalanceVisualizer } from './leave-balance-visualizer'
 import { LeaveDaysVisualizer } from './leave-days-visualizer'
 import { LeaveDocumentUploader } from './leave-document-uploader'
+import { useBlockedDateRange } from './use-blocked-date-range'
+import { rangeOverlapsBlocked } from '@/lib/helpers/calendar-blocked-dates'
 
 interface LeaveRequestFormProps {
   leaveTypes: (LeaveType & { is_document_required?: boolean; is_paid_leave?: boolean })[]
@@ -37,7 +39,9 @@ interface LeaveRequestFormProps {
   isBalancesLoading?: boolean
   hasBalancesError?: boolean
   holidayEvents?: LeaveCalendarEvent[]
+  requestEvents?: LeaveCalendarEvent[]
   existingLeaveDates?: Date[]
+  blockedDates?: Date[]
   isCalendarLoading?: boolean
   sessionChoices: RequestChoiceItem[]
   isSubmitting: boolean
@@ -72,7 +76,9 @@ export function LeaveRequestForm({
   isBalancesLoading = false,
   hasBalancesError = false,
   holidayEvents = [],
+  requestEvents = [],
   existingLeaveDates = [],
+  blockedDates = [],
   isCalendarLoading = false,
   sessionChoices,
   isSubmitting,
@@ -86,6 +92,7 @@ export function LeaveRequestForm({
   const [fileError, setFileError] = useState<string | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const calculateIdRef = useRef(0)
+  const runCalculateRef = useRef<() => Promise<void>>(async () => {})
 
   const {
     handleSubmit,
@@ -140,10 +147,34 @@ export function LeaveRequestForm({
     setCalculateMessage(null)
   }, [setValue])
 
+  const clearDates = useCallback((): void => {
+    setValue('from_date', '')
+    setValue('to_date', '')
+    resetCalculation()
+  }, [resetCalculation, setValue])
+
+  const {
+    blockedSet,
+    blockedRangeMessage,
+    validateAndApplyRange,
+    handleBlockedSelectionAttempt,
+  } = useBlockedDateRange({
+    blockedDates,
+    fromDate,
+    toDate,
+    onClearDates: clearDates,
+  })
+
   const runCalculate = useCallback(async (): Promise<void> => {
     if (!fromDate || !toDate || !startSession || !endSession) {
       setCalculateState('idle')
       setCalculateMessage(null)
+      return
+    }
+    if (rangeOverlapsBlocked(fromDate, toDate, blockedSet)) {
+      setCalculateState('invalid')
+      setCalculateMessage(null)
+      setValue('number_of_days', 0)
       return
     }
     if (isInvalidSessionCombo(fromDate, toDate, startSession, endSession, sessionChoices)) {
@@ -178,22 +209,23 @@ export function LeaveRequestForm({
       setCalculateMessage(getApiErrorMessage(error, 'Failed to calculate leave days'))
       setValue('number_of_days', 0)
     }
-  }, [fromDate, toDate, startSession, endSession, sessionChoices, onCalculate, setValue])
+  }, [fromDate, toDate, startSession, endSession, sessionChoices, onCalculate, setValue, blockedSet])
+
+  runCalculateRef.current = runCalculate
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     if (!fromDate || !toDate || !startSession || !endSession) {
       setCalculateState('idle')
-      setValue('number_of_days', 0)
       return
     }
     debounceRef.current = setTimeout(() => {
-      runCalculate()
+      void runCalculateRef.current()
     }, 400)
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current)
     }
-  }, [fromDate, toDate, startSession, endSession, runCalculate, setValue])
+  }, [fromDate, toDate, startSession, endSession])
 
   useEffect(() => {
     setSelectedFiles([])
@@ -201,32 +233,44 @@ export function LeaveRequestForm({
   }, [leaveTypeValue])
 
   const handleRangeChange = (from: string, to: string): void => {
-    setValue('from_date', from, { shouldValidate: true })
-    setValue('to_date', to, { shouldValidate: true })
-    resetCalculation()
+    validateAndApplyRange(from, to, (nextFrom, nextTo) => {
+      setValue('from_date', nextFrom, { shouldValidate: true })
+      setValue('to_date', nextTo, { shouldValidate: true })
+      resetCalculation()
+    })
   }
 
   const handleFromDateChange = (value: string): void => {
     if (!value) return
-    setValue('from_date', value, { shouldValidate: true })
-    if (!toDate || toDate < value) {
-      setValue('to_date', value, { shouldValidate: true })
-    }
-    resetCalculation()
+    const nextTo = !toDate || toDate < value ? value : toDate
+    validateAndApplyRange(value, nextTo, (nextFrom, nextTo) => {
+      setValue('from_date', nextFrom, { shouldValidate: true })
+      setValue('to_date', nextTo, { shouldValidate: true })
+      resetCalculation()
+    })
   }
 
   const handleToDateChange = (value: string): void => {
     if (!value) return
     if (fromDate && value < fromDate) {
-      setValue('to_date', fromDate, { shouldValidate: true })
-      setValue('from_date', value, { shouldValidate: true })
-    } else {
-      setValue('to_date', value, { shouldValidate: true })
+      validateAndApplyRange(value, fromDate, (nextFrom, nextTo) => {
+        setValue('from_date', nextFrom, { shouldValidate: true })
+        setValue('to_date', nextTo, { shouldValidate: true })
+        resetCalculation()
+      })
+      return
     }
-    resetCalculation()
+    validateAndApplyRange(fromDate, value, (nextFrom, nextTo) => {
+      setValue('from_date', nextFrom, { shouldValidate: true })
+      setValue('to_date', nextTo, { shouldValidate: true })
+      resetCalculation()
+    })
   }
 
   const onFormSubmit = async (data: LeaveRequestInput): Promise<void> => {
+    if (rangeOverlapsBlocked(data.from_date, data.to_date, blockedSet)) {
+      return
+    }
     if (selectedLeaveType?.is_document_required && selectedFiles.length === 0) {
       setFileError('At least one document is required for this leave type.')
       return
@@ -252,7 +296,10 @@ export function LeaveRequestForm({
               toDate={toDate}
               onRangeChange={handleRangeChange}
               holidayEvents={holidayEvents}
+              requestEvents={requestEvents}
               existingLeaveDates={existingLeaveDates}
+              blockedDates={blockedDates}
+              onBlockedSelectionAttempt={handleBlockedSelectionAttempt}
               className="h-full"
             />
           )}
@@ -264,7 +311,11 @@ export function LeaveRequestForm({
             toDate={toDate}
             onFromDateChange={handleFromDateChange}
             onToDateChange={handleToDateChange}
+            blockedDates={blockedDates}
           />
+          {blockedRangeMessage ? (
+            <CommonFormFieldError message={blockedRangeMessage} />
+          ) : null}
           {(errors.from_date?.message || errors.to_date?.message) && (
             <CommonFormFieldError message={errors.from_date?.message ?? errors.to_date?.message ?? ''} />
           )}

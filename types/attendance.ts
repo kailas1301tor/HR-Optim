@@ -9,6 +9,7 @@ export type AttendanceStatus =
   | 'holiday'
   | 'wfh'
   | 'late_wfh'
+  | 'half_day_leave'
 
 export interface AttendanceTiming {
   in: string | null

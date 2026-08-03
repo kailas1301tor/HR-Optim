@@ -19,15 +19,23 @@ import {
 import { cn } from '@/lib/utils'
 import { formatApiDate, parseApiDate } from '@/lib/helpers/format-api-date'
 import {
+  buildBlockedDateSet,
+  isBlockedDate,
+  rangeOverlapsBlocked,
+} from '@/lib/helpers/calendar-blocked-dates'
+import {
   uiCalendarCellBase,
   uiCalendarCellInMonth,
   uiCalendarCellOutMonth,
   uiCalendarGrid,
 } from '@/lib/ui/design-system'
+import type { LeaveCalendarEventKind } from '@/types/request'
+import { getCalendarEventChipClass } from './calendar-event-styles'
 
 export interface CalendarEvent {
   date: string
   label: string
+  kind?: LeaveCalendarEventKind
 }
 
 export interface MonthGridCalendarProps {
@@ -37,8 +45,11 @@ export interface MonthGridCalendarProps {
   onRangeChange: (from: string, to: string) => void
   disabledBefore?: Date
   events?: CalendarEvent[]
+  requestEvents?: CalendarEvent[]
   existingLeaveDates?: Date[]
+  blockedDates?: Date[]
   disabled?: boolean
+  onBlockedSelectionAttempt?: () => void
   className?: string
 }
 
@@ -66,12 +77,17 @@ export function MonthGridCalendar({
   onRangeChange,
   disabledBefore,
   events = [],
+  requestEvents = [],
   existingLeaveDates = [],
+  blockedDates = [],
   disabled = false,
+  onBlockedSelectionAttempt,
   className,
 }: MonthGridCalendarProps) {
   const from = parseApiDate(fromDate)
   const to = parseApiDate(toDate)
+
+  const blockedSet = useMemo(() => buildBlockedDateSet(blockedDates), [blockedDates])
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(month)
@@ -84,13 +100,20 @@ export function MonthGridCalendar({
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>()
-    events.forEach((event) => {
+    const allEvents = [...events, ...requestEvents]
+
+    allEvents.forEach((event) => {
       const list = map.get(event.date) ?? []
       list.push(event)
       map.set(event.date, list)
     })
+
     return map
-  }, [events])
+  }, [events, requestEvents])
+
+  const requestDatesSet = useMemo(() => {
+    return new Set(requestEvents.map((event) => event.date))
+  }, [requestEvents])
 
   const existingLeaveSet = useMemo(() => {
     return new Set(existingLeaveDates.map((d) => formatApiDate(d)))
@@ -103,6 +126,11 @@ export function MonthGridCalendar({
     if (disabledBefore && isBefore(dayStart, startOfDay(disabledBefore))) return
 
     const dayStr = formatApiDate(day)
+    if (isBlockedDate(dayStr, blockedSet)) {
+      onBlockedSelectionAttempt?.()
+      return
+    }
+
     const hasCompleteRange = from && to && fromDate !== toDate
 
     if (!from || !to || hasCompleteRange) {
@@ -111,16 +139,22 @@ export function MonthGridCalendar({
     }
 
     if (fromDate === toDate && from) {
-      if (isBefore(day, from)) {
-        onRangeChange(dayStr, formatApiDate(from))
-      } else {
-        onRangeChange(formatApiDate(from), dayStr)
+      const nextFrom = isBefore(day, from) ? dayStr : formatApiDate(from)
+      const nextTo = isBefore(day, from) ? formatApiDate(from) : dayStr
+
+      if (rangeOverlapsBlocked(nextFrom, nextTo, blockedSet)) {
+        onBlockedSelectionAttempt?.()
+        return
       }
+
+      onRangeChange(nextFrom, nextTo)
     }
   }
 
   const isDayDisabled = (day: Date): boolean => {
     if (disabled) return true
+    const dayStr = formatApiDate(day)
+    if (isBlockedDate(dayStr, blockedSet)) return true
     if (!disabledBefore) return false
     return isBefore(startOfDay(day), startOfDay(disabledBefore))
   }
@@ -144,16 +178,20 @@ export function MonthGridCalendar({
           const dayStr = formatApiDate(day)
           const inMonth = isSameMonth(day, month)
           const today = isToday(day)
+          const isBlocked = isBlockedDate(dayStr, blockedSet)
           const dayDisabled = isDayDisabled(day)
           const inRange = isDateInRange(day, from, to)
           const isRangeStart = from && isSameDay(day, from)
           const isRangeEnd = to && isSameDay(day, to)
           const dayEvents = eventsByDate.get(dayStr) ?? []
+          const hasRequestEvents = requestDatesSet.has(dayStr)
           const hasExistingLeave = existingLeaveSet.has(dayStr)
 
           const ariaLabel = `${format(day, 'EEEE, MMMM d, yyyy')}${
             inRange ? ', selected' : ''
-          }${dayDisabled ? ', unavailable' : ''}`
+          }${isBlocked ? ', booked or holiday, unavailable' : ''}${
+            dayDisabled && !isBlocked ? ', unavailable' : ''
+          }`
 
           return (
             <button
@@ -169,8 +207,9 @@ export function MonthGridCalendar({
                 inMonth ? uiCalendarCellInMonth : uiCalendarCellOutMonth,
                 inRange && 'bg-violet-core/15',
                 (isRangeStart || isRangeEnd) && 'bg-violet-core/25',
+                isBlocked && 'ring-1 ring-inset ring-border/80',
                 !dayDisabled && !inRange && 'hover:bg-muted/60',
-                dayDisabled && 'cursor-not-allowed opacity-40'
+                dayDisabled && 'cursor-not-allowed opacity-50'
               )}
             >
               <div className="flex justify-end">
@@ -187,16 +226,21 @@ export function MonthGridCalendar({
               </div>
 
               <div className="mt-1 flex flex-col gap-0.5 overflow-hidden">
-                {dayEvents.map((event) => (
+                {dayEvents.map((event, index) => (
                   <div
-                    key={`${event.date}-${event.label}`}
-                    className="flex items-center gap-1 rounded-md bg-violet-core/80 px-1.5 py-0.5 text-[10px] text-white truncate"
+                    key={`${event.date}-${event.label}-${event.kind ?? 'event'}-${index}`}
+                    className={cn(
+                      'flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] truncate',
+                      getCalendarEventChipClass(event.kind),
+                    )}
                   >
-                    <Star className="size-2.5 shrink-0 fill-white" aria-hidden />
+                    {event.kind === 'holiday' || !event.kind ? (
+                      <Star className="size-2.5 shrink-0 fill-current" aria-hidden />
+                    ) : null}
                     <span className="truncate">{event.label}</span>
                   </div>
                 ))}
-                {hasExistingLeave && dayEvents.length === 0 && (
+                {hasExistingLeave && !hasRequestEvents && dayEvents.length === 0 && (
                   <div className="flex items-center gap-1 rounded-md bg-violet-core/20 px-1.5 py-0.5 text-[10px] text-violet-core truncate">
                     <span className="truncate">Existing leave</span>
                   </div>

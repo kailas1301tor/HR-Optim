@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { uiSkeletonBlock, uiTableShell } from '@/lib/ui/design-system'
 
-const TABLE_COLUMN_COUNT = 6
+const TABLE_COLUMN_COUNT = 7
 
 export function AttendanceTableSkeleton() {
   return (

@@ -12,6 +12,7 @@ import { getShiftBadgeClassName } from './attendance-constants'
 import { AttendanceDayRows } from './attendance-day-rows'
 import { buildAttendanceSummaryLabel } from './attendance-day-summary'
 import { AttendanceSummary } from './attendance-summary'
+import { AttendanceDayTimeGrid } from './attendance-time-display'
 import type { TeamAttendanceDay, TeamAttendanceEmployee } from '@/types/attendance'
 
 interface AttendanceCardProps {
@@ -127,6 +128,11 @@ export function AttendanceCard({
           canExpand={false}
           isOpen={false}
         />
+        {!isRangeMode ? (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <AttendanceDayTimeGrid day={singleDay} />
+          </div>
+        ) : null}
       </motion.article>
     )
   }

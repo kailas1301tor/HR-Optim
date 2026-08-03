@@ -56,6 +56,12 @@ export const STATUS_CONFIG: Record<
     dotColor: 'bg-amber-400',
     pillClassName: 'bg-sky-400/10 text-amber-300 border border-sky-400/30',
   },
+  half_day_leave: {
+    label: 'On a Half Day Leave',
+    color: 'bg-violet-glow',
+    dotColor: 'bg-violet-glow',
+    pillClassName: 'bg-violet-core/15 text-violet-glow border border-violet-core/30',
+  },
 }
 
 const SHIFT_BADGE_CLASSES = [
